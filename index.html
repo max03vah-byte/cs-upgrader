@@ -23,111 +23,74 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-            padding-bottom: 70px; /* Место под нижнее меню */
+            padding-bottom: 70px;
             user-select: none;
             overflow: hidden;
         }
         
-        /* Шапка */
         .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 15px;
-            background: var(--panel-bg);
-            border-bottom: 2px solid var(--accent);
-            position: relative;
-            z-index: 100;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 15px; background: var(--panel-bg);
+            border-bottom: 2px solid var(--accent); z-index: 100;
         }
         .balance { font-size: 18px; font-weight: bold; color: var(--accent); }
 
-        /* Контент */
-        .main-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px;
-            position: relative;
-        }
+        .main-content { flex: 1; overflow-y: auto; padding: 10px; }
         .content-section { display: none; }
         .content-section.active { display: flex; flex-direction: column; height: 100%; }
 
         /* --- АПГРЕЙДЕР --- */
-        .upgrader-layout {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
+        .upgrader-layout { display: flex; flex-direction: column; height: 100%; }
         
         .circle-zone {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            margin: 10px 0;
-            height: 180px;
+            display: flex; justify-content: center; align-items: center;
+            position: relative; margin: 10px 0; height: 200px;
         }
         
+        /* Крутящаяся стрелка */
+        .arrow-wrapper {
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 180px; height: 180px; z-index: 10; pointer-events: none;
+            display: flex; justify-content: center;
+        }
+        .arrow-pointer {
+            font-size: 30px; color: var(--accent);
+            filter: drop-shadow(0 0 5px rgba(255, 215, 0, 1));
+            transition: transform 3s cubic-bezier(0.1, 0.7, 0.1, 1);
+        }
+
+        /* Само колесо (стоит на месте) */
         .wheel {
             width: 180px; height: 180px; border-radius: 50%;
             background: conic-gradient(var(--accent) 0deg, var(--accent) 0deg, #222 0deg);
             display: flex; align-items: center; justify-content: center;
-            position: relative; transition: background 0.1s;
             border: 4px solid #333;
         }
         .wheel-inner {
             width: 150px; height: 150px; border-radius: 50%;
             background: var(--bg-color); display: flex; flex-direction: column;
             align-items: center; justify-content: center; text-align: center;
-            border: 2px solid #333;
+            border: 2px solid var(--border);
         }
         .chance-text { font-size: 28px; font-weight: bold; color: var(--accent); }
         .chance-label { font-size: 12px; color: var(--text-muted); }
 
-        /* Стрелка сверху */
-        .arrow-pointer {
-            position: absolute;
-            top: -5px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 30px;
-            color: var(--accent);
-            z-index: 10;
-            filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.8));
-        }
-        
-        .up-panels {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
+        .up-panels { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
         .up-panel {
-            flex: 1;
-            background: var(--panel-bg);
-            border-radius: 12px;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            border: 1px solid var(--border);
-            text-align: center;
-            position: relative;
-            min-height: 120px;
+            flex: 1; background: var(--panel-bg); border-radius: 12px; padding: 10px;
+            display: flex; flex-direction: column; align-items: center;
+            border: 1px solid var(--border); text-align: center;
+            position: relative; min-height: 130px; justify-content: center;
+            cursor: pointer; transition: 0.2s;
         }
-        .up-panel-title { font-size: 12px; color: var(--text-muted); margin-bottom: 5px; width: 100%; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+        .up-panel:hover { border-color: var(--accent); }
+        .up-panel-title { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; width: 100%; position: absolute; top: 10px; left: 0; }
         
-        .skin-img {
-            width: 100%;
-            height: 50px;
-            object-fit: contain;
-            margin-bottom: 5px;
-        }
+        .skin-img { width: 100%; height: 50px; object-fit: contain; margin-top: 15px; margin-bottom: 5px; }
         .item-name { font-size: 11px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
         .item-price { font-size: 13px; color: var(--accent); font-weight: bold; }
 
-        .quick-btns {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 10px; width: 100%;
-        }
+        .quick-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 10px; width: 100%; }
         .quick-btn {
             background: #222; color: #fff; border: 1px solid #444; padding: 6px;
             border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold;
@@ -137,8 +100,7 @@
         .btn-upgrade {
             background: var(--accent); color: #000; border: none; padding: 15px;
             font-size: 18px; font-weight: 900; border-radius: 10px; cursor: pointer;
-            text-transform: uppercase; width: 100%; transition: all 0.2s;
-            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+            text-transform: uppercase; width: 100%; transition: all 0.2s; margin-top: 10px;
         }
         .btn-upgrade:hover { background: #ffea00; }
 
@@ -149,147 +111,111 @@
         .result.win { background: rgba(46, 204, 113, 0.1); border: 1px solid var(--win); color: var(--win); }
         .result.lose { background: rgba(231, 76, 60, 0.1); border: 1px solid var(--lose); color: var(--lose); }
 
-        /* Инвентарь внизу */
-        .inv-panel {
-            background: var(--panel-bg);
-            border-radius: 12px;
-            padding: 10px;
-            border: 1px solid var(--border);
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        .inv-title { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
-        .inv-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 10px;
-            overflow-y: auto;
-            flex: 1;
-        }
-        .inv-grid::-webkit-scrollbar { width: 5px; }
-        .inv-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
-        .inv-item {
-            background: #1e232e;
-            border-radius: 8px;
-            padding: 5px;
-            text-align: center;
-            cursor: pointer;
-            border: 1px solid var(--border);
-            transition: 0.2s;
-        }
-        .inv-item:hover { border-color: var(--accent); }
-        .inv-item .skin-img { height: 40px; }
-        .inv-item .item-name { font-size: 10px; }
-        .inv-item .item-price { font-size: 11px; }
-
-        /* --- МАГАЗИН --- */
-        .shop-controls {
-            display: flex; gap: 10px; margin-bottom: 10px;
-        }
+        /* --- МАГАЗИН и ИНВЕНТАРЬ --- */
+        .shop-controls { display: flex; gap: 10px; margin-bottom: 10px; }
         .shop-controls input, .shop-controls select {
             flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border);
             background: var(--panel-bg); color: #fff; outline: none; font-size: 14px;
         }
-        .shop-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-            gap: 10px; padding-bottom: 20px;
-        }
-        .shop-item {
-            background: var(--panel-bg); border-radius: 10px; padding: 10px;
-            border: 1px solid var(--border); text-align: center; display: flex; flex-direction: column;
-        }
-        .shop-item .skin-img { height: 60px; }
-        .btn-buy {
-            background: var(--accent); color: #000; border: none; padding: 6px;
-            border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: auto;
-            transition: 0.2s; font-size: 12px;
-        }
-        .btn-buy:hover { background: #ffea00; }
+        .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; padding-bottom: 20px; }
+        .shop-item { background: var(--panel-bg); border-radius: 10px; padding: 10px; border: 1px solid var(--border); text-align: center; display: flex; flex-direction: column; }
+        .shop-item .skin-img { height: 60px; margin-top: 0; }
+        .btn-buy { background: var(--accent); color: #000; border: none; padding: 6px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: auto; font-size: 12px; }
 
-        /* --- ПРОФИЛЬ --- */
-        .profile-card {
-            background: var(--panel-bg); border-radius: 16px; padding: 20px;
-            border: 1px solid var(--border); text-align: center;
+        /* --- МОДАЛЬНЫЕ ОКНА --- */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;
+            padding: 20px;
         }
-        .avatar { font-size: 60px; margin-bottom: 10px; }
-        .profile-name { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
-        .stats {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;
+        .modal.active { display: flex; }
+        .modal-content {
+            background: var(--panel-bg); width: 100%; max-width: 400px; border-radius: 16px;
+            padding: 20px; border: 1px solid var(--border); text-align: center;
+            max-height: 80vh; display: flex; flex-direction: column;
         }
-        .stat-box {
-            background: #1e232e; border-radius: 10px; padding: 15px; border: 1px solid var(--border);
+        .modal-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: var(--accent); }
+        .modal-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 10px; overflow-y: auto; padding-right: 5px; max-height: 50vh;
         }
-        .stat-val { font-size: 18px; font-weight: bold; color: var(--accent); }
-        .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
+        .modal-item {
+            background: #1e232e; border-radius: 8px; padding: 5px; cursor: pointer;
+            border: 1px solid var(--border); transition: 0.2s; position: relative;
+        }
+        .modal-item:hover { border-color: var(--accent); }
+        .modal-item.selected { border: 2px solid var(--accent); background: #2a2f3a; }
+        .modal-item .skin-img { height: 40px; margin-top: 0; }
+        
+        .close-btn { background: #e74c3c; color: #fff; border: none; padding: 10px; border-radius: 8px; margin-top: 15px; cursor: pointer; font-weight: bold; width: 100%; }
 
-        /* --- НИЖНЕЕ МЕНЮ --- */
+        /* Количество */
+        .qty-control { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 20px 0; }
+        .qty-btn { background: #333; color: #fff; border: none; width: 40px; height: 40px; border-radius: 8px; font-size: 20px; cursor: pointer; }
+        .qty-val { font-size: 24px; font-weight: bold; color: var(--accent); }
+
+        /* НИЖНЕЕ МЕНЮ */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; width: 100%;
             background: var(--panel-bg); border-top: 1px solid var(--border);
-            display: flex; justify-content: space-around; padding: 10px 0;
-            z-index: 100;
+            display: flex; justify-content: space-around; padding: 10px 0; z-index: 100;
         }
-        .nav-item {
-            display: flex; flex-direction: column; align-items: center;
-            color: var(--text-muted); cursor: pointer; font-size: 10px; gap: 4px;
-        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); cursor: pointer; font-size: 10px; gap: 4px; }
         .nav-item.active { color: var(--accent); }
         .nav-icon { font-size: 20px; }
 
-        @media (max-width: 400px) {
-            .wheel { width: 140px; height: 140px; }
-            .wheel-inner { width: 110px; height: 110px; }
-            .chance-text { font-size: 20px; }
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--win); color: #fff; padding: 10px 20px; border-radius: 8px;
+            font-weight: bold; z-index: 2000; display: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
     </style>
 </head>
 <body>
-    <!-- Шапка -->
     <div class="header">
         <div style="font-weight: bold; font-size: 16px;">CS2 UPGRADER</div>
         <div class="balance" id="balanceDisplay">0 ₽</div>
     </div>
 
-    <!-- Основной контент -->
+    <div class="toast" id="toast">Успешно!</div>
+
     <div class="main-content">
-        
-        <!-- ВКЛАДКА АПГРЕЙД -->
+        <!-- АПГРЕЙД -->
         <div id="section-upgrader" class="content-section active">
             <div class="upgrader-layout">
-                <!-- Колесо -->
+                
+                <!-- Колесо и стрелка -->
                 <div class="circle-zone">
-                    <div class="arrow-pointer" id="arrow">▼</div>
                     <div class="wheel" id="wheel">
                         <div class="wheel-inner">
                             <div class="chance-text" id="chanceText">0%</div>
                             <div class="chance-label">Шанс</div>
                         </div>
                     </div>
+                    <div class="arrow-wrapper">
+                        <div class="arrow-pointer" id="arrow">▼</div>
+                    </div>
                 </div>
 
                 <!-- Панели ставки и цели -->
                 <div class="up-panels">
-                    <div class="up-panel">
-                        <div class="up-panel-title">ВАША СТАВКА</div>
+                    <div class="up-panel" onclick="openSelectModal('left')">
+                        <div class="up-panel-title">ВАША СТАВКА (Нажмите)</div>
                         <img src="" id="leftImg" class="skin-img" style="display:none;">
-                        <div id="leftEmpty" style="color:var(--text-muted); font-size:30px; margin-top:10px;">📦</div>
-                        <div class="item-name" id="leftName">Выберите скин</div>
+                        <div id="leftEmpty" style="color:var(--text-muted); font-size:30px;">📦</div>
+                        <div class="item-name" id="leftName">Выбрать скины</div>
                         <div class="item-price" id="leftPrice"></div>
                     </div>
-                    
                     <div style="display: flex; align-items: center; color: var(--text-muted);">→</div>
-
-                    <div class="up-panel">
-                        <div class="up-panel-title">ЦЕЛЬ</div>
+                    <div class="up-panel" onclick="openSelectModal('right')">
+                        <div class="up-panel-title">ЦЕЛЬ (Нажмите)</div>
                         <img src="" id="rightImg" class="skin-img">
                         <div class="item-name" id="rightName"></div>
                         <div class="item-price" id="rightPrice"></div>
                     </div>
                 </div>
 
-                <!-- Кнопки шанса -->
                 <div class="quick-btns">
                     <button class="quick-btn" onclick="setQuickTarget('x2')">x2</button>
                     <button class="quick-btn" onclick="setQuickTarget('x4')">x4</button>
@@ -299,72 +225,68 @@
                     <button class="quick-btn" onclick="setQuickTarget('75')">75%</button>
                 </div>
 
-                <button class="btn-upgrade" id="upgradeBtn" style="margin-top: 10px;">УЛУЧШИТЬ</button>
+                <button class="btn-upgrade" id="upgradeBtn">УЛУЧШИТЬ</button>
                 <div class="result" id="resultBox"></div>
-
-                <!-- Инвентарь на главной -->
-                <div class="inv-panel">
-                    <div class="inv-title">ВЫБЕРИТЕ СКИНЫ ДЛЯ СТАВКИ</div>
-                    <div class="inv-grid" id="mainInvGrid"></div>
-                </div>
             </div>
         </div>
 
-        <!-- ВКЛАДКА МАГАЗИН -->
+        <!-- МАГАЗИН -->
         <div id="section-shop" class="content-section">
             <div class="shop-controls">
-                <input type="text" id="searchInput" placeholder="Поиск по названию..." oninput="renderShop()">
+                <input type="text" id="searchInput" placeholder="Поиск..." oninput="renderShop()">
                 <select id="sortSelect" onchange="renderShop()">
-                    <option value="asc">По цене (дешевле)</option>
-                    <option value="desc">По цене (дороже)</option>
+                    <option value="asc">Дешевле</option>
+                    <option value="desc">Дороже</option>
                 </select>
             </div>
             <div class="shop-grid" id="shopGrid"></div>
         </div>
 
-        <!-- ВКЛАДКА ПРОФИЛЬ -->
-        <div id="section-profile" class="content-section">
-            <div class="profile-card">
-                <div class="avatar">👤</div>
-                <div class="profile-name">Мой Профиль</div>
-                <div style="color: var(--text-muted); font-size: 14px;">ID: #1337</div>
-                
-                <div class="stats">
-                    <div class="stat-box">
-                        <div class="stat-val" id="statBalance">0 ₽</div>
-                        <div class="stat-label">Баланс</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-val" id="statBestDrop">0 ₽</div>
-                        <div class="stat-label">Лучший дроп</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-val" id="statUpgrades">0</div>
-                        <div class="stat-label">Апгрейдов</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-val" id="statInvCount">0</div>
-                        <div class="stat-label">Скинов в инв.</div>
-                    </div>
-                </div>
-            </div>
+        <!-- ИНВЕНТАРЬ -->
+        <div id="section-inv" class="content-section">
+            <h2 style="text-align:center; margin-bottom:10px; font-size:16px; color:var(--text-muted);">МОЙ ИНВЕНТАРЬ</h2>
+            <div class="shop-grid" id="invGridFull"></div>
         </div>
-
     </div>
 
-    <!-- Нижнее меню -->
+    <!-- МОДАЛЬНОЕ ОКНО ВЫБОРА СКИНОВ -->
+    <div class="modal" id="selectModal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle">Выберите скин</div>
+            <div class="modal-grid" id="modalGrid"></div>
+            <button class="close-btn" onclick="closeModal('selectModal')">Закрыть</button>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО ПОКУПКИ -->
+    <div class="modal" id="buyModal">
+        <div class="modal-content" style="max-width: 300px;">
+            <div class="modal-title">Покупка</div>
+            <img src="" id="buyImg" style="width:100px; height:80px; object-fit:contain; margin:0 auto;">
+            <div style="font-weight:bold; margin-top:10px;" id="buyName"></div>
+            <div style="color:var(--accent); font-weight:bold; font-size:18px; margin-top:5px;" id="buyPrice"></div>
+            
+            <div class="qty-control">
+                <button class="qty-btn" onclick="changeQty(-1)">-</button>
+                <div class="qty-val" id="buyQty">1</div>
+                <button class="qty-btn" onclick="changeQty(1)">+</button>
+            </div>
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Итого: <span id="buyTotal" style="color:#fff;">0</span> ₽</div>
+            
+            <button class="btn-buy" style="padding:12px; font-size:16px;" onclick="confirmBuy()">Оплатить</button>
+            <button class="close-btn" onclick="closeModal('buyModal')">Отмена</button>
+        </div>
+    </div>
+
     <div class="bottom-nav">
         <div class="nav-item active" onclick="switchTab('section-upgrader', this)">
-            <div class="nav-icon">⚡</div>
-            <div>Апгрейд</div>
+            <div class="nav-icon">⚡</div><div>Апгрейд</div>
         </div>
         <div class="nav-item" onclick="switchTab('section-shop', this)">
-            <div class="nav-icon">🛒</div>
-            <div>Магазин</div>
+            <div class="nav-icon">🛒</div><div>Магазин</div>
         </div>
-        <div class="nav-item" onclick="switchTab('section-profile', this)">
-            <div class="nav-icon">👤</div>
-            <div>Профиль</div>
+        <div class="nav-item" onclick="switchTab('section-inv', this)">
+            <div class="nav-icon">🎒</div><div>Инвентарь</div>
         </div>
     </div>
 
@@ -372,77 +294,75 @@
         const tg = window.Telegram?.WebApp;
         if (tg) { tg.ready(); tg.expand(); }
 
-        // База скинов (надежные картинки Steam CDN)
-        const baseImg = "https://community.cloudflare.steamstatic.com/economy/image/";
+        // Официальная база картинок (открывается в браузере)
+        const baseImg = "https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/";
+        
         const ITEMS = [
-            { id: '1', name: 'P250 | Sand Dune', price: 10, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '2', name: 'Glock-18 | Candy Apple', price: 20, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '3', name: 'USP-S | Forest Leaves', price: 30, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '4', name: 'AK-47 | Safari Mesh', price: 50, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '5', name: 'M4A4 | Urban DDPAT', price: 60, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '6', name: 'AWP | Safari Mesh', price: 80, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '7', name: 'Desert Eagle | Mudder', price: 100, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '8', name: 'AK-47 | Slate', price: 120, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '9', name: 'USP-S | Ticket to Hell', price: 150, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '10', name: 'Glock-18 | Water Elemental', price: 180, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '11', name: 'M4A1-S | Cyrex', price: 200, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '12', name: 'AWP | Worm God', price: 220, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '13', name: 'AK-47 | Blue Laminate', price: 250, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '14', name: 'M4A4 | Evil Daimyo', price: 280, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '15', name: 'Desert Eagle | Crimson Web', price: 300, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '16', name: 'AWP | Electric Hive', price: 350, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '17', name: 'AK-47 | Redline', price: 400, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '18', name: 'USP-S | Cyrex', price: 450, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '19', name: 'M4A1-S | Guardian', price: 500, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '20', name: 'Desert Eagle | Code Red', price: 600, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '21', name: 'AWP | Neo-Noir', price: 700, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '22', name: 'AK-47 | Point Disarray', price: 800, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '23', name: 'M4A1-S | Printstream', price: 1000, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '24', name: 'USP-S | Neo-Noir', price: 1100, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '25', name: 'AK-47 | Bloodsport', price: 1200, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '26', name: 'AWP | Asiimov', price: 1500, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '27', name: 'M4A4 | Desolate Space', price: 1600, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '28', name: 'AK-47 | The Empress', price: 1800, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '29', name: 'Desert Eagle | Printstream', price: 2000, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '30', name: 'USP-S | Kill Confirmed', price: 2200, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '31', name: 'M4A4 | The Emperor', price: 2500, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '32', name: 'AK-47 | Vulcan', price: 2800, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '33', name: 'AWP | Hyper Beast', price: 3000, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '34', name: 'M4A1-S | Hyper Beast', price: 3500, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '35', name: 'AK-47 | Neon Revolution', price: 4000, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '36', name: 'AWP | Wildfire', price: 4500, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '37', name: 'AK-47 | Case Hardened', price: 5000, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '38', name: 'Desert Eagle | Blaze', price: 5500, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '39', name: 'AWP | Containment Breach', price: 6000, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '40', name: 'AK-47 | Fire Serpent', price: 7000, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '41', name: 'AWP | Medusa', price: 8000, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '42', name: 'M4A4 | Poseidon', price: 9000, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '43', name: 'AWP | Dragon Lore', price: 10000, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '44', name: 'M4A4 | Howl', price: 12000, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '45', name: 'AWP | Gungnir', price: 15000, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '46', name: 'AK-47 | Wild Lotus', price: 18000, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '47', name: 'AWP | The Prince', price: 20000, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '48', name: '★ Karambit | Doppler', price: 25000, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '49', name: '★ Butterfly Knife | Fade', price: 30000, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
-            { id: '50', name: '★ M9 Bayonet | Crimson Web', price: 35000, img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' }
+            { id: '1', name: 'P250 | Sand Dune', price: 10, img: baseImg + 'p250_sand_dune.png' },
+            { id: '2', name: 'Glock-18 | Candy Apple', price: 20, img: baseImg + 'glock18_candy_apple.png' },
+            { id: '3', name: 'USP-S | Forest Leaves', price: 30, img: baseImg + 'usp_s_forest_leaves.png' },
+            { id: '4', name: 'AK-47 | Safari Mesh', price: 50, img: baseImg + 'ak47_safari_mesh.png' },
+            { id: '5', name: 'M4A4 | Urban DDPAT', price: 60, img: baseImg + 'm4a4_urban_ddpat.png' },
+            { id: '6', name: 'AWP | Safari Mesh', price: 80, img: baseImg + 'awp_safari_mesh.png' },
+            { id: '7', name: 'Desert Eagle | Mudder', price: 100, img: baseImg + 'desert_eagle_mudder.png' },
+            { id: '8', name: 'AK-47 | Slate', price: 120, img: baseImg + 'ak47_slate.png' },
+            { id: '9', name: 'USP-S | Ticket to Hell', price: 150, img: baseImg + 'usp_s_ticket_to_hell.png' },
+            { id: '10', name: 'Glock-18 | Water Elemental', price: 180, img: baseImg + 'glock18_water_elemental.png' },
+            { id: '11', name: 'M4A1-S | Cyrex', price: 200, img: baseImg + 'm4a1_s_cyrex.png' },
+            { id: '12', name: 'AWP | Worm God', price: 220, img: baseImg + 'awp_worm_god.png' },
+            { id: '13', name: 'AK-47 | Blue Laminate', price: 250, img: baseImg + 'ak47_blue_laminate.png' },
+            { id: '14', name: 'M4A4 | Evil Daimyo', price: 280, img: baseImg + 'm4a4_evil_daimyo.png' },
+            { id: '15', name: 'Desert Eagle | Crimson Web', price: 300, img: baseImg + 'desert_eagle_crimson_web.png' },
+            { id: '16', name: 'AWP | Electric Hive', price: 350, img: baseImg + 'awp_electric_hive.png' },
+            { id: '17', name: 'AK-47 | Redline', price: 400, img: baseImg + 'ak47_redline.png' },
+            { id: '18', name: 'USP-S | Cyrex', price: 450, img: baseImg + 'usp_s_cyrex.png' },
+            { id: '19', name: 'M4A1-S | Guardian', price: 500, img: baseImg + 'm4a1_s_guardian.png' },
+            { id: '20', name: 'Desert Eagle | Code Red', price: 600, img: baseImg + 'desert_eagle_code_red.png' },
+            { id: '21', name: 'AWP | Neo-Noir', price: 700, img: baseImg + 'awp_neonoir.png' },
+            { id: '22', name: 'AK-47 | Point Disarray', price: 800, img: baseImg + 'ak47_point_disarray.png' },
+            { id: '23', name: 'M4A1-S | Printstream', price: 1000, img: baseImg + 'm4a1_s_printstream.png' },
+            { id: '24', name: 'USP-S | Neo-Noir', price: 1100, img: baseImg + 'usp_s_neonoir.png' },
+            { id: '25', name: 'AK-47 | Bloodsport', price: 1200, img: baseImg + 'ak47_bloodsport.png' },
+            { id: '26', name: 'AWP | Asiimov', price: 1500, img: baseImg + 'awp_asiimov.png' },
+            { id: '27', name: 'M4A4 | Desolate Space', price: 1600, img: baseImg + 'm4a4_desolate_space.png' },
+            { id: '28', name: 'AK-47 | The Empress', price: 1800, img: baseImg + 'ak47_the_empress.png' },
+            { id: '29', name: 'Desert Eagle | Printstream', price: 2000, img: baseImg + 'desert_eagle_printstream.png' },
+            { id: '30', name: 'USP-S | Kill Confirmed', price: 2200, img: baseImg + 'usp_s_kill_confirmed.png' },
+            { id: '31', name: 'M4A4 | The Emperor', price: 2500, img: baseImg + 'm4a4_the_emperor.png' },
+            { id: '32', name: 'AK-47 | Vulcan', price: 2800, img: baseImg + 'ak47_vulcan.png' },
+            { id: '33', name: 'AWP | Hyper Beast', price: 3000, img: baseImg + 'awp_hyper_beast.png' },
+            { id: '34', name: 'M4A1-S | Hyper Beast', price: 3500, img: baseImg + 'm4a1_s_hyper_beast.png' },
+            { id: '35', name: 'AK-47 | Neon Revolution', price: 4000, img: baseImg + 'ak47_neon_revolution.png' },
+            { id: '36', name: 'AWP | Wildfire', price: 4500, img: baseImg + 'awp_wildfire.png' },
+            { id: '37', name: 'AK-47 | Case Hardened', price: 5000, img: baseImg + 'ak47_case_hardened.png' },
+            { id: '38', name: 'Desert Eagle | Blaze', price: 5500, img: baseImg + 'desert_eagle_blaze.png' },
+            { id: '39', name: 'AWP | Containment Breach', price: 6000, img: baseImg + 'awp_containment_breach.png' },
+            { id: '40', name: 'AK-47 | Fire Serpent', price: 7000, img: baseImg + 'ak47_fire_serpent.png' },
+            { id: '41', name: 'AWP | Medusa', price: 8000, img: baseImg + 'awp_medusa.png' },
+            { id: '42', name: 'M4A4 | Poseidon', price: 9000, img: baseImg + 'm4a4_poseidon.png' },
+            { id: '43', name: 'AWP | Dragon Lore', price: 10000, img: baseImg + 'awp_dragon_lore.png' },
+            { id: '44', name: 'M4A4 | Howl', price: 12000, img: baseImg + 'm4a4_howl.png' },
+            { id: '45', name: 'AWP | Gungnir', price: 15000, img: baseImg + 'awp_gungnir.png' },
+            { id: '46', name: 'AK-47 | Wild Lotus', price: 18000, img: baseImg + 'ak47_wild_lotus.png' },
+            { id: '47', name: 'AWP | The Prince', price: 20000, img: baseImg + 'awp_the_prince.png' },
+            { id: '48', name: '★ Karambit | Doppler', price: 25000, img: baseImg + 'knife_karambit_doppler.png' },
+            { id: '49', name: '★ Butterfly Knife | Fade', price: 30000, img: baseImg + 'knife_butterfly_fade.png' },
+            { id: '50', name: '★ M9 Bayonet | Crimson Web', price: 35000, img: baseImg + 'knife_m9_bayonet_crimson_web.png' }
         ];
 
-        const STORAGE_KEY = 'cs_upgrader_v10';
+        const STORAGE_KEY = 'cs_upgrader_v12';
         let state = loadState();
-        let selectedLeft = null; // Скин для ставки
-        let selectedRight = ITEMS[16]; // Цель (по умолчанию AK Redline)
-        let upgradeCounter = 0; // Счетчик для секретного шанса
+        let selectedLeft = []; // Теперь это массив скинов
+        let selectedRight = ITEMS[16]; 
+        let upgradeCounter = 0; 
+        
+        // Переменные для покупки
+        let currentBuyItem = null;
+        let currentBuyQty = 1;
 
         function loadState() {
             const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) { 
-                try { 
-                    const parsed = JSON.parse(saved); 
-                    if (!parsed.bestDrop) parsed.bestDrop = 0;
-                    if (!parsed.upgradesCount) parsed.upgradesCount = 0;
-                    return parsed; 
-                } catch (e) {} 
-            }
+            if (saved) { try { return JSON.parse(saved); } catch (e) {} }
             return { balance: 1000, inventory: [], bestDrop: 0, upgradesCount: 0 };
         }
 
@@ -450,101 +370,209 @@
         
         function updateUI() {
             document.getElementById('balanceDisplay').textContent = state.balance.toLocaleString() + ' ₽';
-            document.getElementById('statBalance').textContent = state.balance.toLocaleString() + ' ₽';
-            document.getElementById('statBestDrop').textContent = state.bestDrop.toLocaleString() + ' ₽';
-            document.getElementById('statUpgrades').textContent = state.upgradesCount;
-            document.getElementById('statInvCount').textContent = state.inventory.length;
+        }
+        
+        function showToast(text) {
+            const t = document.getElementById('toast');
+            t.textContent = text;
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 2500);
         }
 
-        // Вкладки
         window.switchTab = function(tabId, el) {
             document.querySelectorAll('.content-section').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             el.classList.add('active');
-            
             if (tabId === 'section-shop') renderShop();
-            if (tabId === 'section-upgrader') renderMainInventory();
+            if (tabId === 'section-inv') renderInv();
         }
 
-        // Отрисовка Магазина
+        // --- МАГАЗИН ---
         window.renderShop = function() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const sort = document.getElementById('sortSelect').value;
             const grid = document.getElementById('shopGrid');
             
             let filtered = ITEMS.filter(i => i.name.toLowerCase().includes(query));
-            
             if (sort === 'asc') filtered.sort((a, b) => a.price - b.price);
             else if (sort === 'desc') filtered.sort((a, b) => b.price - a.price);
             
             grid.innerHTML = filtered.map(item => `
                 <div class="shop-item">
-                    <img src="${item.img}" class="skin-img" loading="lazy" onerror="this.src='https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE'">
+                    <img src="${item.img}" class="skin-img" loading="lazy">
                     <div class="item-name" title="${item.name}">${item.name}</div>
                     <div class="item-price">${item.price.toLocaleString()} ₽</div>
-                    <button class="btn-buy" onclick="buyItem('${item.id}')">Купить</button>
+                    <button class="btn-buy" onclick="openBuyModal('${item.id}')">Купить</button>
                 </div>
             `).join('');
         }
 
-        window.buyItem = function(id) {
-            const item = ITEMS.find(i => i.id === id);
-            if (state.balance < item.price) return alert('Недостаточно средств!');
-            state.balance -= item.price;
-            state.inventory.push(item);
-            saveState();
-            updateUI();
+        window.openBuyModal = function(id) {
+            currentBuyItem = ITEMS.find(i => i.id === id);
+            currentBuyQty = 1;
+            document.getElementById('buyImg').src = currentBuyItem.img;
+            document.getElementById('buyName').textContent = currentBuyItem.name;
+            document.getElementById('buyPrice').textContent = currentBuyItem.price.toLocaleString() + ' ₽';
+            document.getElementById('buyQty').textContent = currentBuyQty;
+            updateBuyTotal();
+            document.getElementById('buyModal').classList.add('active');
         }
 
-        // Отрисовка Инвентаря на главной
-        function renderMainInventory() {
-            const grid = document.getElementById('mainInvGrid');
+        window.changeQty = function(amount) {
+            currentBuyQty += amount;
+            if (currentBuyQty < 1) currentBuyQty = 1;
+            document.getElementById('buyQty').textContent = currentBuyQty;
+            updateBuyTotal();
+        }
+
+        function updateBuyTotal() {
+            document.getElementById('buyTotal').textContent = (currentBuyItem.price * currentBuyQty).toLocaleString();
+        }
+
+        window.confirmBuy = function() {
+            const totalPrice = currentBuyItem.price * currentBuyQty;
+            if (state.balance < totalPrice) return alert('Недостаточно средств!');
+            
+            state.balance -= totalPrice;
+            for(let i=0; i<currentBuyQty; i++) {
+                state.inventory.push(currentBuyItem);
+            }
+            saveState();
+            updateUI();
+            closeModal('buyModal');
+            showToast(`Успешно куплено: ${currentBuyItem.name} (x${currentBuyQty})`);
+        }
+
+        // --- ИНВЕНТАРЬ ---
+        function renderInv() {
+            const grid = document.getElementById('invGridFull');
             if (state.inventory.length === 0) {
-                grid.innerHTML = '<div style="color:var(--text-muted); font-size:12px; grid-column: 1/-1; text-align:center;">Инвентарь пуст</div>';
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:var(--text-muted);">Пусто</div>';
                 return;
             }
             grid.innerHTML = state.inventory.map((item, index) => `
-                <div class="inv-item" onclick="selectLeftItem(${index})">
+                <div class="shop-item">
                     <img src="${item.img}" class="skin-img" loading="lazy">
-                    <div class="item-name">${item.name.split('|')[0]}</div>
+                    <div class="item-name">${item.name}</div>
                     <div class="item-price">${item.price} ₽</div>
                 </div>
             `).join('');
         }
 
-        // Выбор скина для апгрейда
-        window.selectLeftItem = function(index) {
-            selectedLeft = state.inventory[index];
-            selectedLeft.index = index;
+        // --- МОДАЛЬНОЕ ОКНО ВЫБОРА ---
+        let modalMode = 'left'; 
+        
+        window.openSelectModal = function(mode) {
+            modalMode = mode;
+            const grid = document.getElementById('modalGrid');
+            document.getElementById('modalTitle').textContent = mode === 'left' ? 'Ваша ставка (можно несколько)' : 'Выберите цель';
             
-            document.getElementById('leftImg').src = selectedLeft.img;
-            document.getElementById('leftImg').style.display = 'block';
-            document.getElementById('leftEmpty').style.display = 'none';
-            document.getElementById('leftName').textContent = selectedLeft.name;
-            document.getElementById('leftPrice').textContent = selectedLeft.price.toLocaleString() + ' ₽';
+            if (mode === 'left') {
+                if (state.inventory.length === 0) {
+                    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#888;">Инвентарь пуст. Купите скины в магазине.</div>';
+                } else {
+                    grid.innerHTML = state.inventory.map((item, index) => {
+                        const isSelected = selectedLeft.some(i => i.index === index);
+                        return `
+                        <div class="modal-item ${isSelected ? 'selected' : ''}" onclick="toggleLeftItem(${index})">
+                            <img src="${item.img}" class="skin-img">
+                            <div class="item-name">${item.name.split('|')[0]}</div>
+                            <div class="item-price">${item.price} ₽</div>
+                        </div>`;
+                    }).join('');
+                }
+            } else {
+                grid.innerHTML = ITEMS.map(item => `
+                    <div class="modal-item" onclick="setRightItem('${item.id}')">
+                        <img src="${item.img}" class="skin-img">
+                        <div class="item-name">${item.name.split('|')[0]}</div>
+                        <div class="item-price">${item.price} ₽</div>
+                    </div>
+                `).join('');
+            }
+            document.getElementById('selectModal').classList.add('active');
+        }
+
+        window.closeModal = function(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        window.toggleLeftItem = function(index) {
+            const item = state.inventory[index];
+            const existingIdx = selectedLeft.findIndex(i => i.index === index);
             
+            if (existingIdx > -1) {
+                selectedLeft.splice(existingIdx, 1);
+            } else {
+                selectedLeft.push({ ...item, index });
+            }
+            openSelectModal('left');
+            updateLeftPanel();
+        }
+
+        window.setRightItem = function(id) {
+            selectedRight = ITEMS.find(i => i.id === id);
+            updateRightPanel();
+            closeModal('selectModal');
+        }
+
+        function updateLeftPanel() {
+            const img = document.getElementById('leftImg');
+            const empty = document.getElementById('leftEmpty');
+            const name = document.getElementById('leftName');
+            const price = document.getElementById('leftPrice');
+            
+            if (selectedLeft.length === 0) {
+                img.style.display = 'none'; empty.style.display = 'block';
+                name.textContent = 'Выбрать скины'; price.textContent = '';
+            } else if (selectedLeft.length === 1) {
+                img.style.display = 'block'; empty.style.display = 'none';
+                img.src = selectedLeft[0].img;
+                name.textContent = selectedLeft[0].name;
+                price.textContent = selectedLeft[0].price.toLocaleString() + ' ₽';
+            } else {
+                img.style.display = 'none'; empty.style.display = 'block';
+                empty.textContent = '📦';
+                const total = selectedLeft.reduce((sum, item) => sum + item.price, 0);
+                name.textContent = `Выбрано: ${selectedLeft.length} шт.`;
+                price.textContent = total.toLocaleString() + ' ₽';
+            }
             updateChanceUI();
         }
 
-        window.selectTarget = function(id) {
-            selectedRight = ITEMS.find(i => i.id === id);
+        function updateRightPanel() {
+            document.getElementById('rightImg').src = selectedRight.img;
             document.getElementById('rightName').textContent = selectedRight.name;
             document.getElementById('rightPrice').textContent = selectedRight.price.toLocaleString() + ' ₽';
-            document.getElementById('rightImg').src = selectedRight.img;
             updateChanceUI();
+        }
+
+        function updateChanceUI() {
+            const totalLeftPrice = selectedLeft.reduce((sum, item) => sum + item.price, 0);
+            if (totalLeftPrice === 0) {
+                document.getElementById('chanceText').textContent = '0%';
+                document.getElementById('wheel').style.background = `conic-gradient(var(--accent) 0deg, #222 0deg)`;
+                return;
+            }
+            let chance = totalLeftPrice / selectedRight.price;
+            if (chance > 1) chance = 1;
+            const percent = (chance * 100).toFixed(1);
+            document.getElementById('chanceText').textContent = percent + '%';
+            document.getElementById('wheel').style.background = `conic-gradient(var(--accent) ${chance * 360}deg, #222 ${chance * 360}deg)`;
         }
 
         window.setQuickTarget = function(mode) {
-            if (!selectedLeft) return alert('Сначала выберите скин из инвентаря!');
+            const totalLeftPrice = selectedLeft.reduce((sum, item) => sum + item.price, 0);
+            if (totalLeftPrice === 0) return alert('Выберите скины для ставки!');
             
             let targetPrice;
-            if (mode === 'x2') targetPrice = selectedLeft.price * 2;
-            else if (mode === 'x4') targetPrice = selectedLeft.price * 4;
-            else if (mode === 'x8') targetPrice = selectedLeft.price * 8;
-            else if (mode === '35') targetPrice = selectedLeft.price / 0.35;
-            else if (mode === '55') targetPrice = selectedLeft.price / 0.55;
-            else if (mode === '75') targetPrice = selectedLeft.price / 0.75;
+            if (mode === 'x2') targetPrice = totalLeftPrice * 2;
+            else if (mode === 'x4') targetPrice = totalLeftPrice * 4;
+            else if (mode === 'x8') targetPrice = totalLeftPrice * 8;
+            else if (mode === '35') targetPrice = totalLeftPrice / 0.35;
+            else if (mode === '55') targetPrice = totalLeftPrice / 0.55;
+            else if (mode === '75') targetPrice = totalLeftPrice / 0.75;
 
             let closest = ITEMS[0];
             let minDiff = Infinity;
@@ -552,92 +580,92 @@
                 const diff = Math.abs(item.price - targetPrice);
                 if (diff < minDiff) { minDiff = diff; closest = item; }
             }
-            selectTarget(closest.id);
+            setRightItem(closest.id);
         }
 
-        function updateChanceUI() {
-            if (!selectedLeft) {
-                document.getElementById('chanceText').textContent = '0%';
-                document.getElementById('wheel').style.background = `conic-gradient(var(--accent) 0deg, #222 0deg)`;
-                return;
-            }
-            let chance = selectedLeft.price / selectedRight.price;
-            if (chance > 1) chance = 1;
-            const percent = (chance * 100).toFixed(1);
-            document.getElementById('chanceText').textContent = percent + '%';
-            document.getElementById('wheel').style.background = `conic-gradient(var(--accent) ${chance * 360}deg, #222 ${chance * 360}deg)`;
-        }
-
-        // Логика Апгрейда
+        // --- АПГРЕЙД ---
         document.getElementById('upgradeBtn').addEventListener('click', () => {
-            if (!selectedLeft) return alert('Выберите скин из инвентаря!');
-            if (selectedLeft.price >= selectedRight.price) return alert('Цена цели должна быть выше!');
+            const totalLeftPrice = selectedLeft.reduce((sum, item) => sum + item.price, 0);
+            if (totalLeftPrice === 0) return alert('Выберите скины из инвентаря!');
+            if (totalLeftPrice >= selectedRight.price) return alert('Ставка должна быть меньше цели!');
 
-            const chance = selectedLeft.price / selectedRight.price;
+            const chance = totalLeftPrice / selectedRight.price;
             let targetToWin = selectedRight;
             
-            // Секретный шанс каждый 15-й апгрейд
             upgradeCounter++;
             let secretDrop = false;
             if (upgradeCounter >= 15) {
                 upgradeCounter = 0;
-                if (Math.random() < 0.3) { // 30% шанс на секретный дроп
+                if (Math.random() < 0.3) {
                     secretDrop = true;
-                    targetToWin = ITEMS[43]; // AWP Dragon Lore
-                    if (selectedLeft.price > 5000) targetToWin = ITEMS[47]; // AWP The Prince
+                    targetToWin = ITEMS[43];
+                    if (totalLeftPrice > 5000) targetToWin = ITEMS[47];
                 }
             }
 
-            // Удаляем скин
-            state.inventory.splice(selectedLeft.index, 1);
+            // Удаляем выбранные скины из инвентаря
+            const indicesToRemove = selectedLeft.map(i => i.index).sort((a,b) => b-a);
+            indicesToRemove.forEach(idx => state.inventory.splice(idx, 1));
+
+            // Крутим стрелку
+            const arrow = document.getElementById('arrow');
+            const win = secretDrop || (Math.random() < chance);
             
-            // Анимация колеса
-            const wheel = document.getElementById('wheel');
-            let currentDeg = 0;
-            const spinInterval = setInterval(() => {
-                currentDeg += 30;
-                wheel.style.background = `conic-gradient(var(--accent) ${currentDeg}deg, #222 ${currentDeg}deg)`;
-            }, 30);
+            let targetDeg;
+            if (win) {
+                // Если выиграли, останавливаем на 0 градусов (наверху)
+                targetDeg = 360 * 5; 
+            } else {
+                // Если проиграли, останавливаем где-то в серой зоне (от 10 до 350 градусов)
+                const grayStart = chance * 360;
+                const randomPos = grayStart + Math.random() * (360 - grayStart);
+                targetDeg = 360 * 5 + randomPos;
+            }
+
+            arrow.style.transform = `rotate(${targetDeg}deg)`;
+
+            // Блокируем кнопку на время анимации
+            document.getElementById('upgradeBtn').disabled = true;
+            document.getElementById('resultBox').style.display = 'none';
 
             setTimeout(() => {
-                clearInterval(spinInterval);
-                
-                const win = secretDrop || (Math.random() < chance);
                 const box = document.getElementById('resultBox');
-                
                 if (win) {
                     state.inventory.push(targetToWin);
                     state.upgradesCount++;
                     if (targetToWin.price > state.bestDrop) state.bestDrop = targetToWin.price;
-                    
                     box.className = 'result win';
                     box.textContent = `🎉 Выигрыш! ${targetToWin.name}`;
                 } else {
                     state.upgradesCount++;
                     box.className = 'result lose';
-                    box.textContent = `💀 Не повезло. Скин сгорел.`;
+                    box.textContent = `💀 Не повезло. Скины сгорели.`;
                 }
                 box.style.display = 'block';
                 
                 saveState();
-                renderMainInventory();
                 updateUI();
+                renderInv();
                 
-                selectedLeft = null;
-                document.getElementById('leftImg').style.display = 'none';
-                document.getElementById('leftEmpty').style.display = 'block';
-                document.getElementById('leftName').textContent = 'Выберите скин';
-                document.getElementById('leftPrice').textContent = '';
-                updateChanceUI();
+                selectedLeft = [];
+                updateLeftPanel();
                 
-            }, 1000);
+                // Возвращаем стрелку в исходное положение
+                setTimeout(() => {
+                    arrow.style.transition = 'none';
+                    arrow.style.transform = 'rotate(0deg)';
+                    setTimeout(() => arrow.style.transition = 'transform 3s cubic-bezier(0.1, 0.7, 0.1, 1);', 50);
+                }, 1000);
+
+                document.getElementById('upgradeBtn').disabled = false;
+            }, 3000); // 3 секунды на анимацию
         });
 
         // Инициализация
         updateUI();
-        selectTarget('17'); // AK Redline
-        renderMainInventory();
-        
+        setRightItem('17');
+        renderShop();
+        renderInv();
     </script>
 </body>
 </html>
