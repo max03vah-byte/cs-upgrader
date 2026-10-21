@@ -15,6 +15,7 @@
             --border: #2a2f3a;
             --win: #2ecc71;
             --lose: #e74c3c;
+            --sell: #3498db;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         body {
@@ -116,9 +117,13 @@
             background: var(--panel-bg); color: #fff; outline: none; font-size: 14px;
         }
         .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; padding-bottom: 20px; }
-        .shop-item { background: var(--panel-bg); border-radius: 10px; padding: 10px; border: 1px solid var(--border); text-align: center; display: flex; flex-direction: column; }
+        .shop-item { background: var(--panel-bg); border-radius: 10px; padding: 10px; border: 1px solid var(--border); text-align: center; display: flex; flex-direction: column; position: relative; }
         .shop-item .skin-img { height: 60px; margin-top: 0; }
         .btn-buy { background: var(--accent); color: #000; border: none; padding: 6px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: auto; font-size: 12px; }
+        
+        /* Кнопка продажи */
+        .btn-sell { background: var(--sell); color: #fff; border: none; padding: 6px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 5px; font-size: 12px; }
+        .btn-sell:hover { background: #2980b9; }
 
         /* --- МОДАЛЬНЫЕ ОКНА --- */
         .modal {
@@ -140,6 +145,7 @@
         .modal-item {
             background: #1e232e; border-radius: 8px; padding: 5px; cursor: pointer;
             border: 1px solid var(--border); transition: 0.2s; position: relative;
+            display: flex; flex-direction: column; justify-content: space-between;
         }
         .modal-item:hover { border-color: var(--accent); }
         .modal-item.selected { border: 2px solid var(--accent); background: #2a2f3a; }
@@ -301,6 +307,7 @@
         </div>
     </div>
 
+    <!-- МОДАЛЬНОЕ ОКНО ВЫБОРА -->
     <div class="modal" id="selectModal">
         <div class="modal-content">
             <div class="modal-title" id="modalTitle">Выберите скин</div>
@@ -309,6 +316,7 @@
         </div>
     </div>
 
+    <!-- МОДАЛЬНОЕ ОКНО ПОКУПКИ -->
     <div class="modal" id="buyModal">
         <div class="modal-content" style="max-width: 300px;">
             <div class="modal-title">Покупка</div>
@@ -333,7 +341,6 @@
         if (tg) { tg.ready(); tg.expand(); }
 
         const ADMIN_ID = 1935313766; 
-
         const baseImg = "https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/";
         
         const ITEMS = [
@@ -389,7 +396,7 @@
             { id: '50', name: '★ M9 Bayonet | Crimson Web', price: 35000, img: baseImg + 'knife_m9_bayonet_crimson_web.png' }
         ];
 
-        const STORAGE_KEY = 'cs_upgrader_v14';
+        const STORAGE_KEY = 'cs_upgrader_v15';
         let state = loadState();
         let selectedLeft = [];
         let selectedRight = ITEMS[16]; 
@@ -401,7 +408,6 @@
         function loadState() {
             const saved = localStorage.getItem(STORAGE_KEY);
             let currentState = { balance: 1000, inventory: [], bestDrop: 0, upgradesCount: 0 };
-            
             if (saved) { try { currentState = JSON.parse(saved); } catch (e) {} }
             return currentState;
         }
@@ -423,7 +429,6 @@
             setTimeout(() => t.style.display = 'none', 2500);
         }
 
-        // ПРОВЕРКА БОНУСА (вызывается после проигрыша или при загрузке)
         function checkPoorBonus() {
             if (state.balance < 10) {
                 state.balance += 400;
@@ -460,6 +465,30 @@
             if (tabId === 'section-shop') renderShop();
             if (tabId === 'section-inv') renderInv();
             if (tabId === 'section-profile') updateUI();
+        }
+
+        // --- ПРОДАЖА СКИНА ---
+        window.sellItem = function(index, event) {
+            if (event) event.stopPropagation(); // Чтобы не открывалось окно выбора при клике на кнопку "Продать"
+            
+            const item = state.inventory[index];
+            const sellPrice = Math.floor(item.price * 0.7); // Продажа за 70% стоимости
+            
+            if (confirm(`Вы уверены, что хотите продать ${item.name} за ${sellPrice.toLocaleString()} ₽?`)) {
+                state.balance += sellPrice;
+                state.inventory.splice(index, 1);
+                
+                // Если этот скин был выбран для апгрейда, убираем его оттуда
+                selectedLeft = selectedLeft.filter(i => i.index !== index);
+                // Обновляем индексы оставшихся выбранных скинов
+                selectedLeft.forEach(i => { if (i.index > index) i.index--; });
+                
+                saveState();
+                updateUI();
+                renderInv();
+                updateLeftPanel();
+                showToast(`Скин продан за ${sellPrice.toLocaleString()} ₽`);
+            }
         }
 
         window.renderShop = function() {
@@ -519,6 +548,7 @@
             updateUI();
         }
 
+        // --- ОТРИСОВКА ИНВЕНТАРЯ С КНОПКОЙ ПРОДАЖИ ---
         function renderInv() {
             const grid = document.getElementById('invGridFull');
             if (state.inventory.length === 0) {
@@ -528,8 +558,9 @@
             grid.innerHTML = state.inventory.map((item, index) => `
                 <div class="shop-item">
                     <img src="${item.img}" class="skin-img" loading="lazy">
-                    <div class="item-name">${item.name}</div>
+                    <div class="item-name" title="${item.name}">${item.name}</div>
                     <div class="item-price">${item.price} ₽</div>
+                    <button class="btn-sell" onclick="sellItem(${index}, event)">Продать за ${Math.floor(item.price * 0.7)} ₽</button>
                 </div>
             `).join('');
         }
@@ -552,6 +583,8 @@
                             <img src="${item.img}" class="skin-img">
                             <div class="item-name">${item.name.split('|')[0]}</div>
                             <div class="item-price">${item.price} ₽</div>
+                            <!-- Кнопка продажи прямо в окне выбора -->
+                            <button class="btn-sell" style="margin-top: 5px; padding: 4px; font-size: 10px;" onclick="sellItem(${index}, event)">Продать</button>
                         </div>`;
                     }).join('');
                 }
@@ -725,7 +758,6 @@
 
                 document.getElementById('upgradeBtn').disabled = false;
                 
-                // Проверка бонуса после апгрейда (если скины сгорели и денег нет)
                 checkPoorBonus();
                 updateUI();
             }, 3000);
