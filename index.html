@@ -152,6 +152,112 @@
         }
         .load-more-btn:hover { background: rgba(255, 215, 0, 0.1); }
 
+        /* --- ПРОФИЛЬ --- */
+        .profile-section {
+            background: var(--panel-bg); border-radius: 16px; padding: 15px;
+            border: 1px solid var(--border); margin-bottom: 15px;
+        }
+        
+        .profile-top {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 15px;
+        }
+        
+        .profile-left { display: flex; gap: 15px; align-items: center; }
+        .avatar-circle {
+            width: 70px; height: 70px; border-radius: 50%; background: #2a2f3a;
+            display: flex; justify-content: center; align-items: center; font-size: 40px;
+            border: 2px solid var(--accent);
+        }
+        
+        .profile-info { display: flex; flex-direction: column; gap: 5px; }
+        .profile-name { font-size: 20px; font-weight: bold; }
+        .profile-id { font-size: 12px; color: var(--text-muted); }
+        .profile-balance { font-size: 18px; font-weight: bold; color: var(--accent); margin-top: 5px; }
+        
+        .btn-edit { background: #2a2f3a; border: 1px solid var(--border); color: #fff; padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; margin-top: 5px; width: fit-content; }
+        
+        .best-drop {
+            text-align: right;
+            display: flex; flex-direction: column; align-items: flex-end;
+        }
+        .best-drop-title { font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
+        .best-drop-img { width: 80px; height: 50px; object-fit: contain; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 5px; margin-bottom: 5px; border: 1px solid var(--border); }
+        .best-drop-price { font-size: 14px; color: var(--win); font-weight: bold; }
+
+        .level-bar-container {
+            background: #0d1017; border-radius: 10px; padding: 10px; margin-bottom: 15px; border: 1px solid var(--border);
+        }
+        .level-header { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
+        .level-title { font-size: 16px; font-weight: bold; color: var(--accent); }
+        .level-progress-bg { width: 100%; height: 8px; background: #2a2f3a; border-radius: 4px; overflow: hidden; }
+        .level-progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
+
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+        }
+        .stat-box {
+            background: #1e232e; border-radius: 12px; padding: 15px;
+            border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center;
+        }
+        .stat-icon { font-size: 16px; margin-bottom: 5px; }
+        .stat-val { font-size: 18px; font-weight: bold; color: var(--accent); }
+        .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; }
+        .stat-val.win { color: var(--win); }
+        .stat-val.lose { color: var(--lose); }
+        
+        .action-buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+        .transfer-btn {
+            background: #2a2f3a; color: #fff; border: 1px solid var(--border); width: 100%;
+            padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        .transfer-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .promo-btn { background: linear-gradient(135deg, #27ae60, #2ecc71); color: #fff; border: none; }
+        .admin-btn { background: linear-gradient(135deg, #e74c3c, #c0392b); color: #fff; border: none; }
+
+        /* --- ИСТОРИЯ АПГРЕЙДОВ --- */
+        .history-section {
+            background: var(--panel-bg); border-radius: 16px; padding: 15px;
+            border: 1px solid var(--border);
+        }
+        .history-header {
+            font-size: 14px; color: var(--text-muted); margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            font-weight: bold;
+        }
+        .history-item {
+            background: #1e232e; border-radius: 10px; padding: 10px; margin-bottom: 10px;
+            border: 1px solid var(--border);
+            display: flex; flex-direction: column; gap: 5px;
+        }
+        .history-item.win { border-color: rgba(46, 204, 113, 0.3); }
+        .history-item.lose { border-color: rgba(231, 76, 60, 0.3); }
+        
+        .history-top { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; }
+        .history-status.win { color: var(--win); }
+        .history-status.lose { color: var(--lose); }
+        .history-chance { color: var(--accent); }
+        
+        .history-content {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 5px;
+        }
+        
+        .history-skin {
+            display: flex; gap: 10px; align-items: center; flex: 1;
+            overflow: hidden;
+        }
+        .history-img {
+            width: 50px; height: 40px; object-fit: contain; background: rgba(0,0,0,0.2); border-radius: 6px; padding: 2px;
+        }
+        .history-details {
+            display: flex; flex-direction: column; overflow: hidden; width: 100%;
+        }
+        .history-name { font-size: 12px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .history-price { font-size: 11px; color: var(--text-muted); }
+        
+        .history-arrow { font-size: 18px; color: var(--text-muted); margin: 0 10px; }
+
         /* --- МОДАЛЬНЫЕ ОКНА --- */
         .modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -218,26 +324,6 @@
         .qty-control { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 20px 0; }
         .qty-btn { background: #333; color: #fff; border: none; width: 40px; height: 40px; border-radius: 8px; font-size: 20px; cursor: pointer; }
         .qty-val { font-size: 24px; font-weight: bold; color: var(--accent); }
-
-        /* ПРОФИЛЬ */
-        .profile-card {
-            background: var(--panel-bg); border-radius: 16px; padding: 20px;
-            border: 1px solid var(--border); text-align: center;
-        }
-        .avatar { font-size: 60px; margin-bottom: 10px; }
-        .profile-name { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
-        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; margin-bottom: 20px;}
-        .stat-box { background: #1e232e; border-radius: 10px; padding: 15px; border: 1px solid var(--border); }
-        .stat-val { font-size: 18px; font-weight: bold; color: var(--accent); }
-        .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
-
-        .transfer-btn {
-            background: #2a2f3a; color: #fff; border: 1px solid var(--border); width: 100%;
-            padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-bottom: 10px;
-        }
-        .transfer-btn:hover { border-color: var(--accent); color: var(--accent); }
-        .promo-btn { background: linear-gradient(135deg, #27ae60, #2ecc71); color: #fff; border: none; }
-        .admin-btn { background: linear-gradient(135deg, #e74c3c, #c0392b); color: #fff; border: none; }
 
         /* НИЖНЕЕ МЕНЮ */
         .bottom-nav {
@@ -358,31 +444,82 @@
 
             <!-- ПРОФИЛЬ -->
             <div id="section-profile" class="content-section">
-                <div class="profile-card">
-                    <div class="avatar">👤</div>
-                    <div class="profile-name">Мой Профиль</div>
-                    <div style="color: var(--text-muted); font-size: 14px;">ID: #1337</div>
-                    <div class="stats">
-                        <div class="stat-box">
-                            <div class="stat-val" id="statBalance">0 ₽</div>
-                            <div class="stat-label">Баланс</div>
+                <div class="profile-section">
+                    <div class="profile-top">
+                        <div class="profile-left">
+                            <div class="avatar-circle">👤</div>
+                            <div class="profile-info">
+                                <div class="profile-name" id="profileNameDisplay">MAK...</div>
+                                <div class="profile-id">ID: #1337</div>
+                                <button class="btn-edit" onclick="editProfileName()">✎ Изменить</button>
+                            </div>
                         </div>
-                        <div class="stat-box">
-                            <div class="stat-val" id="statBestDrop">0 ₽</div>
-                            <div class="stat-label">Лучший дроп</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-val" id="statUpgrades">0</div>
-                            <div class="stat-label">Апгрейдов</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-val" id="statInvCount">0</div>
-                            <div class="stat-label">Скинов</div>
+                        <div class="best-drop">
+                            <div class="best-drop-title">Лучший дроп</div>
+                            <img src="" id="bestDropImg" class="best-drop-img" style="display:none;">
+                            <div id="bestDropEmpty" style="font-size:20px; color:var(--text-muted);">Нет</div>
+                            <div class="best-drop-price" id="bestDropPrice">0 ₽</div>
                         </div>
                     </div>
-                    <button class="transfer-btn" onclick="openTransferModal()">💸 Перевести деньги</button>
-                    <button class="transfer-btn promo-btn" onclick="openPromoModal()">🎁 Ввести промокод</button>
-                    <button class="transfer-btn admin-btn" id="adminSettingsBtn" onclick="openAdminModal()" style="display: none;">⚙️ Настройки шанса</button>
+
+                    <div class="level-bar-container">
+                        <div class="level-header">
+                            <div class="level-title" id="levelDisplay">УРОВЕНЬ 1</div>
+                            <div style="color:var(--text-muted); font-size:11px;" id="levelProgressText">0 / 10</div>
+                        </div>
+                        <div class="level-progress-bg">
+                            <div class="level-progress-fill" id="levelProgressBar"></div>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-icon">🔄</div>
+                            <div class="stat-val" id="statTotalUpgrades">0</div>
+                            <div class="stat-label">Апгрейды</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-icon">✅</div>
+                            <div class="stat-val win" id="statWins">0</div>
+                            <div class="stat-label">Победы</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-icon">❌</div>
+                            <div class="stat-val lose" id="statLosses">0</div>
+                            <div class="stat-label">Поражения</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-icon">📈</div>
+                            <div class="stat-val" id="statWinrate" style="color:var(--accent);">0%</div>
+                            <div class="stat-label">Винрейт</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-icon">🔥</div>
+                            <div class="stat-val" id="statStreak" style="color:#f39c12;">0</div>
+                            <div class="stat-label">Серия</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-icon">💵</div>
+                            <div class="stat-val" id="statTurnover" style="color:var(--sell);">0 ₽</div>
+                            <div class="stat-label">Оборот</div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="transfer-btn" onclick="openTransferModal()">💸 Перевести деньги</button>
+                        <button class="transfer-btn promo-btn" onclick="openPromoModal()">🎁 Ввести промокод</button>
+                        <button class="transfer-btn admin-btn" id="adminSettingsBtn" onclick="openAdminModal()" style="display: none;">⚙️ Настройки шанса</button>
+                    </div>
+                </div>
+
+                <!-- ИСТОРИЯ АПГРЕЙДОВ -->
+                <div class="history-section">
+                    <div class="history-header">
+                        <span>ИСТОРИЯ АПГРЕЙДОВ</span>
+                    </div>
+                    <div id="historyList">
+                        <!-- Заполняется через JS -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -403,6 +540,7 @@
         </div>
     </div>
 
+    <!-- МОДАЛЬНЫЕ ОКНА -->
     <div class="modal" id="selectModal">
         <div class="modal-content">
             <div class="modal-title" id="modalTitle">Выберите скин</div>
@@ -469,7 +607,6 @@
         </div>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО АДМИНА -->
     <div class="modal" id="adminModal">
         <div class="modal-content sell-modal-content" style="border-color: #e74c3c;">
             <div class="modal-title" style="color: #e74c3c; text-align: left; margin-bottom: 5px;">Настройка шанса</div>
@@ -507,7 +644,7 @@
         if (tg) { tg.ready(); tg.expand(); }
 
         const ADMIN_ID = 1935313766; 
-        const STORAGE_KEY = 'cs_upgrader_v31';
+        const STORAGE_KEY = 'cs_upgrader_v32';
         
         let ITEMS = []; 
         let state = loadState();
@@ -541,6 +678,7 @@
         };
         
         if (!state.usedPromos) state.usedPromos = [];
+        if (!state.history) state.history = [];
 
         async function fetchSkins() {
             try {
@@ -599,7 +737,20 @@
 
         function loadState() {
             const saved = localStorage.getItem(STORAGE_KEY);
-            let currentState = { balance: 1000, inventory: [], bestDrop: 0, upgradesCount: 0, lastCaseTime: 0, usedPromos: [], adminMultiplier: 1.0 };
+            let currentState = { 
+                balance: 1000, 
+                inventory: [], 
+                bestDrop: 0, 
+                upgradesCount: 0, 
+                lastCaseTime: 0, 
+                usedPromos: [], 
+                adminMultiplier: 1.0,
+                history: [],
+                wins: 0,
+                losses: 0,
+                streak: 0,
+                turnover: 0
+            };
             if (saved) { try { currentState = JSON.parse(saved); } catch (e) {} }
             return currentState;
         }
@@ -614,8 +765,44 @@
             document.getElementById('balanceDisplay').textContent = formatMoney(state.balance);
             document.getElementById('statBalance').textContent = formatMoney(state.balance);
             document.getElementById('statBestDrop').textContent = formatMoney(state.bestDrop);
-            document.getElementById('statUpgrades').textContent = state.upgradesCount;
             document.getElementById('statInvCount').textContent = state.inventory.length;
+            
+            // Обновление профиля
+            document.getElementById('profileNameDisplay').textContent = state.profileName || 'MAK...';
+            document.getElementById('statTotalUpgrades').textContent = state.upgradesCount;
+            document.getElementById('statWins').textContent = state.wins || 0;
+            document.getElementById('statLosses').textContent = state.losses || 0;
+            
+            const totalGames = (state.wins || 0) + (state.losses || 0);
+            const winrate = totalGames > 0 ? Math.round(((state.wins || 0) / totalGames) * 100) : 0;
+            document.getElementById('statWinrate').textContent = winrate + '%';
+            
+            document.getElementById('statStreak').textContent = state.streak || 0;
+            document.getElementById('statTurnover').textContent = formatMoney(state.turnover || 0);
+            
+            // Лучший дроп
+            if (state.bestDrop > 0) {
+                const bestItem = ITEMS.find(i => i.price === state.bestDrop);
+                if (bestItem) {
+                    document.getElementById('bestDropImg').src = bestItem.img;
+                    document.getElementById('bestDropImg').style.display = 'block';
+                    document.getElementById('bestDropEmpty').style.display = 'none';
+                }
+            } else {
+                document.getElementById('bestDropImg').style.display = 'none';
+                document.getElementById('bestDropEmpty').style.display = 'block';
+            }
+            document.getElementById('bestDropPrice').textContent = formatMoney(state.bestDrop);
+
+            // Уровень
+            const level = Math.floor(state.upgradesCount / 10) + 1;
+            const progress = (state.upgradesCount % 10) * 10;
+            document.getElementById('levelDisplay').textContent = `УРОВЕНЬ ${level}`;
+            document.getElementById('levelProgressBar').style.width = progress + '%';
+            document.getElementById('levelProgressText').textContent = `${state.upgradesCount % 10} / 10`;
+
+            // История
+            renderHistory();
             
             if (state.inventory.length > 0) {
                 const total = state.inventory.reduce((sum, item) => sum + item.price, 0);
@@ -624,6 +811,39 @@
             } else {
                 document.getElementById('sellAllBtn').style.display = 'none';
             }
+        }
+        
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            if (!state.history || state.history.length === 0) {
+                list.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:12px; padding:10px;">История пуста</div>';
+                return;
+            }
+            list.innerHTML = state.history.map(h => `
+                <div class="history-item ${h.win ? 'win' : 'lose'}">
+                    <div class="history-top">
+                        <span class="history-status ${h.win ? 'win' : 'lose'}">${h.win ? '↑ ПОБЕДА' : '↓ ПРОИГРЫШ'}</span>
+                        <span class="history-chance">${h.chance}%</span>
+                    </div>
+                    <div class="history-content">
+                        <div class="history-skin">
+                            <img src="${h.leftImg}" class="history-img">
+                            <div class="history-details">
+                                <div class="history-name">${h.leftName}</div>
+                                <div class="history-price">${formatMoney(h.leftPrice)}</div>
+                            </div>
+                        </div>
+                        <div class="history-arrow">→</div>
+                        <div class="history-skin">
+                            <img src="${h.rightImg}" class="history-img">
+                            <div class="history-details">
+                                <div class="history-name">${h.rightName}</div>
+                                <div class="history-price">${formatMoney(h.rightPrice)}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
         }
         
         function showToast(text) {
@@ -656,7 +876,15 @@
             updateCaseButton();
         }
 
-        // --- АДМИН ПАНЕЛЬ ---
+        window.editProfileName = function() {
+            const newName = prompt("Введите новый никнейм:", state.profileName || "MAK...");
+            if (newName && newName.trim()) {
+                state.profileName = newName.trim();
+                saveState();
+                updateUI();
+            }
+        }
+
         window.openAdminModal = function() {
             document.getElementById('adminChanceInput').value = state.adminMultiplier || 1.0;
             document.getElementById('adminModal').classList.add('active');
@@ -1084,7 +1312,6 @@
             setRightItem(closest.id);
         }
 
-        // --- ЛОГИКА АПГРЕЙДА ---
         document.getElementById('upgradeBtn').addEventListener('click', () => {
             if (isSpinning) return; 
             
@@ -1112,6 +1339,20 @@
             const indicesToRemove = selectedLeft.map(i => i.index).sort((a,b) => b-a);
             indicesToRemove.forEach(idx => state.inventory.splice(idx, 1));
 
+            // Запись в историю
+            const leftItem = selectedLeft[0]; // Берем первый скин для истории
+            const historyRecord = {
+                win: false,
+                chance: (baseChance * 100).toFixed(1),
+                leftImg: leftItem.img,
+                leftName: leftItem.name,
+                leftPrice: totalLeftPrice,
+                rightImg: selectedRight.img,
+                rightName: selectedRight.name,
+                rightPrice: selectedRight.price,
+                time: Date.now()
+            };
+
             const arrow = document.getElementById('arrow');
             const win = secretDrop || (Math.random() < realChance); 
             
@@ -1138,17 +1379,28 @@
 
             setTimeout(() => {
                 const box = document.getElementById('resultBox');
+                historyRecord.win = win;
+                
                 if (win) {
                     state.inventory.push(targetToWin);
                     state.upgradesCount++;
+                    state.wins = (state.wins || 0) + 1;
+                    state.streak = (state.streak || 0) + 1;
                     if (targetToWin.price > state.bestDrop) state.bestDrop = targetToWin.price;
                     box.className = 'result win';
                     box.textContent = `🎉 Выигрыш! ${targetToWin.name}`;
                 } else {
                     state.upgradesCount++;
+                    state.losses = (state.losses || 0) + 1;
+                    state.streak = 0;
                     box.className = 'result lose';
                     box.textContent = `💀 Не повезло. Скины сгорели.`;
                 }
+                
+                state.turnover = (state.turnover || 0) + totalLeftPrice;
+                state.history.unshift(historyRecord);
+                if (state.history.length > 50) state.history.pop();
+
                 box.style.display = 'block';
                 
                 saveState();
@@ -1166,7 +1418,6 @@
             }, 4000); 
         });
 
-        // --- ЛОГИКА КЕЙСА С ШАНСАМИ ---
         window.openCaseModal = function() {
             if (Date.now() - state.lastCaseTime < COOLDOWN_TIME) return;
             
@@ -1190,23 +1441,18 @@
                 const grid = document.getElementById('caseRewardsGrid');
                 grid.innerHTML = '';
                 
-                // Генерируем 3 награды с разными шансами
                 for (let i = 0; i < 3; i++) {
                     let roll = Math.random();
                     let targetPrice = 0;
                     
                     if (roll < 0.01) {
-                        // 1% шанс на ДЖЕКПОТ (10 млн - 500 млн)
                         targetPrice = 10000000 + Math.random() * (500000000 - 10000000);
                     } else if (roll < 0.06) {
-                        // 5% шанс на средний дроп (до 1 млн)
                         targetPrice = 100000 + Math.random() * 900000;
                     } else {
-                        // 94% шанс на обычный дроп (100 - 50000)
                         targetPrice = 100 + Math.random() * 49900;
                     }
                     
-                    // Ищем ближайший скин по цене
                     let closest = ITEMS[0];
                     let minDiff = Infinity;
                     for (let item of ITEMS) {
