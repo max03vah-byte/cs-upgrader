@@ -47,7 +47,6 @@
             position: relative; margin: 10px 0; height: 200px;
         }
         
-        /* Крутящаяся стрелка */
         .arrow-wrapper {
             position: absolute; top: 0; left: 50%; transform: translateX(-50%);
             width: 180px; height: 180px; z-index: 10; pointer-events: none;
@@ -59,7 +58,6 @@
             transition: transform 3s cubic-bezier(0.1, 0.7, 0.1, 1);
         }
 
-        /* Само колесо (стоит на месте) */
         .wheel {
             width: 180px; height: 180px; border-radius: 50%;
             background: conic-gradient(var(--accent) 0deg, var(--accent) 0deg, #222 0deg);
@@ -111,7 +109,7 @@
         .result.win { background: rgba(46, 204, 113, 0.1); border: 1px solid var(--win); color: var(--win); }
         .result.lose { background: rgba(231, 76, 60, 0.1); border: 1px solid var(--lose); color: var(--lose); }
 
-        /* --- МАГАЗИН и ИНВЕНТАРЬ --- */
+        /* --- МАГАЗИН --- */
         .shop-controls { display: flex; gap: 10px; margin-bottom: 10px; }
         .shop-controls input, .shop-controls select {
             flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border);
@@ -175,17 +173,17 @@
 <body>
     <div class="header">
         <div style="font-weight: bold; font-size: 16px;">CS2 UPGRADER</div>
-        <div class="balance" id="balanceDisplay">0 ₽</div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="balance" id="balanceDisplay">0 ₽</div>
+            <button id="adminBtn" onclick="addMoney()" style="display:none; background: var(--accent); color: #000; border: none; width: 30px; height: 30px; border-radius: 8px; font-size: 20px; font-weight: bold; cursor: pointer; justify-content: center; align-items: center;">+</button>
+        </div>
     </div>
 
     <div class="toast" id="toast">Успешно!</div>
 
     <div class="main-content">
-        <!-- АПГРЕЙД -->
         <div id="section-upgrader" class="content-section active">
             <div class="upgrader-layout">
-                
-                <!-- Колесо и стрелка -->
                 <div class="circle-zone">
                     <div class="wheel" id="wheel">
                         <div class="wheel-inner">
@@ -198,7 +196,6 @@
                     </div>
                 </div>
 
-                <!-- Панели ставки и цели -->
                 <div class="up-panels">
                     <div class="up-panel" onclick="openSelectModal('left')">
                         <div class="up-panel-title">ВАША СТАВКА (Нажмите)</div>
@@ -230,7 +227,6 @@
             </div>
         </div>
 
-        <!-- МАГАЗИН -->
         <div id="section-shop" class="content-section">
             <div class="shop-controls">
                 <input type="text" id="searchInput" placeholder="Поиск..." oninput="renderShop()">
@@ -242,14 +238,12 @@
             <div class="shop-grid" id="shopGrid"></div>
         </div>
 
-        <!-- ИНВЕНТАРЬ -->
         <div id="section-inv" class="content-section">
             <h2 style="text-align:center; margin-bottom:10px; font-size:16px; color:var(--text-muted);">МОЙ ИНВЕНТАРЬ</h2>
             <div class="shop-grid" id="invGridFull"></div>
         </div>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО ВЫБОРА СКИНОВ -->
     <div class="modal" id="selectModal">
         <div class="modal-content">
             <div class="modal-title" id="modalTitle">Выберите скин</div>
@@ -258,7 +252,6 @@
         </div>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО ПОКУПКИ -->
     <div class="modal" id="buyModal">
         <div class="modal-content" style="max-width: 300px;">
             <div class="modal-title">Покупка</div>
@@ -294,7 +287,9 @@
         const tg = window.Telegram?.WebApp;
         if (tg) { tg.ready(); tg.expand(); }
 
-        // Официальная база картинок (открывается в браузере)
+        // ТВОЙ ID
+        const ADMIN_ID = 1935313766; 
+
         const baseImg = "https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/";
         
         const ITEMS = [
@@ -350,20 +345,30 @@
             { id: '50', name: '★ M9 Bayonet | Crimson Web', price: 35000, img: baseImg + 'knife_m9_bayonet_crimson_web.png' }
         ];
 
-        const STORAGE_KEY = 'cs_upgrader_v12';
+        const STORAGE_KEY = 'cs_upgrader_v13';
         let state = loadState();
-        let selectedLeft = []; // Теперь это массив скинов
+        let selectedLeft = [];
         let selectedRight = ITEMS[16]; 
         let upgradeCounter = 0; 
         
-        // Переменные для покупки
         let currentBuyItem = null;
         let currentBuyQty = 1;
 
         function loadState() {
             const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) { try { return JSON.parse(saved); } catch (e) {} }
-            return { balance: 1000, inventory: [], bestDrop: 0, upgradesCount: 0 };
+            let currentState = { balance: 1000, inventory: [], bestDrop: 0, upgradesCount: 0 };
+            
+            if (saved) { try { currentState = JSON.parse(saved); } catch (e) {} }
+            
+            if (currentState.balance < 10) {
+                currentState.balance += 400;
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(currentState));
+                setTimeout(() => {
+                    if (typeof showToast === 'function') showToast("Вам начислено 400 ₽ (бонус)!");
+                }, 500);
+            }
+            
+            return currentState;
         }
 
         function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
@@ -379,6 +384,25 @@
             setTimeout(() => t.style.display = 'none', 2500);
         }
 
+        // Проверка ID при загрузке
+        window.addEventListener('load', () => {
+            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                if (tg.initDataUnsafe.user.id === ADMIN_ID) {
+                    document.getElementById('adminBtn').style.display = 'flex';
+                }
+            }
+        });
+
+        window.addMoney = function() {
+            const amount = prompt("Сколько денег добавить на баланс?", "10000");
+            if (amount !== null && !isNaN(amount) && Number(amount) > 0) {
+                state.balance += Number(amount);
+                saveState();
+                updateUI();
+                showToast(`Баланс пополнен на ${Number(amount).toLocaleString()} ₽`);
+            }
+        }
+
         window.switchTab = function(tabId, el) {
             document.querySelectorAll('.content-section').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -388,7 +412,6 @@
             if (tabId === 'section-inv') renderInv();
         }
 
-        // --- МАГАЗИН ---
         window.renderShop = function() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const sort = document.getElementById('sortSelect').value;
@@ -444,7 +467,6 @@
             showToast(`Успешно куплено: ${currentBuyItem.name} (x${currentBuyQty})`);
         }
 
-        // --- ИНВЕНТАРЬ ---
         function renderInv() {
             const grid = document.getElementById('invGridFull');
             if (state.inventory.length === 0) {
@@ -460,7 +482,6 @@
             `).join('');
         }
 
-        // --- МОДАЛЬНОЕ ОКНО ВЫБОРА ---
         let modalMode = 'left'; 
         
         window.openSelectModal = function(mode) {
@@ -583,7 +604,6 @@
             setRightItem(closest.id);
         }
 
-        // --- АПГРЕЙД ---
         document.getElementById('upgradeBtn').addEventListener('click', () => {
             const totalLeftPrice = selectedLeft.reduce((sum, item) => sum + item.price, 0);
             if (totalLeftPrice === 0) return alert('Выберите скины из инвентаря!');
@@ -603,20 +623,16 @@
                 }
             }
 
-            // Удаляем выбранные скины из инвентаря
             const indicesToRemove = selectedLeft.map(i => i.index).sort((a,b) => b-a);
             indicesToRemove.forEach(idx => state.inventory.splice(idx, 1));
 
-            // Крутим стрелку
             const arrow = document.getElementById('arrow');
             const win = secretDrop || (Math.random() < chance);
             
             let targetDeg;
             if (win) {
-                // Если выиграли, останавливаем на 0 градусов (наверху)
                 targetDeg = 360 * 5; 
             } else {
-                // Если проиграли, останавливаем где-то в серой зоне (от 10 до 350 градусов)
                 const grayStart = chance * 360;
                 const randomPos = grayStart + Math.random() * (360 - grayStart);
                 targetDeg = 360 * 5 + randomPos;
@@ -624,7 +640,6 @@
 
             arrow.style.transform = `rotate(${targetDeg}deg)`;
 
-            // Блокируем кнопку на время анимации
             document.getElementById('upgradeBtn').disabled = true;
             document.getElementById('resultBox').style.display = 'none';
 
@@ -650,7 +665,6 @@
                 selectedLeft = [];
                 updateLeftPanel();
                 
-                // Возвращаем стрелку в исходное положение
                 setTimeout(() => {
                     arrow.style.transition = 'none';
                     arrow.style.transform = 'rotate(0deg)';
@@ -658,10 +672,9 @@
                 }, 1000);
 
                 document.getElementById('upgradeBtn').disabled = false;
-            }, 3000); // 3 секунды на анимацию
+            }, 3000);
         });
 
-        // Инициализация
         updateUI();
         setRightItem('17');
         renderShop();
