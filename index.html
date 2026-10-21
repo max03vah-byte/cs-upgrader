@@ -46,25 +46,30 @@
         
         .circle-zone {
             display: flex; justify-content: center; align-items: center;
-            position: relative; margin: 10px 0; height: 200px;
+            position: relative; margin: 20px 0 10px 0; height: 220px;
         }
         
-        .arrow-container {
-            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-            width: 180px; height: 180px; z-index: 10; pointer-events: none;
-            display: flex; justify-content: center;
+        /* Шкала с цифрами */
+        .scale-label {
+            position: absolute;
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--text-muted);
+            z-index: 5;
+            text-shadow: 0 0 5px #000;
         }
-        .arrow-pointer {
-            font-size: 30px; color: var(--accent); transform-origin: 50% 50%;
-            filter: drop-shadow(0 0 5px rgba(255, 215, 0, 1));
-            transition: transform 4s cubic-bezier(0.1, 0.7, 0.1, 1);
-        }
+        .scale-100 { top: -10px; left: 50%; transform: translateX(-50%); }
+        .scale-50-left { top: 50%; left: 0px; transform: translateY(-50%); }
+        .scale-50-right { top: 50%; right: 0px; transform: translateY(-50%); }
+        .scale-0 { bottom: -10px; left: 50%; transform: translateX(-50%); }
 
+        /* Колесо */
         .wheel {
             width: 180px; height: 180px; border-radius: 50%;
             background: conic-gradient(var(--accent) 0deg, var(--accent) 0deg, #222 0deg);
             display: flex; align-items: center; justify-content: center;
             border: 4px solid #333;
+            position: relative;
         }
         .wheel-inner {
             width: 150px; height: 150px; border-radius: 50%;
@@ -74,6 +79,22 @@
         }
         .chance-text { font-size: 28px; font-weight: bold; color: var(--accent); }
         .chance-label { font-size: 12px; color: var(--text-muted); }
+
+        /* Стрелка (указатель) */
+        .arrow-container {
+            position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 180px; height: 90px; /* Половина высоты колеса */
+            z-index: 10; pointer-events: none;
+            display: flex; justify-content: center; align-items: flex-end;
+            overflow: hidden;
+        }
+        .arrow-pointer {
+            font-size: 30px; color: var(--accent); 
+            transform-origin: 50% 100%; /* Вращение от центра колеса */
+            position: absolute; bottom: -15px;
+            filter: drop-shadow(0 0 5px rgba(255, 215, 0, 1));
+            /* Transition задается в JS */
+        }
 
         .up-panels { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
         .up-panel {
@@ -277,15 +298,22 @@
             <!-- АПГРЕЙД -->
             <div id="section-upgrader" class="content-section active">
                 <div class="upgrader-layout">
+                    
                     <div class="circle-zone">
+                        <div class="scale-label scale-100">100%</div>
+                        <div class="scale-label scale-50-left">50%</div>
+                        <div class="scale-label scale-50-right">50%</div>
+                        <div class="scale-label scale-0">0%</div>
+
                         <div class="wheel" id="wheel">
                             <div class="wheel-inner">
                                 <div class="chance-text" id="chanceText">0%</div>
                                 <div class="chance-label">Шанс</div>
                             </div>
                         </div>
+                        
                         <div class="arrow-container">
-                            <div class="arrow-pointer" id="arrow">▼</div>
+                            <div class="arrow-pointer" id="arrow">▲</div>
                         </div>
                     </div>
 
@@ -402,7 +430,6 @@
         </div>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО ВЫБОРА -->
     <div class="modal" id="selectModal">
         <div class="modal-content">
             <div class="modal-title" id="modalTitle">Выберите скин</div>
@@ -494,7 +521,7 @@
         if (tg) { tg.ready(); tg.expand(); }
 
         const ADMIN_ID = 1935313766; 
-        const STORAGE_KEY = 'cs_upgrader_v26';
+        const STORAGE_KEY = 'cs_upgrader_v27';
         
         let ITEMS = []; 
         let state = loadState();
@@ -516,6 +543,7 @@
         const SHOP_CHUNK = 100;
 
         let currentModalMode = 'left';
+        let isSpinning = false; // Защита от спама кнопки
 
         const PROMOCODES = {
             'LEGEND100M': { type: 'money', value: 100000000 },
@@ -563,7 +591,6 @@
 
                 rawItems.sort((a, b) => a.basePrice - b.basePrice);
 
-                // Генерация цены от 10 до 500 000 000 000 (500 млрд)
                 rawItems.forEach((item, index) => {
                     let ratio = index / rawItems.length;
                     let price = 10 + Math.floor(Math.pow(ratio, 4) * 500000000000);
@@ -950,7 +977,6 @@
                 return;
             }
 
-            // Ограничиваем вывод 150 скинами для производительности, но поиск идет по всем
             const toRender = filtered.slice(0, 150);
             
             grid.innerHTML = toRender.map(item => `
@@ -1055,11 +1081,15 @@
             setRightItem(closest.id);
         }
 
+        // --- ИСПРАВЛЕННАЯ ЛОГИКА ВРАЩЕНИЯ ---
         document.getElementById('upgradeBtn').addEventListener('click', () => {
+            if (isSpinning) return; // Защита от спама
+            
             const totalLeftPrice = selectedLeft.reduce((sum, item) => sum + item.price, 0);
             if (totalLeftPrice === 0) return alert('Выберите скины из инвентаря!');
             if (totalLeftPrice >= selectedRight.price) return alert('Ставка должна быть меньше цели!');
 
+            isSpinning = true;
             const chance = totalLeftPrice / selectedRight.price;
             let targetToWin = selectedRight;
             
@@ -1079,16 +1109,29 @@
             const arrow = document.getElementById('arrow');
             const win = secretDrop || (Math.random() < chance);
             
+            // Сброс стрелки перед новым вращением
+            arrow.style.transition = 'none';
+            arrow.style.transform = 'rotate(-90deg)'; // -90 градусов (смотрит вниз)
+            void arrow.offsetWidth; // ПРИНУДИТЕЛЬНЫЙ РЕФЛОУ (убирает лаги при повторном запуске)
+            
+            // Вычисляем угол остановки
             let targetDeg = 0;
             if (win) {
-                targetDeg = 360 * 5; 
+                // Если выиграли, останавливаем на 0 градусов (наверху)
+                targetDeg = 0; 
             } else {
-                const grayStart = chance * 360;
-                const randomPos = grayStart + Math.random() * (360 - grayStart);
-                targetDeg = 360 * 5 + randomPos;
+                // Если проиграли, останавливаем в серой зоне (от 90 до 270 градусов)
+                const minDeg = 90;
+                const maxDeg = 270;
+                const randomPos = minDeg + Math.random() * (maxDeg - minDeg);
+                targetDeg = randomPos;
             }
 
-            arrow.style.transform = `rotate(${targetDeg}deg)`;
+            // Включаем плавность и крутим
+            setTimeout(() => {
+                arrow.style.transition = 'transform 4s cubic-bezier(0.1, 0.7, 0.1, 1)';
+                arrow.style.transform = `rotate(${targetDeg}deg)`;
+            }, 50); // Небольшая задержка, чтобы браузер успел пересчитать
 
             document.getElementById('upgradeBtn').disabled = true;
             document.getElementById('resultBox').style.display = 'none';
@@ -1115,13 +1158,8 @@
                 selectedLeft = [];
                 updateLeftPanel();
                 
-                setTimeout(() => {
-                    arrow.style.transition = 'none';
-                    arrow.style.transform = 'rotate(0deg)';
-                    setTimeout(() => arrow.style.transition = 'transform 4s cubic-bezier(0.1, 0.7, 0.1, 1);', 50);
-                }, 1000);
-
                 document.getElementById('upgradeBtn').disabled = false;
+                isSpinning = false; // Разрешаем снова крутить
                 
                 checkPoorBonus();
                 updateUI();
@@ -1150,7 +1188,6 @@
                 currentCaseRewards = [];
                 const randomIndices = new Set();
                 while(randomIndices.size < 3) {
-                    // Берем случайные скины, но не самые дешевые
                     randomIndices.add(Math.floor(Math.random() * ITEMS.length));
                 }
                 
