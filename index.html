@@ -109,7 +109,7 @@
         .result.win { background: rgba(46, 204, 113, 0.1); border: 1px solid var(--win); color: var(--win); }
         .result.lose { background: rgba(231, 76, 60, 0.1); border: 1px solid var(--lose); color: var(--lose); }
 
-        /* --- МАГАЗИН --- */
+        /* --- МАГАЗИН и ИНВЕНТАРЬ --- */
         .shop-controls { display: flex; gap: 10px; margin-bottom: 10px; }
         .shop-controls input, .shop-controls select {
             flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border);
@@ -152,6 +152,18 @@
         .qty-btn { background: #333; color: #fff; border: none; width: 40px; height: 40px; border-radius: 8px; font-size: 20px; cursor: pointer; }
         .qty-val { font-size: 24px; font-weight: bold; color: var(--accent); }
 
+        /* ПРОФИЛЬ */
+        .profile-card {
+            background: var(--panel-bg); border-radius: 16px; padding: 20px;
+            border: 1px solid var(--border); text-align: center;
+        }
+        .avatar { font-size: 60px; margin-bottom: 10px; }
+        .profile-name { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .stat-box { background: #1e232e; border-radius: 10px; padding: 15px; border: 1px solid var(--border); }
+        .stat-val { font-size: 18px; font-weight: bold; color: var(--accent); }
+        .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
+
         /* НИЖНЕЕ МЕНЮ */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; width: 100%;
@@ -182,6 +194,7 @@
     <div class="toast" id="toast">Успешно!</div>
 
     <div class="main-content">
+        <!-- АПГРЕЙД -->
         <div id="section-upgrader" class="content-section active">
             <div class="upgrader-layout">
                 <div class="circle-zone">
@@ -227,6 +240,7 @@
             </div>
         </div>
 
+        <!-- МАГАЗИН -->
         <div id="section-shop" class="content-section">
             <div class="shop-controls">
                 <input type="text" id="searchInput" placeholder="Поиск..." oninput="renderShop()">
@@ -238,9 +252,52 @@
             <div class="shop-grid" id="shopGrid"></div>
         </div>
 
+        <!-- ИНВЕНТАРЬ -->
         <div id="section-inv" class="content-section">
             <h2 style="text-align:center; margin-bottom:10px; font-size:16px; color:var(--text-muted);">МОЙ ИНВЕНТАРЬ</h2>
             <div class="shop-grid" id="invGridFull"></div>
+        </div>
+
+        <!-- ПРОФИЛЬ -->
+        <div id="section-profile" class="content-section">
+            <div class="profile-card">
+                <div class="avatar">👤</div>
+                <div class="profile-name">Мой Профиль</div>
+                <div style="color: var(--text-muted); font-size: 14px;">ID: #1337</div>
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-val" id="statBalance">0 ₽</div>
+                        <div class="stat-label">Баланс</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-val" id="statBestDrop">0 ₽</div>
+                        <div class="stat-label">Лучший дроп</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-val" id="statUpgrades">0</div>
+                        <div class="stat-label">Апгрейдов</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-val" id="statInvCount">0</div>
+                        <div class="stat-label">Скинов</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('section-upgrader', this)">
+            <div class="nav-icon">⚡</div><div>Апгрейд</div>
+        </div>
+        <div class="nav-item" onclick="switchTab('section-shop', this)">
+            <div class="nav-icon">🛒</div><div>Магазин</div>
+        </div>
+        <div class="nav-item" onclick="switchTab('section-inv', this)">
+            <div class="nav-icon">🎒</div><div>Инвентарь</div>
+        </div>
+        <div class="nav-item" onclick="switchTab('section-profile', this)">
+            <div class="nav-icon">👤</div><div>Профиль</div>
         </div>
     </div>
 
@@ -271,23 +328,10 @@
         </div>
     </div>
 
-    <div class="bottom-nav">
-        <div class="nav-item active" onclick="switchTab('section-upgrader', this)">
-            <div class="nav-icon">⚡</div><div>Апгрейд</div>
-        </div>
-        <div class="nav-item" onclick="switchTab('section-shop', this)">
-            <div class="nav-icon">🛒</div><div>Магазин</div>
-        </div>
-        <div class="nav-item" onclick="switchTab('section-inv', this)">
-            <div class="nav-icon">🎒</div><div>Инвентарь</div>
-        </div>
-    </div>
-
     <script>
         const tg = window.Telegram?.WebApp;
         if (tg) { tg.ready(); tg.expand(); }
 
-        // ТВОЙ ID
         const ADMIN_ID = 1935313766; 
 
         const baseImg = "https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/";
@@ -345,7 +389,7 @@
             { id: '50', name: '★ M9 Bayonet | Crimson Web', price: 35000, img: baseImg + 'knife_m9_bayonet_crimson_web.png' }
         ];
 
-        const STORAGE_KEY = 'cs_upgrader_v13';
+        const STORAGE_KEY = 'cs_upgrader_v14';
         let state = loadState();
         let selectedLeft = [];
         let selectedRight = ITEMS[16]; 
@@ -359,15 +403,6 @@
             let currentState = { balance: 1000, inventory: [], bestDrop: 0, upgradesCount: 0 };
             
             if (saved) { try { currentState = JSON.parse(saved); } catch (e) {} }
-            
-            if (currentState.balance < 10) {
-                currentState.balance += 400;
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(currentState));
-                setTimeout(() => {
-                    if (typeof showToast === 'function') showToast("Вам начислено 400 ₽ (бонус)!");
-                }, 500);
-            }
-            
             return currentState;
         }
 
@@ -375,6 +410,10 @@
         
         function updateUI() {
             document.getElementById('balanceDisplay').textContent = state.balance.toLocaleString() + ' ₽';
+            document.getElementById('statBalance').textContent = state.balance.toLocaleString() + ' ₽';
+            document.getElementById('statBestDrop').textContent = state.bestDrop.toLocaleString() + ' ₽';
+            document.getElementById('statUpgrades').textContent = state.upgradesCount;
+            document.getElementById('statInvCount').textContent = state.inventory.length;
         }
         
         function showToast(text) {
@@ -384,13 +423,23 @@
             setTimeout(() => t.style.display = 'none', 2500);
         }
 
-        // Проверка ID при загрузке
+        // ПРОВЕРКА БОНУСА (вызывается после проигрыша или при загрузке)
+        function checkPoorBonus() {
+            if (state.balance < 10) {
+                state.balance += 400;
+                saveState();
+                showToast("Вам начислено 400 ₽ (бонус)!");
+            }
+        }
+
         window.addEventListener('load', () => {
             if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
                 if (tg.initDataUnsafe.user.id === ADMIN_ID) {
                     document.getElementById('adminBtn').style.display = 'flex';
                 }
             }
+            checkPoorBonus();
+            updateUI();
         });
 
         window.addMoney = function() {
@@ -410,6 +459,7 @@
             el.classList.add('active');
             if (tabId === 'section-shop') renderShop();
             if (tabId === 'section-inv') renderInv();
+            if (tabId === 'section-profile') updateUI();
         }
 
         window.renderShop = function() {
@@ -465,6 +515,8 @@
             updateUI();
             closeModal('buyModal');
             showToast(`Успешно куплено: ${currentBuyItem.name} (x${currentBuyQty})`);
+            checkPoorBonus();
+            updateUI();
         }
 
         function renderInv() {
@@ -672,6 +724,10 @@
                 }, 1000);
 
                 document.getElementById('upgradeBtn').disabled = false;
+                
+                // Проверка бонуса после апгрейда (если скины сгорели и денег нет)
+                checkPoorBonus();
+                updateUI();
             }, 3000);
         });
 
