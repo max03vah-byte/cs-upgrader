@@ -143,6 +143,14 @@
         .case-btn:hover:not(:disabled) { transform: scale(1.02); }
         .case-btn:disabled { background: #333; box-shadow: none; color: #888; cursor: not-allowed; }
 
+        /* Кнопка "Показать еще" */
+        .load-more-btn {
+            background: var(--panel-bg); border: 1px solid var(--accent); color: var(--accent);
+            width: 100%; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold;
+            cursor: pointer; margin-top: 10px; transition: 0.2s;
+        }
+        .load-more-btn:hover { background: rgba(255, 215, 0, 0.1); }
+
         /* --- МОДАЛЬНЫЕ ОКНА --- */
         .modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -256,7 +264,7 @@
     <div class="toast" id="toast">Успешно!</div>
 
     <div class="main-content" id="mainContent">
-        <div class="loader" id="loader">Загрузка базы скинов (около 1500 шт)...</div>
+        <div class="loader" id="loader">Загрузка базы скинов...</div>
         
         <div id="appContent" style="display: none;">
             <!-- АПГРЕЙД -->
@@ -308,13 +316,14 @@
             <!-- МАГАЗИН -->
             <div id="section-shop" class="content-section">
                 <div class="shop-controls">
-                    <input type="text" id="searchInput" placeholder="Поиск..." oninput="renderShop()">
-                    <select id="sortSelect" onchange="renderShop()">
+                    <input type="text" id="searchInput" placeholder="Поиск..." oninput="renderShop(true)">
+                    <select id="sortSelect" onchange="renderShop(true)">
                         <option value="asc">Дешевле</option>
                         <option value="desc">Дороже</option>
                     </select>
                 </div>
                 <div class="shop-grid" id="shopGrid"></div>
+                <button class="load-more-btn" id="loadMoreBtn" onclick="loadMoreShop()" style="display: none;">Показать еще</button>
             </div>
 
             <!-- ИНВЕНТАРЬ -->
@@ -468,7 +477,7 @@
         if (tg) { tg.ready(); tg.expand(); }
 
         const ADMIN_ID = 1935313766; 
-        const STORAGE_KEY = 'cs_upgrader_v23';
+        const STORAGE_KEY = 'cs_upgrader_v24';
         
         let ITEMS = []; 
         let state = loadState();
@@ -485,7 +494,11 @@
         let caseCooldownInterval = null;
         const COOLDOWN_TIME = 3 * 60 * 1000; 
 
-        // БАЗА ПРОМОКОДОВ
+        // Переменные для магазина (Пагинация)
+        let currentShopItems = [];
+        let renderedShopCount = 0;
+        const SHOP_CHUNK = 100;
+
         const PROMOCODES = {
             'LEGEND100M': { type: 'money', value: 100000000 },
             'JACKPOT10M': { type: 'money', value: 10000000 },
@@ -495,7 +508,6 @@
             'UPGRADE': { type: 'money', value: 3000 }
         };
         
-        // Храним активированные промокоды в стейте, чтобы нельзя было активировать дважды
         if (!state.usedPromos) state.usedPromos = [];
 
         async function fetchSkins() {
@@ -533,8 +545,11 @@
 
                 rawItems.sort((a, b) => a.basePrice - b.basePrice);
 
+                // Плавный рост цены (чтобы не было перегрузки)
                 rawItems.forEach((item, index) => {
-                    item.price = Math.floor(10 * Math.pow(1.05, index)); // Более плавный рост цены для 1500 скинов
+                    // От 10 до 500000
+                    let price = 10 + Math.floor(Math.pow(index / rawItems.length, 2.5) * 500000);
+                    item.price = price;
                 });
                 
                 ITEMS = rawItems;
@@ -600,7 +615,7 @@
             checkPoorBonus();
             updateUI();
             setRightItem(selectedRight.id);
-            renderShop();
+            renderShop(true);
             renderInv();
             updateCaseButton();
         }
@@ -643,7 +658,6 @@
             }
         }
 
-        // --- ПРОМОКОДЫ ---
         window.openPromoModal = function() {
             document.getElementById('promoInput').value = '';
             document.getElementById('promoModal').classList.add('active');
@@ -658,7 +672,6 @@
             const promo = PROMOCODES[code];
             if (!promo) return alert('Неверный промокод!');
 
-            // Активация
             if (promo.type === 'money') {
                 state.balance += promo.value;
                 showToast(`Промокод активирован! +${promo.value.toLocaleString('ru-RU')} ₽`);
@@ -697,7 +710,7 @@
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             el.classList.add('active');
-            if (tabId === 'section-shop') renderShop();
+            if (tabId === 'section-shop') renderShop(true);
             if (tabId === 'section-inv') renderInv();
             if (tabId === 'section-profile') updateUI();
         }
@@ -749,25 +762,46 @@
             }
         }
 
-        window.renderShop = function() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            const sort = document.getElementById('sortSelect').value;
+        // --- ПАГИНАЦИЯ МАГАЗИНА ---
+        window.renderShop = function(reset = false) {
+            if (reset) {
+                const query = document.getElementById('searchInput').value.toLowerCase();
+                const sort = document.getElementById('sortSelect').value;
+                
+                currentShopItems = ITEMS.filter(i => i.name.toLowerCase().includes(query));
+                if (sort === 'asc') currentShopItems.sort((a, b) => a.price - b.price);
+                else if (sort === 'desc') currentShopItems.sort((a, b) => b.price - a.price);
+                
+                renderedShopCount = 0;
+                document.getElementById('shopGrid').innerHTML = '';
+            }
+
             const grid = document.getElementById('shopGrid');
+            const nextChunk = currentShopItems.slice(renderedShopCount, renderedShopCount + SHOP_CHUNK);
             
-            let filtered = ITEMS.filter(i => i.name.toLowerCase().includes(query));
-            if (sort === 'asc') filtered.sort((a, b) => a.price - b.price);
-            else if (sort === 'desc') filtered.sort((a, b) => b.price - a.price);
+            nextChunk.forEach(item => {
+                grid.innerHTML += `
+                    <div class="shop-item">
+                        <img src="${item.img}" class="skin-img" loading="lazy">
+                        <div class="item-name" title="${item.name}">${item.name}</div>
+                        <div class="item-price">${item.price.toLocaleString('ru-RU')} ₽</div>
+                        <button class="btn-buy" onclick="openBuyModal('${item.id}')">Купить</button>
+                    </div>
+                `;
+            });
+
+            renderedShopCount += SHOP_CHUNK;
             
-            const toRender = filtered.slice(0, 200); // Показываем первые 200, чтобы не лагало
-            
-            grid.innerHTML = toRender.map(item => `
-                <div class="shop-item">
-                    <img src="${item.img}" class="skin-img" loading="lazy">
-                    <div class="item-name" title="${item.name}">${item.name}</div>
-                    <div class="item-price">${item.price.toLocaleString('ru-RU')} ₽</div>
-                    <button class="btn-buy" onclick="openBuyModal('${item.id}')">Купить</button>
-                </div>
-            `).join('');
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
+            if (renderedShopCount < currentShopItems.length) {
+                loadMoreBtn.style.display = 'block';
+            } else {
+                loadMoreBtn.style.display = 'none';
+            }
+        }
+
+        window.loadMoreShop = function() {
+            renderShop(false);
         }
 
         window.openBuyModal = function(id) {
