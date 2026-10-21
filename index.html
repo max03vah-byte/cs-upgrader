@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Апгрейдер Симулятор</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            padding: 20px 16px;
+            min-height: 100vh;
+            user-select: none;
+        }
+        .balance-card {
+            background: linear-gradient(135deg, #16213e, #0f3460);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            border: 1px solid #e94560;
+        }
+        .balance-label { font-size: 14px; opacity: 0.7; margin-bottom: 4px; }
+        .balance-value { font-size: 32px; font-weight: 800; color: #e94560; }
+        .item-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .item-card {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 16px 12px;
+            text-align: center;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .item-card.selected { border-color: #e94560; background: #1f2b4d; }
+        .item-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+        .item-price { font-size: 12px; color: #e94560; font-weight: 700; }
+        .bet-section { margin-bottom: 20px; }
+        .bet-label { font-size: 14px; margin-bottom: 8px; opacity: 0.8; }
+        .bet-input {
+            width: 100%;
+            padding: 14px;
+            font-size: 18px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            background: #0f0f1a;
+            color: #fff;
+            outline: none;
+        }
+        .bet-input:focus { border-color: #e94560; }
+        .upgrade-btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: 700;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #e94560, #c23152);
+            color: #fff;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+        .upgrade-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .result-box {
+            margin-top: 16px;
+            padding: 14px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 600;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .result-win { background: #1b4332; color: #95d5b2; border: 1px solid #2d6a4f; }
+        .result-lose { background: #3d1f1f; color: #ff8a8a; border: 1px solid #6b2c2c; }
+        .reset-btn {
+            background: none;
+            border: 1px solid #444;
+            color: #888;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            margin-top: 12px;
+            cursor: pointer;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="balance-card">
+        <div class="balance-label">Баланс</div>
+        <div class="balance-value" id="balance">0</div>
+    </div>
+
+    <div style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">Выберите цель</div>
+    <div class="item-grid" id="itemGrid"></div>
+
+    <div class="bet-section">
+        <div class="bet-label">Сумма ставки</div>
+        <input type="number" class="bet-input" id="betInput" placeholder="Введите сумму" min="1">
+    </div>
+
+    <button class="upgrade-btn" id="upgradeBtn">Апгрейд</button>
+    <div id="resultBox" class="result-box" style="display: none;"></div>
+    <button class="reset-btn" id="resetBtn">Сбросить баланс (1000)</button>
+
+    <script>
+        const tg = window.Telegram?.WebApp;
+        if (tg) { tg.ready(); tg.expand(); }
+
+        const ITEMS = [
+            { id: 'ak_redline', name: 'AK-47 | Redline', price: 500 },
+            { id: 'm4_print', name: 'M4A1-S | Printstream', price: 1200 },
+            { id: 'awp_asiimov', name: 'AWP | Asiimov', price: 2500 },
+            { id: 'knife_doppler', name: 'Нож | Doppler', price: 5000 },
+        ];
+
+        const STORAGE_KEY = 'upgrader_sim_state';
+        const DEFAULT_BALANCE = 1000;
+
+        function loadState() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try { return JSON.parse(saved); } catch (e) {}
+            }
+            return { balance: DEFAULT_BALANCE };
+        }
+
+        function saveState(state) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        let state = loadState();
+        let selectedItem = ITEMS[0];
+
+        function renderBalance() {
+            document.getElementById('balance').textContent = state.balance.toLocaleString();
+        }
+
+        function renderItems() {
+            const grid = document.getElementById('itemGrid');
+            grid.innerHTML = ITEMS.map(item => `
+                <div class="item-card ${item.id === selectedItem.id ? 'selected' : ''}" data-id="${item.id}">
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-price">$${item.price}</div>
+                </div>
+            `).join('');
+
+            grid.querySelectorAll('.item-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    selectedItem = ITEMS.find(i => i.id === card.dataset.id);
+                    renderItems();
+                });
+            });
+        }
+
+        function showResult(text, isWin) {
+            const box = document.getElementById('resultBox');
+            box.style.display = 'flex';
+            box.className = 'result-box ' + (isWin ? 'result-win' : 'result-lose');
+            box.textContent = text;
+        }
+
+        function doUpgrade() {
+            const betInput = document.getElementById('betInput');
+            const bet = parseInt(betInput.value);
+
+            if (!bet || bet <= 0) { showResult('Введите корректную сумму', false); return; }
+            if (bet > state.balance) { showResult('Недостаточно средств', false); return; }
+            if (bet > selectedItem.price) { showResult('Ставка не может превышать цену цели', false); return; }
+
+            const chance = bet / selectedItem.price;
+            state.balance -= bet;
+
+            const roll = Math.random();
+            const win = roll < chance;
+
+            if (win) {
+                state.balance += selectedItem.price;
+                showResult(`🎉 Выигрыш! Получен ${selectedItem.name} (+$${selectedItem.price})`, true);
+            } else {
+                showResult(`💀 Не повезло. Потеряно $${bet}`, false);
+            }
+
+            saveState(state);
+            renderBalance();
+            betInput.value = '';
+        }
+
+        document.getElementById('upgradeBtn').addEventListener('click', doUpgrade);
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            if (confirm('Сбросить баланс до 1000?')) {
+                state.balance = DEFAULT_BALANCE;
+                saveState(state);
+                renderBalance();
+                document.getElementById('resultBox').style.display = 'none';
+            }
+        });
+
+        renderBalance();
+        renderItems();
+    </script>
+</body>
+</html>
