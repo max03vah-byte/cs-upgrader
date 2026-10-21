@@ -1,20 +1,3 @@
-Отличная идея! Чтобы нельзя было бесконечно фармить скины, я добавил **кулдаун (КД) на 3 минуты**. 
-
-Как это работает:
-1. Когда ты решаешь пример, кейс открывается, и запускается таймер на 180 секунд.
-2. На кнопке кейса в инвентаре будет отображаться оставшееся время (например: `⏳ Доступен через: 02:59`), и она будет заблокирована.
-3. Как только 3 минуты истекут, кнопка снова станет активной.
-
-### 🛠 Что делать:
-1. Открой `index.html` на GitHub и нажми карандаш.
-2. Удали старый код и вставь этот.
-3. Нажми **Commit changes**.
-4. В **@BotFather** пропиши `/setmenubutton` и отправь ссылку с новым кэшем: `https://max03vah-byte.github.io/cs-upgrader/?v=9`
-5. Открой бота.
-
-Вот полный обновленный код:
-
-```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -235,9 +218,11 @@
 
         .transfer-btn {
             background: #2a2f3a; color: #fff; border: 1px solid var(--border); width: 100%;
-            padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s;
+            padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-bottom: 10px;
         }
         .transfer-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .promo-btn { background: linear-gradient(135deg, #27ae60, #2ecc71); color: #fff; border: none; }
 
         /* НИЖНЕЕ МЕНЮ */
         .bottom-nav {
@@ -271,7 +256,7 @@
     <div class="toast" id="toast">Успешно!</div>
 
     <div class="main-content" id="mainContent">
-        <div class="loader" id="loader">Загрузка базы скинов...</div>
+        <div class="loader" id="loader">Загрузка базы скинов (около 1500 шт)...</div>
         
         <div id="appContent" style="display: none;">
             <!-- АПГРЕЙД -->
@@ -338,7 +323,6 @@
                     <h2 style="font-size:16px; color:var(--text-muted);">МОЙ ИНВЕНТАРЬ</h2>
                 </div>
                 
-                <!-- Кнопка кейса с КД -->
                 <button class="case-btn" id="caseBtn" onclick="openCaseModal()">🎁 Кейс за правильный ответ</button>
 
                 <button class="sell-all-btn" id="sellAllBtn" onclick="sellAll()">
@@ -373,6 +357,7 @@
                         </div>
                     </div>
                     <button class="transfer-btn" onclick="openTransferModal()">💸 Перевести деньги</button>
+                    <button class="transfer-btn promo-btn" onclick="openPromoModal()">🎁 Ввести промокод</button>
                 </div>
             </div>
         </div>
@@ -446,7 +431,18 @@
         </div>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО КЕЙСА -->
+    <div class="modal" id="promoModal">
+        <div class="modal-content sell-modal-content" style="border-color: #2ecc71;">
+            <div class="modal-title" style="color: #2ecc71; text-align: left; margin-bottom: 5px;">Ввод промокода</div>
+            <div style="font-size: 12px; color: var(--text-muted); text-align: left; margin-bottom: 15px;">Введите секретный код</div>
+            <input type="text" class="math-input" id="promoInput" placeholder="ПРОМОКОД" style="text-transform: uppercase;">
+            <div class="sell-modal-buttons" style="margin-top: 15px;">
+                <button class="btn-cancel-sell" onclick="closeModal('promoModal')">Отмена</button>
+                <button class="btn-confirm-sell" style="background: #2ecc71;" onclick="executePromo()">АКТИВИРОВАТЬ</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal" id="caseModal">
         <div class="modal-content case-modal-content">
             <div class="modal-title" style="color: #9b59b6;">Кейс за правильный ответ</div>
@@ -472,7 +468,7 @@
         if (tg) { tg.ready(); tg.expand(); }
 
         const ADMIN_ID = 1935313766; 
-        const STORAGE_KEY = 'cs_upgrader_v22';
+        const STORAGE_KEY = 'cs_upgrader_v23';
         
         let ITEMS = []; 
         let state = loadState();
@@ -486,9 +482,21 @@
         let currentCaseAnswer = 0;
         let currentCaseRewards = [];
         
-        // Переменные КД
         let caseCooldownInterval = null;
-        const COOLDOWN_TIME = 3 * 60 * 1000; // 3 минуты в миллисекундах
+        const COOLDOWN_TIME = 3 * 60 * 1000; 
+
+        // БАЗА ПРОМОКОДОВ
+        const PROMOCODES = {
+            'LEGEND100M': { type: 'money', value: 100000000 },
+            'JACKPOT10M': { type: 'money', value: 10000000 },
+            'MILLION1M': { type: 'money', value: 1000000 },
+            'START': { type: 'money', value: 5000 },
+            'CS2': { type: 'money', value: 10000 },
+            'UPGRADE': { type: 'money', value: 3000 }
+        };
+        
+        // Храним активированные промокоды в стейте, чтобы нельзя было активировать дважды
+        if (!state.usedPromos) state.usedPromos = [];
 
         async function fetchSkins() {
             try {
@@ -526,7 +534,7 @@
                 rawItems.sort((a, b) => a.basePrice - b.basePrice);
 
                 rawItems.forEach((item, index) => {
-                    item.price = Math.floor(10 * Math.pow(1.1, index));
+                    item.price = Math.floor(10 * Math.pow(1.05, index)); // Более плавный рост цены для 1500 скинов
                 });
                 
                 ITEMS = rawItems;
@@ -545,7 +553,7 @@
 
         function loadState() {
             const saved = localStorage.getItem(STORAGE_KEY);
-            let currentState = { balance: 1000, inventory: [], bestDrop: 0, upgradesCount: 0, lastCaseTime: 0 };
+            let currentState = { balance: 1000, inventory: [], bestDrop: 0, upgradesCount: 0, lastCaseTime: 0, usedPromos: [] };
             if (saved) { try { currentState = JSON.parse(saved); } catch (e) {} }
             return currentState;
         }
@@ -597,14 +605,12 @@
             updateCaseButton();
         }
 
-        // --- ЛОГИКА КД КЕЙСА ---
         function updateCaseButton() {
             const now = Date.now();
             const timePassed = now - state.lastCaseTime;
             const btn = document.getElementById('caseBtn');
             
             if (timePassed < COOLDOWN_TIME) {
-                // Кейс на КД
                 btn.disabled = true;
                 if (caseCooldownInterval) clearInterval(caseCooldownInterval);
                 
@@ -621,7 +627,6 @@
                     }
                 }, 1000);
             } else {
-                // Кейс доступен
                 btn.disabled = false;
                 btn.innerHTML = '🎁 Кейс за правильный ответ';
                 if (caseCooldownInterval) clearInterval(caseCooldownInterval);
@@ -636,6 +641,33 @@
                 updateUI();
                 showToast(`Баланс пополнен на ${Number(amount).toLocaleString('ru-RU')} ₽`);
             }
+        }
+
+        // --- ПРОМОКОДЫ ---
+        window.openPromoModal = function() {
+            document.getElementById('promoInput').value = '';
+            document.getElementById('promoModal').classList.add('active');
+        }
+
+        window.executePromo = function() {
+            const code = document.getElementById('promoInput').value.trim().toUpperCase();
+            
+            if (!code) return alert('Введите промокод!');
+            if (state.usedPromos.includes(code)) return alert('Вы уже активировали этот промокод!');
+            
+            const promo = PROMOCODES[code];
+            if (!promo) return alert('Неверный промокод!');
+
+            // Активация
+            if (promo.type === 'money') {
+                state.balance += promo.value;
+                showToast(`Промокод активирован! +${promo.value.toLocaleString('ru-RU')} ₽`);
+            }
+            
+            state.usedPromos.push(code);
+            saveState();
+            updateUI();
+            closeModal('promoModal');
         }
 
         window.openTransferModal = function() {
@@ -726,7 +758,7 @@
             if (sort === 'asc') filtered.sort((a, b) => a.price - b.price);
             else if (sort === 'desc') filtered.sort((a, b) => b.price - a.price);
             
-            const toRender = filtered.slice(0, 100);
+            const toRender = filtered.slice(0, 200); // Показываем первые 200, чтобы не лагало
             
             grid.innerHTML = toRender.map(item => `
                 <div class="shop-item">
@@ -813,7 +845,7 @@
                     }).join('');
                 }
             } else {
-                grid.innerHTML = ITEMS.slice(0, 150).map(item => `
+                grid.innerHTML = ITEMS.slice(0, 200).map(item => `
                     <div class="modal-item" onclick="setRightItem('${item.id}')">
                         <img src="${item.img}" class="skin-img">
                         <div class="item-name">${item.name.split('|')[0]}</div>
@@ -986,7 +1018,6 @@
             }, 4000); 
         });
 
-        // --- ЛОГИКА КЕЙСА ---
         window.openCaseModal = function() {
             if (Date.now() - state.lastCaseTime < COOLDOWN_TIME) return;
             
@@ -1039,7 +1070,6 @@
             const reward = currentCaseRewards.find(i => i.id === id);
             state.inventory.push(reward);
             
-            // Ставим КД
             state.lastCaseTime = Date.now();
             saveState();
             
@@ -1054,4 +1084,3 @@
     </script>
 </body>
 </html>
-```
