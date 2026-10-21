@@ -1,209 +1,398 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Апгрейдер Симулятор</title>
+    <title>Апгрейдер CS2</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --accent: #ffd700;
+            --accent-hover: #ffea00;
+            --text-main: #ffffff;
+            --text-muted: #888;
+            --border: #333;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #1a1a2e;
-            color: #eee;
-            padding: 20px 16px;
+            background-color: var(--bg-color);
+            color: var(--text-main);
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
             user-select: none;
         }
-        .balance-card {
-            background: linear-gradient(135deg, #16213e, #0f3460);
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 20px;
-            border: 1px solid #e94560;
-        }
-        .balance-label { font-size: 14px; opacity: 0.7; margin-bottom: 4px; }
-        .balance-value { font-size: 32px; font-weight: 800; color: #e94560; }
-        .item-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .item-card {
-            background: #16213e;
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: var(--panel-bg);
             border-radius: 12px;
-            padding: 16px 12px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--accent);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .balance { font-size: 20px; font-weight: bold; color: var(--accent); }
+
+        .main-zone {
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .panel {
+            flex: 1;
+            background: var(--panel-bg);
+            border-radius: 16px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .panel-title { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; text-align: center; }
+        
+        .skin-card {
+            width: 100%;
+            background: #2a2a2a;
+            border-radius: 10px;
+            padding: 10px;
             text-align: center;
             border: 2px solid transparent;
-            cursor: pointer;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
         }
-        .item-card.selected { border-color: #e94560; background: #1f2b4d; }
-        .item-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-        .item-price { font-size: 12px; color: #e94560; font-weight: 700; }
-        .bet-section { margin-bottom: 20px; }
-        .bet-label { font-size: 14px; margin-bottom: 8px; opacity: 0.8; }
-        .bet-input {
+        
+        .skin-img {
             width: 100%;
-            padding: 14px;
-            font-size: 18px;
-            border-radius: 12px;
-            border: 1px solid #333;
-            background: #0f0f1a;
-            color: #fff;
-            outline: none;
+            height: 80px;
+            object-fit: contain;
+            margin-bottom: 5px;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5));
         }
-        .bet-input:focus { border-color: #e94560; }
-        .upgrade-btn {
-            width: 100%;
-            padding: 16px;
-            font-size: 18px;
-            font-weight: 700;
-            border: none;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #e94560, #c23152);
-            color: #fff;
-            cursor: pointer;
-            margin-top: 12px;
+        
+        .item-name { font-size: 12px; font-weight: bold; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .item-price { font-size: 14px; color: var(--accent); font-weight: bold; }
+
+        .wheel-zone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1.2;
         }
-        .upgrade-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .result-box {
-            margin-top: 16px;
-            padding: 14px;
-            border-radius: 12px;
-            text-align: center;
-            font-weight: 600;
-            min-height: 50px;
+        .wheel {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: conic-gradient(var(--accent) 0deg, var(--accent) 0deg, #333 0deg);
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
+            margin-bottom: 15px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+            transition: background 0.1s;
         }
-        .result-win { background: #1b4332; color: #95d5b2; border: 1px solid #2d6a4f; }
-        .result-lose { background: #3d1f1f; color: #ff8a8a; border: 1px solid #6b2c2c; }
-        .reset-btn {
-            background: none;
-            border: 1px solid #444;
-            color: #888;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 12px;
-            margin-top: 12px;
+        .wheel-inner {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+        .chance-text { font-size: 22px; font-weight: bold; color: var(--accent); }
+        .chance-label { font-size: 11px; color: var(--text-muted); }
+
+        .btn-upgrade {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: 900;
+            border-radius: 10px;
             cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s;
             width: 100%;
+        }
+        .btn-upgrade:hover { background: var(--accent-hover); transform: scale(1.02); }
+        .btn-upgrade:disabled { background: #555; color: #888; cursor: not-allowed; transform: none; }
+
+        .input-group {
+            margin-top: 10px;
+            width: 100%;
+        }
+        .input-group input {
+            width: 100%;
+            background: #000;
+            border: 1px solid var(--border);
+            color: var(--accent);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 16px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .input-group input:focus { outline: none; border-color: var(--accent); }
+
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+            font-size: 14px;
+        }
+        .result.win { background: rgba(0, 255, 0, 0.1); border: 1px solid #00ff00; color: #00ff00; }
+        .result.lose { background: rgba(255, 0, 0, 0.1); border: 1px solid #ff0000; color: #ff0000; }
+
+        .inventory {
+            background: var(--panel-bg);
+            border-radius: 16px;
+            padding: 15px;
+            border: 1px solid var(--border);
+            flex-grow: 1;
+        }
+        .inv-title { font-size: 15px; color: var(--text-muted); margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        
+        .inv-scroll {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            padding-bottom: 10px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent) var(--panel-bg);
+        }
+        .inv-scroll::-webkit-scrollbar { height: 6px; }
+        .inv-scroll::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+        
+        .inv-item {
+            min-width: 120px;
+            max-width: 120px;
+            background: #252525;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #444;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .inv-item:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .inv-item .skin-img { height: 50px; }
+        
+        @media (max-width: 600px) {
+            .main-zone { flex-direction: column; }
+            .wheel-zone { flex-direction: row; justify-content: space-around; }
+            .wheel { width: 100px; height: 100px; margin-bottom: 0; }
+            .wheel-inner { width: 75px; height: 75px; }
+            .chance-text { font-size: 16px; }
         }
     </style>
 </head>
 <body>
-    <div class="balance-card">
-        <div class="balance-label">Баланс</div>
-        <div class="balance-value" id="balance">0</div>
+    <div class="header">
+        <div>Баланс</div>
+        <div class="balance" id="balance">0</div>
+        <button id="resetBtn" style="background:none; border:1px solid #555; color:#888; padding:5px 10px; border-radius:5px; cursor:pointer;">Сброс</button>
     </div>
 
-    <div style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">Выберите цель</div>
-    <div class="item-grid" id="itemGrid"></div>
+    <div class="main-zone">
+        <!-- Левая панель: Ставка -->
+        <div class="panel">
+            <div class="panel-title">Ваша ставка</div>
+            <div class="skin-card">
+                <img src="https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/items/weapon_cash.png" class="skin-img" alt="money" onerror="this.style.display='none'">
+                <div class="item-name">Виртуальные деньги</div>
+                <div class="input-group">
+                    <input type="number" id="betInput" placeholder="Сумма" min="1">
+                </div>
+            </div>
+        </div>
 
-    <div class="bet-section">
-        <div class="bet-label">Сумма ставки</div>
-        <input type="number" class="bet-input" id="betInput" placeholder="Введите сумму" min="1">
+        <!-- Центральная панель -->
+        <div class="wheel-zone">
+            <div class="wheel" id="wheel">
+                <div class="wheel-inner">
+                    <div class="chance-text" id="chanceText">0%</div>
+                    <div class="chance-label">Шанс</div>
+                </div>
+            </div>
+            <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+                <button class="btn-upgrade" id="upgradeBtn">Улучшить</button>
+                <div class="result" id="resultBox"></div>
+            </div>
+        </div>
+
+        <!-- Правая панель: Цель -->
+        <div class="panel">
+            <div class="panel-title">Цель апгрейда</div>
+            <div class="skin-card selected" id="targetCard">
+                <img src="" id="targetImg" class="skin-img">
+                <div class="item-name" id="targetName"></div>
+                <div class="item-price" id="targetPrice"></div>
+            </div>
+        </div>
     </div>
 
-    <button class="upgrade-btn" id="upgradeBtn">Апгрейд</button>
-    <div id="resultBox" class="result-box" style="display: none;"></div>
-    <button class="reset-btn" id="resetBtn">Сбросить баланс (1000)</button>
+    <!-- Нижняя панель: Выбор скинов -->
+    <div class="inventory">
+        <div class="inv-title">Выберите скин для апгрейда</div>
+        <div class="inv-scroll" id="invGrid"></div>
+    </div>
 
     <script>
         const tg = window.Telegram?.WebApp;
         if (tg) { tg.ready(); tg.expand(); }
 
+        // Картинки берутся с публичного CDN Steam
         const ITEMS = [
-            { id: 'ak_redline', name: 'AK-47 | Redline', price: 500 },
-            { id: 'm4_print', name: 'M4A1-S | Printstream', price: 1200 },
-            { id: 'awp_asiimov', name: 'AWP | Asiimov', price: 2500 },
-            { id: 'knife_doppler', name: 'Нож | Doppler', price: 5000 },
+            { id: '1', name: 'AK-47 | Slate', price: 50, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/ak47_slate.png' },
+            { id: '2', name: 'USP-S | Ticket to Hell', price: 100, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/usp_s_ticket_to_hell.png' },
+            { id: '3', name: 'Glock-18 | Water Elemental', price: 150, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/glock18_water_elemental.png' },
+            { id: '4', name: 'M4A1-S | Cyrex', price: 250, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/m4a1_s_cyrex.png' },
+            { id: '5', name: 'AK-47 | Redline', price: 400, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/ak47_redline.png' },
+            { id: '6', name: 'Desert Eagle | Code Red', price: 600, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/desert_eagle_code_red.png' },
+            { id: '7', name: 'AWP | Neo-Noir', price: 800, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/awp_neonoir.png' },
+            { id: '8', name: 'M4A1-S | Printstream', price: 1000, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/m4a1_s_printstream.png' },
+            { id: '9', name: 'AK-47 | Bloodsport', price: 1200, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/ak47_bloodsport.png' },
+            { id: '10', name: 'AWP | Asiimov', price: 1500, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/awp_asiimov.png' },
+            { id: '11', name: 'AK-47 | The Empress', price: 1800, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/ak47_the_empress.png' },
+            { id: '12', name: 'USP-S | Kill Confirmed', price: 2200, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/usp_s_kill_confirmed.png' },
+            { id: '13', name: 'M4A4 | The Emperor', price: 2500, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/m4a4_the_emperor.png' },
+            { id: '14', name: 'AWP | Hyper Beast', price: 3000, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/awp_hyper_beast.png' },
+            { id: '15', name: 'AWP | Dragon Lore', price: 10000, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/awp_dragon_lore.png' },
+            { id: '16', name: 'M4A4 | Howl', price: 12000, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/m4a4_howl.png' }
         ];
 
-        const STORAGE_KEY = 'upgrader_sim_state';
+        const STORAGE_KEY = 'cs_upgrader_state_v3';
         const DEFAULT_BALANCE = 1000;
+        
+        let state = loadState();
+        let selectedTarget = ITEMS[4]; // По умолчанию AK Redline
 
         function loadState() {
             const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) {
-                try { return JSON.parse(saved); } catch (e) {}
-            }
+            if (saved) { try { return JSON.parse(saved); } catch (e) {} }
             return { balance: DEFAULT_BALANCE };
         }
 
-        function saveState(state) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        }
+        function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+        function updateBalance() { document.getElementById('balance').textContent = state.balance.toLocaleString(); }
 
-        let state = loadState();
-        let selectedItem = ITEMS[0];
-
-        function renderBalance() {
-            document.getElementById('balance').textContent = state.balance.toLocaleString();
-        }
-
-        function renderItems() {
-            const grid = document.getElementById('itemGrid');
+        function renderGrid() {
+            const grid = document.getElementById('invGrid');
             grid.innerHTML = ITEMS.map(item => `
-                <div class="item-card ${item.id === selectedItem.id ? 'selected' : ''}" data-id="${item.id}">
-                    <div class="item-name">${item.name}</div>
+                <div class="inv-item" onclick="selectTarget('${item.id}')">
+                    <img src="${item.img}" class="skin-img" loading="lazy">
+                    <div class="item-name">${item.name.split('|')[0]}</div>
                     <div class="item-price">$${item.price}</div>
                 </div>
             `).join('');
-
-            grid.querySelectorAll('.item-card').forEach(card => {
-                card.addEventListener('click', () => {
-                    selectedItem = ITEMS.find(i => i.id === card.dataset.id);
-                    renderItems();
-                });
-            });
         }
+
+        window.selectTarget = function(id) {
+            selectedTarget = ITEMS.find(i => i.id === id);
+            
+            document.getElementById('targetName').textContent = selectedTarget.name;
+            document.getElementById('targetPrice').textContent = '$' + selectedTarget.price;
+            document.getElementById('targetImg').src = selectedTarget.img;
+            
+            updateChanceUI();
+            document.getElementById('resultBox').style.display = 'none';
+        }
+
+        function updateChanceUI() {
+            const bet = parseInt(document.getElementById('betInput').value) || 0;
+            let chance = bet / selectedTarget.price;
+            if (chance > 1) chance = 1;
+            if (chance < 0) chance = 0;
+            
+            const percent = (chance * 100).toFixed(1);
+            document.getElementById('chanceText').textContent = percent + '%';
+            
+            const wheel = document.getElementById('wheel');
+            const degrees = chance * 360;
+            wheel.style.background = `conic-gradient(var(--accent) ${degrees}deg, #333 ${degrees}deg)`;
+        }
+
+        document.getElementById('betInput').addEventListener('input', updateChanceUI);
+
+        document.getElementById('upgradeBtn').addEventListener('click', () => {
+            const bet = parseInt(document.getElementById('betInput').value);
+            if (!bet || bet <= 0) return showResult('Введите сумму', false);
+            if (bet > state.balance) return showResult('Недостаточно средств', false);
+            if (bet > selectedTarget.price) return showResult('Ставка больше цены цели', false);
+
+            const chance = bet / selectedTarget.price;
+            state.balance -= bet;
+            
+            const wheel = document.getElementById('wheel');
+            let currentDeg = 0;
+            const spinInterval = setInterval(() => {
+                currentDeg += 25;
+                wheel.style.background = `conic-gradient(var(--accent) ${currentDeg}deg, #333 ${currentDeg}deg)`;
+            }, 20);
+
+            setTimeout(() => {
+                clearInterval(spinInterval);
+                
+                const win = Math.random() < chance;
+                if (win) {
+                    state.balance += selectedTarget.price;
+                    showResult(`🎉 Выигрыш! Получен ${selectedTarget.name}`, true);
+                } else {
+                    showResult(`💀 Не повезло. Потеряно $${bet}`, false);
+                }
+                
+                saveState();
+                updateBalance();
+                updateChanceUI();
+                document.getElementById('betInput').value = '';
+                
+            }, 1000);
+        });
 
         function showResult(text, isWin) {
             const box = document.getElementById('resultBox');
-            box.style.display = 'flex';
-            box.className = 'result-box ' + (isWin ? 'result-win' : 'result-lose');
+            box.style.display = 'block';
+            box.className = 'result ' + (isWin ? 'win' : 'lose');
             box.textContent = text;
         }
 
-        function doUpgrade() {
-            const betInput = document.getElementById('betInput');
-            const bet = parseInt(betInput.value);
-
-            if (!bet || bet <= 0) { showResult('Введите корректную сумму', false); return; }
-            if (bet > state.balance) { showResult('Недостаточно средств', false); return; }
-            if (bet > selectedItem.price) { showResult('Ставка не может превышать цену цели', false); return; }
-
-            const chance = bet / selectedItem.price;
-            state.balance -= bet;
-
-            const roll = Math.random();
-            const win = roll < chance;
-
-            if (win) {
-                state.balance += selectedItem.price;
-                showResult(`🎉 Выигрыш! Получен ${selectedItem.name} (+$${selectedItem.price})`, true);
-            } else {
-                showResult(`💀 Не повезло. Потеряно $${bet}`, false);
-            }
-
-            saveState(state);
-            renderBalance();
-            betInput.value = '';
-        }
-
-        document.getElementById('upgradeBtn').addEventListener('click', doUpgrade);
-
         document.getElementById('resetBtn').addEventListener('click', () => {
-            if (confirm('Сбросить баланс до 1000?')) {
-                state.balance = DEFAULT_BALANCE;
-                saveState(state);
-                renderBalance();
+            if (confirm('Сбросить весь прогресс?')) {
+                state = { balance: DEFAULT_BALANCE };
+                saveState();
+                updateBalance();
+                document.getElementById('betInput').value = '';
+                updateChanceUI();
                 document.getElementById('resultBox').style.display = 'none';
             }
         });
 
-        renderBalance();
-        renderItems();
+        // Инициализация
+        updateBalance();
+        renderGrid();
+        selectTarget('5');
     </script>
+</body>
+</html>
 </body>
 </html>
