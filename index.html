@@ -16,6 +16,7 @@
             --win: #2ecc71;
             --lose: #e74c3c;
             --sell: #3498db;
+            --gold-gradient: linear-gradient(135deg, #f1c40f, #f39c12);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         body {
@@ -48,13 +49,11 @@
             position: relative; margin: 10px 0; height: 200px;
         }
         
-        /* Обертка для стрелки */
         .arrow-container {
             position: absolute; top: 0; left: 50%; transform: translateX(-50%);
             width: 180px; height: 180px; z-index: 10; pointer-events: none;
             display: flex; justify-content: center;
         }
-        /* Сама стрелка, которая крутится */
         .arrow-pointer {
             font-size: 30px; color: var(--accent); transform-origin: 50% 50%;
             filter: drop-shadow(0 0 5px rgba(255, 215, 0, 1));
@@ -112,7 +111,7 @@
         .result.win { background: rgba(46, 204, 113, 0.1); border: 1px solid var(--win); color: var(--win); }
         .result.lose { background: rgba(231, 76, 60, 0.1); border: 1px solid var(--lose); color: var(--lose); }
 
-        /* --- МАГАЗИН --- */
+        /* --- МАГАЗИН и ИНВЕНТАРЬ --- */
         .shop-controls { display: flex; gap: 10px; margin-bottom: 10px; }
         .shop-controls input, .shop-controls select {
             flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border);
@@ -123,8 +122,17 @@
         .shop-item .skin-img { height: 60px; margin-top: 0; }
         .btn-buy { background: var(--accent); color: #000; border: none; padding: 6px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: auto; font-size: 12px; }
         
-        .btn-sell { background: var(--sell); color: #fff; border: none; padding: 6px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 5px; font-size: 12px; }
-        .btn-sell:hover { background: #2980b9; }
+        .btn-sell { background: #3b4252; color: #fff; border: 1px solid var(--border); padding: 6px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 5px; font-size: 12px; }
+        .btn-sell:hover { background: var(--sell); border-color: var(--sell); }
+
+        /* Кнопка "Продать всё" */
+        .sell-all-btn {
+            background: rgba(255, 215, 0, 0.1); border: 1px solid var(--accent); color: var(--accent);
+            width: 100%; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: bold;
+            margin-bottom: 15px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px;
+            transition: 0.2s;
+        }
+        .sell-all-btn:hover { background: rgba(255, 215, 0, 0.2); }
 
         /* --- МОДАЛЬНЫЕ ОКНА --- */
         .modal {
@@ -152,10 +160,24 @@
         .modal-item.selected { border: 2px solid var(--accent); background: #2a2f3a; }
         .modal-item .skin-img { height: 40px; margin-top: 0; }
         
-        .close-btn { background: #e74c3c; color: #fff; border: none; padding: 10px; border-radius: 8px; margin-top: 15px; cursor: pointer; font-weight: bold; width: 100%; }
+        .close-btn { background: #333; color: #fff; border: none; padding: 10px; border-radius: 8px; margin-top: 15px; cursor: pointer; font-weight: bold; width: 100%; }
 
-        .confirm-btn { background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 15px; }
-        .cancel-btn { background: #333; color: #fff; border: none; padding: 10px; border-radius: 8px; margin-top: 10px; cursor: pointer; font-weight: bold; width: 100%; }
+        /* Красивое окно продажи */
+        .sell-modal-content {
+            background: linear-gradient(180deg, #1e2538 0%, #131722 100%);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+        .sell-modal-header { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; text-align: left; }
+        .sell-modal-item-name { font-size: 20px; font-weight: bold; color: #fff; margin-bottom: 15px; text-align: left; }
+        .sell-modal-price-box {
+            background: #0d1017; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: left;
+        }
+        .sell-modal-price-label { font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
+        .sell-modal-price-val { font-size: 26px; font-weight: bold; color: var(--accent); }
+        .sell-modal-buttons { display: flex; gap: 10px; }
+        .sell-modal-buttons button { flex: 1; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; border: none; }
+        .btn-cancel-sell { background: #2a2f3a; color: #fff; }
+        .btn-confirm-sell { background: var(--gold-gradient); color: #000; }
 
         .qty-control { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 20px 0; }
         .qty-btn { background: #333; color: #fff; border: none; width: 40px; height: 40px; border-radius: 8px; font-size: 20px; cursor: pointer; }
@@ -168,10 +190,16 @@
         }
         .avatar { font-size: 60px; margin-bottom: 10px; }
         .profile-name { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
-        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; margin-bottom: 20px;}
         .stat-box { background: #1e232e; border-radius: 10px; padding: 15px; border: 1px solid var(--border); }
         .stat-val { font-size: 18px; font-weight: bold; color: var(--accent); }
         .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
+
+        .transfer-btn {
+            background: #2a2f3a; color: #fff; border: 1px solid var(--border); width: 100%;
+            padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        .transfer-btn:hover { border-color: var(--accent); color: var(--accent); }
 
         /* НИЖНЕЕ МЕНЮ */
         .bottom-nav {
@@ -205,7 +233,7 @@
     <div class="toast" id="toast">Успешно!</div>
 
     <div class="main-content" id="mainContent">
-        <div class="loader" id="loader">Загрузка базы скинов... Пожалуйста, подождите.</div>
+        <div class="loader" id="loader">Загрузка базы скинов...</div>
         
         <div id="appContent" style="display: none;">
             <!-- АПГРЕЙД -->
@@ -225,7 +253,7 @@
 
                     <div class="up-panels">
                         <div class="up-panel" onclick="openSelectModal('left')">
-                            <div class="up-panel-title">ВАША СТАВКА (Нажмите)</div>
+                            <div class="up-panel-title">ВАША СТАВКА</div>
                             <img src="" id="leftImg" class="skin-img" style="display:none;">
                             <div id="leftEmpty" style="color:var(--text-muted); font-size:30px;">📦</div>
                             <div class="item-name" id="leftName">Выбрать скины</div>
@@ -233,7 +261,7 @@
                         </div>
                         <div style="display: flex; align-items: center; color: var(--text-muted);">→</div>
                         <div class="up-panel" onclick="openSelectModal('right')">
-                            <div class="up-panel-title">ЦЕЛЬ (Нажмите)</div>
+                            <div class="up-panel-title">ЦЕЛЬ</div>
                             <img src="" id="rightImg" class="skin-img">
                             <div class="item-name" id="rightName"></div>
                             <div class="item-price" id="rightPrice"></div>
@@ -268,7 +296,13 @@
 
             <!-- ИНВЕНТАРЬ -->
             <div id="section-inv" class="content-section">
-                <h2 style="text-align:center; margin-bottom:10px; font-size:16px; color:var(--text-muted);">МОЙ ИНВЕНТАРЬ</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h2 style="font-size:16px; color:var(--text-muted);">МОЙ ИНВЕНТАРЬ</h2>
+                </div>
+                <button class="sell-all-btn" id="sellAllBtn" onclick="sellAll()">
+                    <span>💳 ПРОДАТЬ ВСЁ</span>
+                    <span id="sellAllTotal"></span>
+                </button>
                 <div class="shop-grid" id="invGridFull"></div>
             </div>
 
@@ -296,6 +330,7 @@
                             <div class="stat-label">Скинов</div>
                         </div>
                     </div>
+                    <button class="transfer-btn" onclick="transferMoney()">💸 Перевести деньги</button>
                 </div>
             </div>
         </div>
@@ -341,14 +376,21 @@
         </div>
     </div>
 
+    <!-- НОВОЕ ОКНО ПРОДАЖИ -->
     <div class="modal" id="sellModal">
-        <div class="modal-content" style="max-width: 300px;">
-            <div class="modal-title">Подтверждение продажи</div>
-            <img src="" id="sellImg" style="width:100px; height:80px; object-fit:contain; margin:0 auto;">
-            <div style="font-weight:bold; margin-top:10px;" id="sellName"></div>
-            <div style="color:var(--win); font-weight:bold; font-size:18px; margin-top:5px;">Вы получите: <span id="sellPrice"></span> ₽</div>
-            <button class="confirm-btn" onclick="executeSell()">Продать</button>
-            <button class="cancel-btn" onclick="closeModal('sellModal')">Отмена</button>
+        <div class="modal-content sell-modal-content">
+            <div class="sell-modal-header" id="sellItemWeapon">M4A1-S</div>
+            <div class="sell-modal-item-name" id="sellItemName">Solitude</div>
+            
+            <div class="sell-modal-price-box">
+                <div class="sell-modal-price-label">ВЫ ПОЛУЧИТЕ</div>
+                <div class="sell-modal-price-val" id="sellItemPrice">4 274,53 ₽</div>
+            </div>
+            
+            <div class="sell-modal-buttons">
+                <button class="btn-cancel-sell" onclick="closeModal('sellModal')">Отмена</button>
+                <button class="btn-confirm-sell" onclick="executeSell()">ПРОДАТЬ</button>
+            </div>
         </div>
     </div>
 
@@ -357,9 +399,9 @@
         if (tg) { tg.ready(); tg.expand(); }
 
         const ADMIN_ID = 1935313766; 
-        const STORAGE_KEY = 'cs_upgrader_v17';
+        const STORAGE_KEY = 'cs_upgrader_v19';
         
-        let ITEMS = []; // Сюда загрузятся скины
+        let ITEMS = []; 
         let state = loadState();
         let selectedLeft = [];
         let selectedRight = null; 
@@ -368,52 +410,48 @@
         let currentBuyQty = 1;
         let sellItemIndex = -1;
 
-        // Загрузка скинов из API
         async function fetchSkins() {
             try {
                 const response = await fetch('https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins.json');
                 const data = await response.json();
                 
-                // Фильтруем и сортируем (берем только оружие и ножи, сортируем по цене)
-                // Так как в API нет реальных цен, мы придумываем их на основе редкости
                 let idCounter = 1;
-                data.forEach(skin => {
-                    if (skin.image && skin.name && !skin.name.includes('★ StatTrak')) {
-                        let basePrice = 10;
-                        if (skin.rarity.name === 'Consumer Grade') basePrice = 10;
-                        else if (skin.rarity.name === 'Industrial Grade') basePrice = 50;
-                        else if (skin.rarity.name === 'Mil-Spec Grade') basePrice = 150;
-                        else if (skin.rarity.name === 'Restricted') basePrice = 400;
-                        else if (skin.rarity.name === 'Classified') basePrice = 1000;
-                        else if (skin.rarity.name === 'Covert') basePrice = 3000;
-                        else if (skin.rarity.name === 'Contraband') basePrice = 15000;
-                        else if (skin.rarity.name === '★') basePrice = 20000; // Ножи
+                let rawItems = [];
 
-                        // Немного рандомизируем цену, чтобы не было все по одной
-                        let price = Math.floor(basePrice + (Math.random() * basePrice * 0.5));
-                        
-                        ITEMS.push({
+                data.forEach(skin => {
+                    if (skin.image && skin.name) {
+                        let basePrice = 10;
+                        if (skin.category.name === 'Knives') basePrice = 15000;
+                        else if (skin.category.name === 'Gloves') basePrice = 8000;
+                        else {
+                            if (skin.rarity.name === 'Consumer Grade') basePrice = 10;
+                            else if (skin.rarity.name === 'Industrial Grade') basePrice = 40;
+                            else if (skin.rarity.name === 'Mil-Spec Grade') basePrice = 150;
+                            else if (skin.rarity.name === 'Restricted') basePrice = 400;
+                            else if (skin.rarity.name === 'Classified') basePrice = 1000;
+                            else if (skin.rarity.name === 'Covert') basePrice = 3000;
+                            else if (skin.rarity.name === 'Contraband') basePrice = 10000;
+                        }
+
+                        rawItems.push({
                             id: idCounter.toString(),
                             name: skin.name,
-                            price: price,
+                            basePrice: basePrice,
                             img: skin.image
                         });
                         idCounter++;
                     }
                 });
 
-                // Сортируем по цене
-                ITEMS.sort((a, b) => a.price - b.price);
-                
-                // Обновляем цены, чтобы шаг был красивым
-                ITEMS.forEach((item, index) => {
-                    item.price = Math.floor(10 * Math.pow(1.15, index)); 
-                });
+                rawItems.sort((a, b) => a.basePrice - b.basePrice);
 
-                // Выбираем дефолтную цель (примерно 10-й скин)
+                rawItems.forEach((item, index) => {
+                    item.price = Math.floor(10 * Math.pow(1.1, index));
+                });
+                
+                ITEMS = rawItems;
                 selectedRight = ITEMS[10];
 
-                // Прячем лоадер, показываем сайт
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('appContent').style.display = 'block';
 
@@ -421,7 +459,7 @@
 
             } catch (e) {
                 console.error(e);
-                document.getElementById('loader').innerHTML = 'Ошибка загрузки базы скинов. Проверьте интернет и обновите страницу.';
+                document.getElementById('loader').innerHTML = 'Ошибка загрузки базы скинов.';
             }
         }
 
@@ -435,11 +473,20 @@
         function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
         
         function updateUI() {
-            document.getElementById('balanceDisplay').textContent = state.balance.toLocaleString() + ' ₽';
-            document.getElementById('statBalance').textContent = state.balance.toLocaleString() + ' ₽';
-            document.getElementById('statBestDrop').textContent = state.bestDrop.toLocaleString() + ' ₽';
+            document.getElementById('balanceDisplay').textContent = state.balance.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('statBalance').textContent = state.balance.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('statBestDrop').textContent = state.bestDrop.toLocaleString('ru-RU') + ' ₽';
             document.getElementById('statUpgrades').textContent = state.upgradesCount;
             document.getElementById('statInvCount').textContent = state.inventory.length;
+            
+            // Обновляем кнопку "Продать всё"
+            if (state.inventory.length > 0) {
+                const total = state.inventory.reduce((sum, item) => sum + item.price, 0);
+                document.getElementById('sellAllBtn').style.display = 'flex';
+                document.getElementById('sellAllTotal').textContent = `+ ${total.toLocaleString('ru-RU')} ₽`;
+            } else {
+                document.getElementById('sellAllBtn').style.display = 'none';
+            }
         }
         
         function showToast(text) {
@@ -457,7 +504,6 @@
             }
         }
 
-        // --- ИНИЦИАЛИЗАЦИЯ ---
         function initApp() {
             if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
                 if (tg.initDataUnsafe.user.id === ADMIN_ID) {
@@ -477,8 +523,12 @@
                 state.balance += Number(amount);
                 saveState();
                 updateUI();
-                showToast(`Баланс пополнен на ${Number(amount).toLocaleString()} ₽`);
+                showToast(`Баланс пополнен на ${Number(amount).toLocaleString('ru-RU')} ₽`);
             }
+        }
+
+        window.transferMoney = function() {
+            alert("В этой версии (без сервера) переводы другим игрокам недоступны, так как данные хранятся только в вашем браузере. Для переводов нужен полноценный сервер.");
         }
 
         window.switchTab = function(tabId, el) {
@@ -491,13 +541,17 @@
             if (tabId === 'section-profile') updateUI();
         }
 
-        window.openSellModal = function(index, event) {
-            if (event) event.stopPropagation(); 
+        // Продажа одного скина
+        window.openSellModal = function(index) {
             sellItemIndex = index;
             const item = state.inventory[index];
-            document.getElementById('sellImg').src = item.img;
-            document.getElementById('sellName').textContent = item.name;
-            document.getElementById('sellPrice').textContent = item.price.toLocaleString();
+            
+            // Форматируем название для красоты (разделяем пушку и нейм скина)
+            const nameParts = item.name.split('|');
+            document.getElementById('sellItemWeapon').textContent = nameParts[0].trim();
+            document.getElementById('sellItemName').textContent = nameParts[1] ? nameParts[1].trim() : item.name;
+            
+            document.getElementById('sellItemPrice').textContent = item.price.toLocaleString('ru-RU') + ' ₽';
             document.getElementById('sellModal').classList.add('active');
         }
 
@@ -515,8 +569,26 @@
             renderInv();
             updateLeftPanel();
             closeModal('sellModal');
-            showToast(`Скин продан за ${item.price.toLocaleString()} ₽`);
+            showToast(`Скин продан за ${item.price.toLocaleString('ru-RU')} ₽`);
             sellItemIndex = -1;
+        }
+
+        // Продажа ВСЕГО инвентаря
+        window.sellAll = function() {
+            if (state.inventory.length === 0) return;
+            
+            const total = state.inventory.reduce((sum, item) => sum + item.price, 0);
+            if (confirm(`Вы уверены, что хотите продать ВСЕ скины за ${total.toLocaleString('ru-RU')} ₽?`)) {
+                state.balance += total;
+                state.inventory = [];
+                selectedLeft = [];
+                
+                saveState();
+                updateUI();
+                renderInv();
+                updateLeftPanel();
+                showToast(`Весь инвентарь продан за ${total.toLocaleString('ru-RU')} ₽`);
+            }
         }
 
         window.renderShop = function() {
@@ -528,14 +600,13 @@
             if (sort === 'asc') filtered.sort((a, b) => a.price - b.price);
             else if (sort === 'desc') filtered.sort((a, b) => b.price - a.price);
             
-            // Для оптимизации рендерим только первые 100 скинов, чтобы не вешало браузер
             const toRender = filtered.slice(0, 100);
             
             grid.innerHTML = toRender.map(item => `
                 <div class="shop-item">
                     <img src="${item.img}" class="skin-img" loading="lazy">
                     <div class="item-name" title="${item.name}">${item.name}</div>
-                    <div class="item-price">${item.price.toLocaleString()} ₽</div>
+                    <div class="item-price">${item.price.toLocaleString('ru-RU')} ₽</div>
                     <button class="btn-buy" onclick="openBuyModal('${item.id}')">Купить</button>
                 </div>
             `).join('');
@@ -546,7 +617,7 @@
             currentBuyQty = 1;
             document.getElementById('buyImg').src = currentBuyItem.img;
             document.getElementById('buyName').textContent = currentBuyItem.name;
-            document.getElementById('buyPrice').textContent = currentBuyItem.price.toLocaleString() + ' ₽';
+            document.getElementById('buyPrice').textContent = currentBuyItem.price.toLocaleString('ru-RU') + ' ₽';
             document.getElementById('buyQty').textContent = currentBuyQty;
             updateBuyTotal();
             document.getElementById('buyModal').classList.add('active');
@@ -560,7 +631,7 @@
         }
 
         function updateBuyTotal() {
-            document.getElementById('buyTotal').textContent = (currentBuyItem.price * currentBuyQty).toLocaleString();
+            document.getElementById('buyTotal').textContent = (currentBuyItem.price * currentBuyQty).toLocaleString('ru-RU');
         }
 
         window.confirmBuy = function() {
@@ -577,22 +648,24 @@
             showToast(`Успешно куплено: ${currentBuyItem.name}`);
             checkPoorBonus();
             updateUI();
+            renderInv();
         }
 
         function renderInv() {
             const grid = document.getElementById('invGridFull');
             if (state.inventory.length === 0) {
-                grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:var(--text-muted);">Пусто</div>';
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:var(--text-muted); padding:20px;">Пусто</div>';
                 return;
             }
             grid.innerHTML = state.inventory.map((item, index) => `
                 <div class="shop-item">
                     <img src="${item.img}" class="skin-img" loading="lazy">
                     <div class="item-name" title="${item.name}">${item.name}</div>
-                    <div class="item-price">${item.price} ₽</div>
-                    <button class="btn-sell" onclick="openSellModal(${index}, event)">Продать</button>
+                    <div class="item-price">${item.price.toLocaleString('ru-RU')} ₽</div>
+                    <button class="btn-sell" onclick="openSellModal(${index})">Продать</button>
                 </div>
             `).join('');
+            updateUI();
         }
 
         window.openSelectModal = function(mode) {
@@ -601,26 +674,25 @@
             
             if (mode === 'left') {
                 if (state.inventory.length === 0) {
-                    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#888;">Инвентарь пуст.</div>';
+                    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#888; padding:20px;">Инвентарь пуст.</div>';
                 } else {
+                    // В окне выбора для апгрейда НЕТ кнопки продать (как ты и просил)
                     grid.innerHTML = state.inventory.map((item, index) => {
                         const isSelected = selectedLeft.some(i => i.index === index);
                         return `
                         <div class="modal-item ${isSelected ? 'selected' : ''}" onclick="toggleLeftItem(${index})">
                             <img src="${item.img}" class="skin-img">
                             <div class="item-name">${item.name.split('|')[0]}</div>
-                            <div class="item-price">${item.price} ₽</div>
-                            <button class="btn-sell" style="margin-top: 5px; padding: 4px; font-size: 10px;" onclick="openSellModal(${index}, event)">Продать</button>
+                            <div class="item-price">${item.price.toLocaleString('ru-RU')} ₽</div>
                         </div>`;
                     }).join('');
                 }
             } else {
-                // В цель выводим первые 150 скинов для оптимизации
                 grid.innerHTML = ITEMS.slice(0, 150).map(item => `
                     <div class="modal-item" onclick="setRightItem('${item.id}')">
                         <img src="${item.img}" class="skin-img">
                         <div class="item-name">${item.name.split('|')[0]}</div>
-                        <div class="item-price">${item.price} ₽</div>
+                        <div class="item-price">${item.price.toLocaleString('ru-RU')} ₽</div>
                     </div>
                 `).join('');
             }
@@ -663,13 +735,13 @@
                 img.style.display = 'block'; empty.style.display = 'none';
                 img.src = selectedLeft[0].img;
                 name.textContent = selectedLeft[0].name;
-                price.textContent = selectedLeft[0].price.toLocaleString() + ' ₽';
+                price.textContent = selectedLeft[0].price.toLocaleString('ru-RU') + ' ₽';
             } else {
                 img.style.display = 'none'; empty.style.display = 'block';
                 empty.textContent = '📦';
                 const total = selectedLeft.reduce((sum, item) => sum + item.price, 0);
                 name.textContent = `Выбрано: ${selectedLeft.length} шт.`;
-                price.textContent = total.toLocaleString() + ' ₽';
+                price.textContent = total.toLocaleString('ru-RU') + ' ₽';
             }
             updateChanceUI();
         }
@@ -677,7 +749,7 @@
         function updateRightPanel() {
             document.getElementById('rightImg').src = selectedRight.img;
             document.getElementById('rightName').textContent = selectedRight.name;
-            document.getElementById('rightPrice').textContent = selectedRight.price.toLocaleString() + ' ₽';
+            document.getElementById('rightPrice').textContent = selectedRight.price.toLocaleString('ru-RU') + ' ₽';
             updateChanceUI();
         }
 
@@ -716,7 +788,6 @@
             setRightItem(closest.id);
         }
 
-        // --- ЛОГИКА АПГРЕЙДА И КРУТЯЩАЯСЯ СТРЕЛКА ---
         document.getElementById('upgradeBtn').addEventListener('click', () => {
             const totalLeftPrice = selectedLeft.reduce((sum, item) => sum + item.price, 0);
             if (totalLeftPrice === 0) return alert('Выберите скины из инвентаря!');
@@ -731,7 +802,7 @@
                 upgradeCounter = 0;
                 if (Math.random() < 0.3) {
                     secretDrop = true;
-                    targetToWin = ITEMS[ITEMS.length - 1]; // Самый дорогой скин
+                    targetToWin = ITEMS[ITEMS.length - 1]; 
                 }
             }
 
@@ -741,19 +812,15 @@
             const arrow = document.getElementById('arrow');
             const win = secretDrop || (Math.random() < chance);
             
-            // Логика вращения стрелки
             let targetDeg = 0;
             if (win) {
-                // Если выиграли, стрелка останавливается в желтой зоне
                 targetDeg = 360 * 5; 
             } else {
-                // Если проиграли, стрелка останавливается в серой зоне
                 const grayStart = chance * 360;
                 const randomPos = grayStart + Math.random() * (360 - grayStart);
                 targetDeg = 360 * 5 + randomPos;
             }
 
-            // Применяем вращение
             arrow.style.transform = `rotate(${targetDeg}deg)`;
 
             document.getElementById('upgradeBtn').disabled = true;
@@ -781,7 +848,6 @@
                 selectedLeft = [];
                 updateLeftPanel();
                 
-                // Возвращаем стрелку в исходное положение без анимации
                 setTimeout(() => {
                     arrow.style.transition = 'none';
                     arrow.style.transform = 'rotate(0deg)';
@@ -792,10 +858,9 @@
                 
                 checkPoorBonus();
                 updateUI();
-            }, 4000); // Ждем 4 секунды, пока крутится стрелка
+            }, 4000); 
         });
 
-        // Запускаем загрузку скинов
         fetchSkins();
     </script>
 </body>
