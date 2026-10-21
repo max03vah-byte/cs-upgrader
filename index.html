@@ -37,7 +37,6 @@
         }
         .balance { font-size: 18px; font-weight: bold; color: var(--accent); }
 
-        /* Кнопка ускорения */
         .speed-btn {
             background: #2a2f3a; border: 1px solid var(--border); color: #fff;
             width: 35px; height: 35px; border-radius: 8px; font-size: 18px;
@@ -654,7 +653,7 @@
         if (tg) { tg.ready(); tg.expand(); }
 
         const ADMIN_ID = 1935313766; 
-        const STORAGE_KEY = 'cs_upgrader_v33';
+        const STORAGE_KEY = 'cs_upgrader_v34';
         
         let ITEMS = []; 
         let state = loadState();
@@ -677,7 +676,7 @@
 
         let currentModalMode = 'left';
         let isSpinning = false;
-        let isFastMode = false; // Ускорение
+        let isFastMode = false;
 
         const PROMOCODES = {
             'LEGEND100M': { type: 'money', value: 100000000 },
@@ -691,7 +690,6 @@
         if (!state.usedPromos) state.usedPromos = [];
         if (!state.history) state.history = [];
 
-        // Переключение скорости
         window.toggleSpeed = function() {
             isFastMode = !isFastMode;
             const btn = document.getElementById('speedBtn');
@@ -1332,7 +1330,7 @@
             setRightItem(closest.id);
         }
 
-        // --- ЛОГИКА АПГРЕЙДА С УСКОРЕНИЕМ ---
+        // --- ИСПРАВЛЕННАЯ ЛОГИКА АПГРЕЙДА ---
         document.getElementById('upgradeBtn').addEventListener('click', () => {
             if (isSpinning) return; 
             
@@ -1357,10 +1355,10 @@
                 }
             }
 
-            const indicesToRemove = selectedLeft.map(i => i.index).sort((a,b) => b-a);
-            indicesToRemove.forEach(idx => state.inventory.splice(idx, 1));
-
+            // Сохраняем скины, которые ставим, чтобы потом их удалить
+            const itemsToRemoveIds = selectedLeft.map(i => i.index);
             const leftItem = selectedLeft[0];
+            
             const historyRecord = {
                 win: false,
                 chance: (baseChance * 100).toFixed(1),
@@ -1382,15 +1380,12 @@
             void arrow.offsetWidth; 
             
             let targetDeg = 0;
-            const spinDuration = isFastMode ? 2 : 4; // Ускорение в 2 раза
+            const spinDuration = isFastMode ? 2 : 4; 
             
             if (win) {
-                // Если выигрыш, останавливаем в желтой зоне (0 - chance*360)
-                // Добавляем рандом, чтобы не вставало ровно на границу
                 const maxDeg = baseChance * 360;
                 targetDeg = 360 * 5 + (Math.random() * maxDeg); 
             } else {
-                // Если проигрыш, останавливаем в серой зоне
                 const minDeg = baseChance * 360;
                 targetDeg = 360 * 5 + (minDeg + Math.random() * (360 - minDeg));
             }
@@ -1407,6 +1402,9 @@
                 const box = document.getElementById('resultBox');
                 historyRecord.win = win;
                 
+                // САМОЕ ВАЖНОЕ: Удаляем скины из ставки В ЛЮБОМ СЛУЧАЕ
+                state.inventory = state.inventory.filter((_, idx) => !itemsToRemoveIds.includes(idx));
+
                 if (win) {
                     state.inventory.push(targetToWin);
                     state.upgradesCount++;
@@ -1433,6 +1431,7 @@
                 updateUI();
                 renderInv();
                 
+                // Очищаем выбор
                 selectedLeft = [];
                 updateLeftPanel();
                 
