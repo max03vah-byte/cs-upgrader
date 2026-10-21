@@ -60,23 +60,18 @@
             position: relative; margin: 10px 0; height: 200px;
         }
         
-        /* НОВАЯ ПАЛКА-УКАЗАТЕЛЬ */
+        /* НОВЫЙ КРАСИВЫЙ ТРЕУГОЛЬНИК */
         .arrow-container {
-            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 180px; height: 180px; z-index: 10; pointer-events: none;
-            display: flex; justify-content: center;
         }
         .arrow-pointer {
-            position: absolute; bottom: 50%; left: 50%; transform-origin: 50% 100%;
-            width: 4px; height: 85px; background: var(--accent);
-            border-radius: 4px; box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent);
-            transform: translateX(-50%) rotate(0deg);
-        }
-        /* Кончик палки */
-        .arrow-pointer::after {
-            content: ''; position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
-            border-left: 8px solid transparent; border-right: 8px solid transparent;
-            border-bottom: 12px solid var(--accent);
+            position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
+            width: 0; height: 0;
+            border-left: 15px solid transparent; border-right: 15px solid transparent;
+            border-top: 25px solid var(--accent);
+            filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8)) drop-shadow(0 0 15px rgba(255, 215, 0, 0.4));
+            transform-origin: 50% 105px; /* Ось вращения (от центра) */
         }
 
         .wheel {
@@ -393,7 +388,7 @@
                                 <div class="chance-label">Шанс</div>
                             </div>
                         </div>
-                        <!-- Палка-указатель -->
+                        <!-- НОВЫЙ ТРЕУГОЛЬНИК -->
                         <div class="arrow-container">
                             <div class="arrow-pointer" id="arrow"></div>
                         </div>
@@ -665,7 +660,7 @@
         if (tg) { tg.ready(); tg.expand(); }
 
         const ADMIN_ID = 1935313766; 
-        const STORAGE_KEY = 'cs_upgrader_v35';
+        const STORAGE_KEY = 'cs_upgrader_v37';
         
         let ITEMS = []; 
         let state = loadState();
@@ -1342,6 +1337,7 @@
             setRightItem(closest.id);
         }
 
+        // --- ИСПРАВЛЕННАЯ ЛОГИКА ВРАЩЕНИЯ ---
         document.getElementById('upgradeBtn').addEventListener('click', () => {
             if (isSpinning) return; 
             
@@ -1385,9 +1381,10 @@
             const arrow = document.getElementById('arrow');
             const win = secretDrop || (Math.random() < realChance); 
             
+            // Оптимизация: сброс поворота
             arrow.style.transition = 'none';
-            arrow.style.transform = 'translateX(-50%) rotate(0deg)';
-            void arrow.offsetWidth; 
+            arrow.style.transform = 'rotate(0deg)';
+            void arrow.offsetWidth; // Принудительный рефлоу
             
             let targetDeg = 0;
             const spinDuration = isFastMode ? 2 : 4;
@@ -1400,9 +1397,10 @@
                 targetDeg = 360 * 5 + (minDeg + Math.random() * (360 - minDeg));
             }
 
+            // Включаем анимацию
             setTimeout(() => {
                 arrow.style.transition = `transform ${spinDuration}s cubic-bezier(0.1, 0.7, 0.1, 1)`;
-                arrow.style.transform = `translateX(-50%) rotate(${targetDeg}deg)`;
+                arrow.style.transform = `rotate(${targetDeg}deg)`;
             }, 50);
 
             document.getElementById('upgradeBtn').disabled = true;
