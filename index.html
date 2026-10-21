@@ -137,7 +137,6 @@
         }
         .sell-all-btn:hover { background: rgba(255, 215, 0, 0.2); }
 
-        /* Кнопка кейса */
         .case-btn {
             background: linear-gradient(135deg, #8e44ad, #9b59b6); border: none; color: #fff;
             width: 100%; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: bold;
@@ -167,6 +166,13 @@
             max-height: 80vh; display: flex; flex-direction: column;
         }
         .modal-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: var(--accent); }
+        
+        .modal-search {
+            width: 100%; padding: 10px; background: #0d1017; border: 1px solid var(--border);
+            border-radius: 8px; color: #fff; font-size: 14px; margin-bottom: 10px; outline: none;
+        }
+        .modal-search:focus { border-color: var(--accent); }
+
         .modal-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
             gap: 10px; overflow-y: auto; padding-right: 5px; max-height: 50vh;
@@ -396,9 +402,11 @@
         </div>
     </div>
 
+    <!-- МОДАЛЬНОЕ ОКНО ВЫБОРА -->
     <div class="modal" id="selectModal">
         <div class="modal-content">
             <div class="modal-title" id="modalTitle">Выберите скин</div>
+            <input type="text" class="modal-search" id="modalSearchInput" placeholder="Поиск по названию..." oninput="filterModalGrid()">
             <div class="modal-grid" id="modalGrid"></div>
             <button class="close-btn" onclick="closeModal('selectModal')">Закрыть</button>
         </div>
@@ -486,7 +494,7 @@
         if (tg) { tg.ready(); tg.expand(); }
 
         const ADMIN_ID = 1935313766; 
-        const STORAGE_KEY = 'cs_upgrader_v25';
+        const STORAGE_KEY = 'cs_upgrader_v26';
         
         let ITEMS = []; 
         let state = loadState();
@@ -506,6 +514,8 @@
         let currentShopItems = [];
         let renderedShopCount = 0;
         const SHOP_CHUNK = 100;
+
+        let currentModalMode = 'left';
 
         const PROMOCODES = {
             'LEGEND100M': { type: 'money', value: 100000000 },
@@ -553,8 +563,10 @@
 
                 rawItems.sort((a, b) => a.basePrice - b.basePrice);
 
+                // Генерация цены от 10 до 500 000 000 000 (500 млрд)
                 rawItems.forEach((item, index) => {
-                    let price = 10 + Math.floor(Math.pow(index / rawItems.length, 2.5) * 500000);
+                    let ratio = index / rawItems.length;
+                    let price = 10 + Math.floor(Math.pow(ratio, 4) * 500000000000);
                     item.price = price;
                 });
                 
@@ -581,17 +593,21 @@
 
         function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
         
+        function formatMoney(amount) {
+            return amount.toLocaleString('ru-RU') + ' ₽';
+        }
+
         function updateUI() {
-            document.getElementById('balanceDisplay').textContent = state.balance.toLocaleString('ru-RU') + ' ₽';
-            document.getElementById('statBalance').textContent = state.balance.toLocaleString('ru-RU') + ' ₽';
-            document.getElementById('statBestDrop').textContent = state.bestDrop.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('balanceDisplay').textContent = formatMoney(state.balance);
+            document.getElementById('statBalance').textContent = formatMoney(state.balance);
+            document.getElementById('statBestDrop').textContent = formatMoney(state.bestDrop);
             document.getElementById('statUpgrades').textContent = state.upgradesCount;
             document.getElementById('statInvCount').textContent = state.inventory.length;
             
             if (state.inventory.length > 0) {
                 const total = state.inventory.reduce((sum, item) => sum + item.price, 0);
                 document.getElementById('sellAllBtn').style.display = 'flex';
-                document.getElementById('sellAllTotal').textContent = `+ ${total.toLocaleString('ru-RU')} ₽`;
+                document.getElementById('sellAllTotal').textContent = `+ ${formatMoney(total)}`;
             } else {
                 document.getElementById('sellAllBtn').style.display = 'none';
             }
@@ -660,7 +676,7 @@
                 state.balance += Number(amount);
                 saveState();
                 updateUI();
-                showToast(`Баланс пополнен на ${Number(amount).toLocaleString('ru-RU')} ₽`);
+                showToast(`Баланс пополнен на ${formatMoney(Number(amount))}`);
             }
         }
 
@@ -680,7 +696,7 @@
 
             if (promo.type === 'money') {
                 state.balance += promo.value;
-                showToast(`Промокод активирован! +${promo.value.toLocaleString('ru-RU')} ₽`);
+                showToast(`Промокод активирован! +${formatMoney(promo.value)}`);
             }
             
             state.usedPromos.push(code);
@@ -708,7 +724,7 @@
             saveState();
             updateUI();
             closeModal('transferModal');
-            showToast(`Успешно переведено ${sum.toLocaleString('ru-RU')} ₽ игроку #${targetId}`);
+            showToast(`Успешно переведено ${formatMoney(sum)} игроку #${targetId}`);
         }
 
         window.switchTab = function(tabId, el) {
@@ -729,7 +745,7 @@
             document.getElementById('sellItemWeapon').textContent = nameParts[0].trim();
             document.getElementById('sellItemName').textContent = nameParts[1] ? nameParts[1].trim() : item.name;
             
-            document.getElementById('sellItemPrice').textContent = item.price.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('sellItemPrice').textContent = formatMoney(item.price);
             document.getElementById('sellModal').classList.add('active');
         }
 
@@ -747,7 +763,7 @@
             renderInv();
             updateLeftPanel();
             closeModal('sellModal');
-            showToast(`Скин продан за ${item.price.toLocaleString('ru-RU')} ₽`);
+            showToast(`Скин продан за ${formatMoney(item.price)}`);
             sellItemIndex = -1;
         }
 
@@ -755,7 +771,7 @@
             if (state.inventory.length === 0) return;
             
             const total = state.inventory.reduce((sum, item) => sum + item.price, 0);
-            if (confirm(`Вы уверены, что хотите продать ВСЕ скины за ${total.toLocaleString('ru-RU')} ₽?`)) {
+            if (confirm(`Вы уверены, что хотите продать ВСЕ скины за ${formatMoney(total)}?`)) {
                 state.balance += total;
                 state.inventory = [];
                 selectedLeft = [];
@@ -764,11 +780,10 @@
                 updateUI();
                 renderInv();
                 updateLeftPanel();
-                showToast(`Весь инвентарь продан за ${total.toLocaleString('ru-RU')} ₽`);
+                showToast(`Весь инвентарь продан за ${formatMoney(total)}`);
             }
         }
 
-        // --- ПОИСК И ПАГИНАЦИЯ МАГАЗИНА ---
         window.renderShop = function(reset = false) {
             if (reset) {
                 const query = document.getElementById('searchInput').value.toLowerCase();
@@ -776,7 +791,6 @@
                 const maxPrice = Number(document.getElementById('maxPriceInput').value) || Infinity;
                 const sort = document.getElementById('sortSelect').value;
                 
-                // Фильтр по названию и цене
                 currentShopItems = ITEMS.filter(i => {
                     const matchesName = i.name.toLowerCase().includes(query);
                     const matchesPrice = i.price >= minPrice && i.price <= maxPrice;
@@ -798,7 +812,7 @@
                     <div class="shop-item">
                         <img src="${item.img}" class="skin-img" loading="lazy">
                         <div class="item-name" title="${item.name}">${item.name}</div>
-                        <div class="item-price">${item.price.toLocaleString('ru-RU')} ₽</div>
+                        <div class="item-price">${formatMoney(item.price)}</div>
                         <button class="btn-buy" onclick="openBuyModal('${item.id}')">Купить</button>
                     </div>
                 `;
@@ -823,7 +837,7 @@
             currentBuyQty = 1;
             document.getElementById('buyImg').src = currentBuyItem.img;
             document.getElementById('buyName').textContent = currentBuyItem.name;
-            document.getElementById('buyPrice').textContent = currentBuyItem.price.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('buyPrice').textContent = formatMoney(currentBuyItem.price);
             document.getElementById('buyQty').textContent = currentBuyQty;
             updateBuyTotal();
             document.getElementById('buyModal').classList.add('active');
@@ -837,7 +851,7 @@
         }
 
         function updateBuyTotal() {
-            document.getElementById('buyTotal').textContent = (currentBuyItem.price * currentBuyQty).toLocaleString('ru-RU');
+            document.getElementById('buyTotal').textContent = formatMoney(currentBuyItem.price * currentBuyQty);
         }
 
         window.confirmBuy = function() {
@@ -867,7 +881,7 @@
                 <div class="shop-item">
                     <img src="${item.img}" class="skin-img" loading="lazy">
                     <div class="item-name" title="${item.name}">${item.name}</div>
-                    <div class="item-price">${item.price.toLocaleString('ru-RU')} ₽</div>
+                    <div class="item-price">${formatMoney(item.price)}</div>
                     <button class="btn-sell" onclick="openSellModal(${index})">Продать</button>
                 </div>
             `).join('');
@@ -875,33 +889,81 @@
         }
 
         window.openSelectModal = function(mode) {
+            currentModalMode = mode;
             const grid = document.getElementById('modalGrid');
             document.getElementById('modalTitle').textContent = mode === 'left' ? 'Ваша ставка' : 'Выберите цель';
+            document.getElementById('modalSearchInput').value = '';
             
             if (mode === 'left') {
                 if (state.inventory.length === 0) {
                     grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#888; padding:20px;">Инвентарь пуст.</div>';
                 } else {
-                    grid.innerHTML = state.inventory.map((item, index) => {
-                        const isSelected = selectedLeft.some(i => i.index === index);
-                        return `
-                        <div class="modal-item ${isSelected ? 'selected' : ''}" onclick="toggleLeftItem(${index})">
-                            <img src="${item.img}" class="skin-img">
-                            <div class="item-name">${item.name.split('|')[0]}</div>
-                            <div class="item-price">${item.price.toLocaleString('ru-RU')} ₽</div>
-                        </div>`;
-                    }).join('');
+                    renderModalLeft();
                 }
             } else {
-                grid.innerHTML = ITEMS.slice(0, 200).map(item => `
-                    <div class="modal-item" onclick="setRightItem('${item.id}')">
-                        <img src="${item.img}" class="skin-img">
-                        <div class="item-name">${item.name.split('|')[0]}</div>
-                        <div class="item-price">${item.price.toLocaleString('ru-RU')} ₽</div>
-                    </div>
-                `).join('');
+                renderModalRight();
             }
             document.getElementById('selectModal').classList.add('active');
+        }
+
+        window.filterModalGrid = function() {
+            if (currentModalMode === 'left') renderModalLeft();
+            else renderModalRight();
+        }
+
+        function renderModalLeft() {
+            const grid = document.getElementById('modalGrid');
+            const query = document.getElementById('modalSearchInput').value.toLowerCase();
+            let filtered = state.inventory.map((item, index) => ({...item, originalIndex: index}));
+            
+            if (query) {
+                filtered = filtered.filter(i => i.name.toLowerCase().includes(query));
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#888; padding:20px;">Ничего не найдено.</div>';
+                return;
+            }
+
+            grid.innerHTML = filtered.map(item => {
+                const isSelected = selectedLeft.some(i => i.index === item.originalIndex);
+                return `
+                <div class="modal-item ${isSelected ? 'selected' : ''}" onclick="toggleLeftItem(${item.originalIndex})">
+                    <img src="${item.img}" class="skin-img">
+                    <div class="item-name">${item.name.split('|')[0]}</div>
+                    <div class="item-price">${formatMoney(item.price)}</div>
+                </div>`;
+            }).join('');
+        }
+
+        function renderModalRight() {
+            const grid = document.getElementById('modalGrid');
+            const query = document.getElementById('modalSearchInput').value.toLowerCase();
+            let filtered = ITEMS;
+            
+            if (query) {
+                filtered = filtered.filter(i => i.name.toLowerCase().includes(query));
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#888; padding:20px;">Ничего не найдено.</div>';
+                return;
+            }
+
+            // Ограничиваем вывод 150 скинами для производительности, но поиск идет по всем
+            const toRender = filtered.slice(0, 150);
+            
+            grid.innerHTML = toRender.map(item => `
+                <div class="modal-item" onclick="setRightItem('${item.id}')">
+                    <img src="${item.img}" class="skin-img">
+                    <div class="item-name">${item.name.split('|')[0]}</div>
+                    <div class="item-price">${formatMoney(item.price)}</div>
+                </div>
+            `).join('');
+            
+            if (filtered.length > 150) {
+                grid.innerHTML += `<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); padding:10px;">Показаны первые 150. Уточните поиск.</div>`;
+            }
         }
 
         window.closeModal = function(id) {
@@ -917,7 +979,7 @@
             } else {
                 selectedLeft.push({ ...item, index });
             }
-            openSelectModal('left');
+            renderModalLeft();
             updateLeftPanel();
         }
 
@@ -940,13 +1002,13 @@
                 img.style.display = 'block'; empty.style.display = 'none';
                 img.src = selectedLeft[0].img;
                 name.textContent = selectedLeft[0].name;
-                price.textContent = selectedLeft[0].price.toLocaleString('ru-RU') + ' ₽';
+                price.textContent = formatMoney(selectedLeft[0].price);
             } else {
                 img.style.display = 'none'; empty.style.display = 'block';
                 empty.textContent = '📦';
                 const total = selectedLeft.reduce((sum, item) => sum + item.price, 0);
                 name.textContent = `Выбрано: ${selectedLeft.length} шт.`;
-                price.textContent = total.toLocaleString('ru-RU') + ' ₽';
+                price.textContent = formatMoney(total);
             }
             updateChanceUI();
         }
@@ -954,7 +1016,7 @@
         function updateRightPanel() {
             document.getElementById('rightImg').src = selectedRight.img;
             document.getElementById('rightName').textContent = selectedRight.name;
-            document.getElementById('rightPrice').textContent = selectedRight.price.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('rightPrice').textContent = formatMoney(selectedRight.price);
             updateChanceUI();
         }
 
@@ -1088,6 +1150,7 @@
                 currentCaseRewards = [];
                 const randomIndices = new Set();
                 while(randomIndices.size < 3) {
+                    // Берем случайные скины, но не самые дешевые
                     randomIndices.add(Math.floor(Math.random() * ITEMS.length));
                 }
                 
