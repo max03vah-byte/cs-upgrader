@@ -1,20 +1,18 @@
-Отличная идея! Мы добавим мини-игру «Кейс за правильный ответ». 
+Отличная идея! Чтобы нельзя было бесконечно фармить скины, я добавил **кулдаун (КД) на 3 минуты**. 
 
-Как это будет работать:
-1. Во вкладке **«Инвентарь»** появится кнопка **«🎁 Кейс за правильный ответ»**.
-2. При нажатии открывается окно с математическим примером (например, `32 + 44`).
-3. Ты вводишь ответ. Если ответ правильный, выпадает **3 случайных скина на выбор**.
-4. Если неправильный — кейс не открывается, и нужно решить новый пример.
-5. У выпавших скинов **не показывается цена**, чтобы был элемент сюрприза (может выпасть как дешевый, так и очень дорогой скин).
+Как это работает:
+1. Когда ты решаешь пример, кейс открывается, и запускается таймер на 180 секунд.
+2. На кнопке кейса в инвентаре будет отображаться оставшееся время (например: `⏳ Доступен через: 02:59`), и она будет заблокирована.
+3. Как только 3 минуты истекут, кнопка снова станет активной.
 
 ### 🛠 Что делать:
-1. Зайди в `index.html` на GitHub и нажми карандаш.
+1. Открой `index.html` на GitHub и нажми карандаш.
 2. Удали старый код и вставь этот.
 3. Нажми **Commit changes**.
-4. В **@BotFather** пропиши `/setmenubutton` и отправь ссылку с новым кэшем: `https://max03vah-byte.github.io/cs-upgrader/?v=8`
+4. В **@BotFather** пропиши `/setmenubutton` и отправь ссылку с новым кэшем: `https://max03vah-byte.github.io/cs-upgrader/?v=9`
 5. Открой бота.
 
-Вот полный код с кейсом:
+Вот полный обновленный код:
 
 ```html
 <!DOCTYPE html>
@@ -156,10 +154,11 @@
         .case-btn {
             background: linear-gradient(135deg, #8e44ad, #9b59b6); border: none; color: #fff;
             width: 100%; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: bold;
-            margin-bottom: 15px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px;
+            margin-bottom: 10px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px;
             box-shadow: 0 4px 15px rgba(142, 68, 173, 0.4); transition: 0.2s;
         }
-        .case-btn:hover { transform: scale(1.02); }
+        .case-btn:hover:not(:disabled) { transform: scale(1.02); }
+        .case-btn:disabled { background: #333; box-shadow: none; color: #888; cursor: not-allowed; }
 
         /* --- МОДАЛЬНЫЕ ОКНА --- */
         .modal {
@@ -339,8 +338,8 @@
                     <h2 style="font-size:16px; color:var(--text-muted);">МОЙ ИНВЕНТАРЬ</h2>
                 </div>
                 
-                <!-- Кнопка кейса -->
-                <button class="case-btn" onclick="openCaseModal()">🎁 Кейс за правильный ответ</button>
+                <!-- Кнопка кейса с КД -->
+                <button class="case-btn" id="caseBtn" onclick="openCaseModal()">🎁 Кейс за правильный ответ</button>
 
                 <button class="sell-all-btn" id="sellAllBtn" onclick="sellAll()">
                     <span>💳 ПРОДАТЬ ВСЁ</span>
@@ -473,7 +472,7 @@
         if (tg) { tg.ready(); tg.expand(); }
 
         const ADMIN_ID = 1935313766; 
-        const STORAGE_KEY = 'cs_upgrader_v21';
+        const STORAGE_KEY = 'cs_upgrader_v22';
         
         let ITEMS = []; 
         let state = loadState();
@@ -484,9 +483,12 @@
         let currentBuyQty = 1;
         let sellItemIndex = -1;
         
-        // Переменные для кейса
         let currentCaseAnswer = 0;
         let currentCaseRewards = [];
+        
+        // Переменные КД
+        let caseCooldownInterval = null;
+        const COOLDOWN_TIME = 3 * 60 * 1000; // 3 минуты в миллисекундах
 
         async function fetchSkins() {
             try {
@@ -543,7 +545,7 @@
 
         function loadState() {
             const saved = localStorage.getItem(STORAGE_KEY);
-            let currentState = { balance: 1000, inventory: [], bestDrop: 0, upgradesCount: 0 };
+            let currentState = { balance: 1000, inventory: [], bestDrop: 0, upgradesCount: 0, lastCaseTime: 0 };
             if (saved) { try { currentState = JSON.parse(saved); } catch (e) {} }
             return currentState;
         }
@@ -592,6 +594,38 @@
             setRightItem(selectedRight.id);
             renderShop();
             renderInv();
+            updateCaseButton();
+        }
+
+        // --- ЛОГИКА КД КЕЙСА ---
+        function updateCaseButton() {
+            const now = Date.now();
+            const timePassed = now - state.lastCaseTime;
+            const btn = document.getElementById('caseBtn');
+            
+            if (timePassed < COOLDOWN_TIME) {
+                // Кейс на КД
+                btn.disabled = true;
+                if (caseCooldownInterval) clearInterval(caseCooldownInterval);
+                
+                caseCooldownInterval = setInterval(() => {
+                    const left = COOLDOWN_TIME - (Date.now() - state.lastCaseTime);
+                    if (left <= 0) {
+                        clearInterval(caseCooldownInterval);
+                        btn.disabled = false;
+                        btn.innerHTML = '🎁 Кейс за правильный ответ';
+                    } else {
+                        const m = Math.floor(left / 60000);
+                        const s = Math.floor((left % 60000) / 1000);
+                        btn.innerHTML = `⏳ Доступен через: ${m}:${s.toString().padStart(2, '0')}`;
+                    }
+                }, 1000);
+            } else {
+                // Кейс доступен
+                btn.disabled = false;
+                btn.innerHTML = '🎁 Кейс за правильный ответ';
+                if (caseCooldownInterval) clearInterval(caseCooldownInterval);
+            }
         }
 
         window.addMoney = function() {
@@ -954,11 +988,12 @@
 
         // --- ЛОГИКА КЕЙСА ---
         window.openCaseModal = function() {
+            if (Date.now() - state.lastCaseTime < COOLDOWN_TIME) return;
+            
             document.getElementById('caseQuestionBox').style.display = 'block';
             document.getElementById('caseRewardsBox').style.display = 'none';
             document.getElementById('mathAnswerInput').value = '';
             
-            // Генерируем случайный пример (сложение)
             const num1 = Math.floor(Math.random() * 50) + 10;
             const num2 = Math.floor(Math.random() * 50) + 10;
             currentCaseAnswer = num1 + num2;
@@ -971,9 +1006,7 @@
             const userAnswer = parseInt(document.getElementById('mathAnswerInput').value);
             
             if (userAnswer === currentCaseAnswer) {
-                // Правильный ответ - генерируем награды
                 currentCaseRewards = [];
-                // Выбираем 3 случайных скина (разной стоимости)
                 const randomIndices = new Set();
                 while(randomIndices.size < 3) {
                     randomIndices.add(Math.floor(Math.random() * ITEMS.length));
@@ -986,7 +1019,6 @@
                     const item = ITEMS[idx];
                     currentCaseRewards.push(item);
                     
-                    // Показываем БЕЗ цены
                     grid.innerHTML += `
                         <div class="modal-item" onclick="claimCaseReward('${item.id}')">
                             <img src="${item.img}" class="skin-img">
@@ -1006,11 +1038,16 @@
         window.claimCaseReward = function(id) {
             const reward = currentCaseRewards.find(i => i.id === id);
             state.inventory.push(reward);
+            
+            // Ставим КД
+            state.lastCaseTime = Date.now();
             saveState();
+            
             renderInv();
             updateUI();
             closeModal('caseModal');
             showToast(`Вы получили скин из кейса!`);
+            updateCaseButton();
         }
 
         fetchSkins();
