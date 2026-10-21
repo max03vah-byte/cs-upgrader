@@ -48,15 +48,17 @@
             position: relative; margin: 10px 0; height: 200px;
         }
         
-        .arrow-wrapper {
+        /* Обертка для стрелки */
+        .arrow-container {
             position: absolute; top: 0; left: 50%; transform: translateX(-50%);
             width: 180px; height: 180px; z-index: 10; pointer-events: none;
             display: flex; justify-content: center;
         }
+        /* Сама стрелка, которая крутится */
         .arrow-pointer {
-            font-size: 30px; color: var(--accent);
+            font-size: 30px; color: var(--accent); transform-origin: 50% 50%;
             filter: drop-shadow(0 0 5px rgba(255, 215, 0, 1));
-            transition: transform 3s cubic-bezier(0.1, 0.7, 0.1, 1);
+            transition: transform 4s cubic-bezier(0.1, 0.7, 0.1, 1);
         }
 
         .wheel {
@@ -110,7 +112,7 @@
         .result.win { background: rgba(46, 204, 113, 0.1); border: 1px solid var(--win); color: var(--win); }
         .result.lose { background: rgba(231, 76, 60, 0.1); border: 1px solid var(--lose); color: var(--lose); }
 
-        /* --- МАГАЗИН и ИНВЕНТАРЬ --- */
+        /* --- МАГАЗИН --- */
         .shop-controls { display: flex; gap: 10px; margin-bottom: 10px; }
         .shop-controls input, .shop-controls select {
             flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border);
@@ -121,7 +123,6 @@
         .shop-item .skin-img { height: 60px; margin-top: 0; }
         .btn-buy { background: var(--accent); color: #000; border: none; padding: 6px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: auto; font-size: 12px; }
         
-        /* Кнопка продажи */
         .btn-sell { background: var(--sell); color: #fff; border: none; padding: 6px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 5px; font-size: 12px; }
         .btn-sell:hover { background: #2980b9; }
 
@@ -153,11 +154,9 @@
         
         .close-btn { background: #e74c3c; color: #fff; border: none; padding: 10px; border-radius: 8px; margin-top: 15px; cursor: pointer; font-weight: bold; width: 100%; }
 
-        /* Окно подтверждения продажи */
         .confirm-btn { background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 15px; }
         .cancel-btn { background: #333; color: #fff; border: none; padding: 10px; border-radius: 8px; margin-top: 10px; cursor: pointer; font-weight: bold; width: 100%; }
 
-        /* Количество */
         .qty-control { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 20px 0; }
         .qty-btn { background: #333; color: #fff; border: none; width: 40px; height: 40px; border-radius: 8px; font-size: 20px; cursor: pointer; }
         .qty-val { font-size: 24px; font-weight: bold; color: var(--accent); }
@@ -190,6 +189,8 @@
             font-weight: bold; z-index: 2000; display: none;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
+        
+        .loader { text-align: center; padding: 50px; font-size: 18px; color: var(--accent); }
     </style>
 </head>
 <body>
@@ -203,93 +204,97 @@
 
     <div class="toast" id="toast">Успешно!</div>
 
-    <div class="main-content">
-        <!-- АПГРЕЙД -->
-        <div id="section-upgrader" class="content-section active">
-            <div class="upgrader-layout">
-                <div class="circle-zone">
-                    <div class="wheel" id="wheel">
-                        <div class="wheel-inner">
-                            <div class="chance-text" id="chanceText">0%</div>
-                            <div class="chance-label">Шанс</div>
+    <div class="main-content" id="mainContent">
+        <div class="loader" id="loader">Загрузка базы скинов... Пожалуйста, подождите.</div>
+        
+        <div id="appContent" style="display: none;">
+            <!-- АПГРЕЙД -->
+            <div id="section-upgrader" class="content-section active">
+                <div class="upgrader-layout">
+                    <div class="circle-zone">
+                        <div class="wheel" id="wheel">
+                            <div class="wheel-inner">
+                                <div class="chance-text" id="chanceText">0%</div>
+                                <div class="chance-label">Шанс</div>
+                            </div>
+                        </div>
+                        <div class="arrow-container">
+                            <div class="arrow-pointer" id="arrow">▼</div>
                         </div>
                     </div>
-                    <div class="arrow-wrapper">
-                        <div class="arrow-pointer" id="arrow">▼</div>
-                    </div>
-                </div>
 
-                <div class="up-panels">
-                    <div class="up-panel" onclick="openSelectModal('left')">
-                        <div class="up-panel-title">ВАША СТАВКА (Нажмите)</div>
-                        <img src="" id="leftImg" class="skin-img" style="display:none;">
-                        <div id="leftEmpty" style="color:var(--text-muted); font-size:30px;">📦</div>
-                        <div class="item-name" id="leftName">Выбрать скины</div>
-                        <div class="item-price" id="leftPrice"></div>
+                    <div class="up-panels">
+                        <div class="up-panel" onclick="openSelectModal('left')">
+                            <div class="up-panel-title">ВАША СТАВКА (Нажмите)</div>
+                            <img src="" id="leftImg" class="skin-img" style="display:none;">
+                            <div id="leftEmpty" style="color:var(--text-muted); font-size:30px;">📦</div>
+                            <div class="item-name" id="leftName">Выбрать скины</div>
+                            <div class="item-price" id="leftPrice"></div>
+                        </div>
+                        <div style="display: flex; align-items: center; color: var(--text-muted);">→</div>
+                        <div class="up-panel" onclick="openSelectModal('right')">
+                            <div class="up-panel-title">ЦЕЛЬ (Нажмите)</div>
+                            <img src="" id="rightImg" class="skin-img">
+                            <div class="item-name" id="rightName"></div>
+                            <div class="item-price" id="rightPrice"></div>
+                        </div>
                     </div>
-                    <div style="display: flex; align-items: center; color: var(--text-muted);">→</div>
-                    <div class="up-panel" onclick="openSelectModal('right')">
-                        <div class="up-panel-title">ЦЕЛЬ (Нажмите)</div>
-                        <img src="" id="rightImg" class="skin-img">
-                        <div class="item-name" id="rightName"></div>
-                        <div class="item-price" id="rightPrice"></div>
+
+                    <div class="quick-btns">
+                        <button class="quick-btn" onclick="setQuickTarget('x2')">x2</button>
+                        <button class="quick-btn" onclick="setQuickTarget('x4')">x4</button>
+                        <button class="quick-btn" onclick="setQuickTarget('x8')">x8</button>
+                        <button class="quick-btn" onclick="setQuickTarget('35')">35%</button>
+                        <button class="quick-btn" onclick="setQuickTarget('55')">55%</button>
+                        <button class="quick-btn" onclick="setQuickTarget('75')">75%</button>
                     </div>
-                </div>
 
-                <div class="quick-btns">
-                    <button class="quick-btn" onclick="setQuickTarget('x2')">x2</button>
-                    <button class="quick-btn" onclick="setQuickTarget('x4')">x4</button>
-                    <button class="quick-btn" onclick="setQuickTarget('x8')">x8</button>
-                    <button class="quick-btn" onclick="setQuickTarget('35')">35%</button>
-                    <button class="quick-btn" onclick="setQuickTarget('55')">55%</button>
-                    <button class="quick-btn" onclick="setQuickTarget('75')">75%</button>
+                    <button class="btn-upgrade" id="upgradeBtn">УЛУЧШИТЬ</button>
+                    <div class="result" id="resultBox"></div>
                 </div>
-
-                <button class="btn-upgrade" id="upgradeBtn">УЛУЧШИТЬ</button>
-                <div class="result" id="resultBox"></div>
             </div>
-        </div>
 
-        <!-- МАГАЗИН -->
-        <div id="section-shop" class="content-section">
-            <div class="shop-controls">
-                <input type="text" id="searchInput" placeholder="Поиск..." oninput="renderShop()">
-                <select id="sortSelect" onchange="renderShop()">
-                    <option value="asc">Дешевле</option>
-                    <option value="desc">Дороже</option>
-                </select>
+            <!-- МАГАЗИН -->
+            <div id="section-shop" class="content-section">
+                <div class="shop-controls">
+                    <input type="text" id="searchInput" placeholder="Поиск..." oninput="renderShop()">
+                    <select id="sortSelect" onchange="renderShop()">
+                        <option value="asc">Дешевле</option>
+                        <option value="desc">Дороже</option>
+                    </select>
+                </div>
+                <div class="shop-grid" id="shopGrid"></div>
             </div>
-            <div class="shop-grid" id="shopGrid"></div>
-        </div>
 
-        <!-- ИНВЕНТАРЬ -->
-        <div id="section-inv" class="content-section">
-            <h2 style="text-align:center; margin-bottom:10px; font-size:16px; color:var(--text-muted);">МОЙ ИНВЕНТАРЬ</h2>
-            <div class="shop-grid" id="invGridFull"></div>
-        </div>
+            <!-- ИНВЕНТАРЬ -->
+            <div id="section-inv" class="content-section">
+                <h2 style="text-align:center; margin-bottom:10px; font-size:16px; color:var(--text-muted);">МОЙ ИНВЕНТАРЬ</h2>
+                <div class="shop-grid" id="invGridFull"></div>
+            </div>
 
-        <!-- ПРОФИЛЬ -->
-        <div id="section-profile" class="content-section">
-            <div class="profile-card">
-                <div class="avatar">👤</div>
-                <div class="profile-name">Мой Профиль</div>
-                <div style="color: var(--text-muted); font-size: 14px;">ID: #1337</div>
-                <div class="stats">
-                    <div class="stat-box">
-                        <div class="stat-val" id="statBalance">0 ₽</div>
-                        <div class="stat-label">Баланс</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-val" id="statBestDrop">0 ₽</div>
-                        <div class="stat-label">Лучший дроп</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-val" id="statUpgrades">0</div>
-                        <div class="stat-label">Апгрейдов</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-val" id="statInvCount">0</div>
-                        <div class="stat-label">Скинов</div>
+            <!-- ПРОФИЛЬ -->
+            <div id="section-profile" class="content-section">
+                <div class="profile-card">
+                    <div class="avatar">👤</div>
+                    <div class="profile-name">Мой Профиль</div>
+                    <div style="color: var(--text-muted); font-size: 14px;">ID: #1337</div>
+                    <div class="stats">
+                        <div class="stat-box">
+                            <div class="stat-val" id="statBalance">0 ₽</div>
+                            <div class="stat-label">Баланс</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val" id="statBestDrop">0 ₽</div>
+                            <div class="stat-label">Лучший дроп</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val" id="statUpgrades">0</div>
+                            <div class="stat-label">Апгрейдов</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-val" id="statInvCount">0</div>
+                            <div class="stat-label">Скинов</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -311,7 +316,6 @@
         </div>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО ВЫБОРА -->
     <div class="modal" id="selectModal">
         <div class="modal-content">
             <div class="modal-title" id="modalTitle">Выберите скин</div>
@@ -320,34 +324,29 @@
         </div>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО ПОКУПКИ -->
     <div class="modal" id="buyModal">
         <div class="modal-content" style="max-width: 300px;">
             <div class="modal-title">Покупка</div>
             <img src="" id="buyImg" style="width:100px; height:80px; object-fit:contain; margin:0 auto;">
             <div style="font-weight:bold; margin-top:10px;" id="buyName"></div>
             <div style="color:var(--accent); font-weight:bold; font-size:18px; margin-top:5px;" id="buyPrice"></div>
-            
             <div class="qty-control">
                 <button class="qty-btn" onclick="changeQty(-1)">-</button>
                 <div class="qty-val" id="buyQty">1</div>
                 <button class="qty-btn" onclick="changeQty(1)">+</button>
             </div>
             <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Итого: <span id="buyTotal" style="color:#fff;">0</span> ₽</div>
-            
             <button class="btn-buy" style="padding:12px; font-size:16px;" onclick="confirmBuy()">Оплатить</button>
             <button class="close-btn" onclick="closeModal('buyModal')">Отмена</button>
         </div>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО ПРОДАЖИ -->
     <div class="modal" id="sellModal">
         <div class="modal-content" style="max-width: 300px;">
             <div class="modal-title">Подтверждение продажи</div>
             <img src="" id="sellImg" style="width:100px; height:80px; object-fit:contain; margin:0 auto;">
             <div style="font-weight:bold; margin-top:10px;" id="sellName"></div>
             <div style="color:var(--win); font-weight:bold; font-size:18px; margin-top:5px;">Вы получите: <span id="sellPrice"></span> ₽</div>
-            
             <button class="confirm-btn" onclick="executeSell()">Продать</button>
             <button class="cancel-btn" onclick="closeModal('sellModal')">Отмена</button>
         </div>
@@ -358,70 +357,73 @@
         if (tg) { tg.ready(); tg.expand(); }
 
         const ADMIN_ID = 1935313766; 
-        const baseImg = "https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/";
+        const STORAGE_KEY = 'cs_upgrader_v17';
         
-        const ITEMS = [
-            { id: '1', name: 'P250 | Sand Dune', price: 10, img: baseImg + 'p250_sand_dune.png' },
-            { id: '2', name: 'Glock-18 | Candy Apple', price: 20, img: baseImg + 'glock18_candy_apple.png' },
-            { id: '3', name: 'USP-S | Forest Leaves', price: 30, img: baseImg + 'usp_s_forest_leaves.png' },
-            { id: '4', name: 'AK-47 | Safari Mesh', price: 50, img: baseImg + 'ak47_safari_mesh.png' },
-            { id: '5', name: 'M4A4 | Urban DDPAT', price: 60, img: baseImg + 'm4a4_urban_ddpat.png' },
-            { id: '6', name: 'AWP | Safari Mesh', price: 80, img: baseImg + 'awp_safari_mesh.png' },
-            { id: '7', name: 'Desert Eagle | Mudder', price: 100, img: baseImg + 'desert_eagle_mudder.png' },
-            { id: '8', name: 'AK-47 | Slate', price: 120, img: baseImg + 'ak47_slate.png' },
-            { id: '9', name: 'USP-S | Ticket to Hell', price: 150, img: baseImg + 'usp_s_ticket_to_hell.png' },
-            { id: '10', name: 'Glock-18 | Water Elemental', price: 180, img: baseImg + 'glock18_water_elemental.png' },
-            { id: '11', name: 'M4A1-S | Cyrex', price: 200, img: baseImg + 'm4a1_s_cyrex.png' },
-            { id: '12', name: 'AWP | Worm God', price: 220, img: baseImg + 'awp_worm_god.png' },
-            { id: '13', name: 'AK-47 | Blue Laminate', price: 250, img: baseImg + 'ak47_blue_laminate.png' },
-            { id: '14', name: 'M4A4 | Evil Daimyo', price: 280, img: baseImg + 'm4a4_evil_daimyo.png' },
-            { id: '15', name: 'Desert Eagle | Crimson Web', price: 300, img: baseImg + 'desert_eagle_crimson_web.png' },
-            { id: '16', name: 'AWP | Electric Hive', price: 350, img: baseImg + 'awp_electric_hive.png' },
-            { id: '17', name: 'AK-47 | Redline', price: 400, img: baseImg + 'ak47_redline.png' },
-            { id: '18', name: 'USP-S | Cyrex', price: 450, img: baseImg + 'usp_s_cyrex.png' },
-            { id: '19', name: 'M4A1-S | Guardian', price: 500, img: baseImg + 'm4a1_s_guardian.png' },
-            { id: '20', name: 'Desert Eagle | Code Red', price: 600, img: baseImg + 'desert_eagle_code_red.png' },
-            { id: '21', name: 'AWP | Neo-Noir', price: 700, img: baseImg + 'awp_neonoir.png' },
-            { id: '22', name: 'AK-47 | Point Disarray', price: 800, img: baseImg + 'ak47_point_disarray.png' },
-            { id: '23', name: 'M4A1-S | Printstream', price: 1000, img: baseImg + 'm4a1_s_printstream.png' },
-            { id: '24', name: 'USP-S | Neo-Noir', price: 1100, img: baseImg + 'usp_s_neonoir.png' },
-            { id: '25', name: 'AK-47 | Bloodsport', price: 1200, img: baseImg + 'ak47_bloodsport.png' },
-            { id: '26', name: 'AWP | Asiimov', price: 1500, img: baseImg + 'awp_asiimov.png' },
-            { id: '27', name: 'M4A4 | Desolate Space', price: 1600, img: baseImg + 'm4a4_desolate_space.png' },
-            { id: '28', name: 'AK-47 | The Empress', price: 1800, img: baseImg + 'ak47_the_empress.png' },
-            { id: '29', name: 'Desert Eagle | Printstream', price: 2000, img: baseImg + 'desert_eagle_printstream.png' },
-            { id: '30', name: 'USP-S | Kill Confirmed', price: 2200, img: baseImg + 'usp_s_kill_confirmed.png' },
-            { id: '31', name: 'M4A4 | The Emperor', price: 2500, img: baseImg + 'm4a4_the_emperor.png' },
-            { id: '32', name: 'AK-47 | Vulcan', price: 2800, img: baseImg + 'ak47_vulcan.png' },
-            { id: '33', name: 'AWP | Hyper Beast', price: 3000, img: baseImg + 'awp_hyper_beast.png' },
-            { id: '34', name: 'M4A1-S | Hyper Beast', price: 3500, img: baseImg + 'm4a1_s_hyper_beast.png' },
-            { id: '35', name: 'AK-47 | Neon Revolution', price: 4000, img: baseImg + 'ak47_neon_revolution.png' },
-            { id: '36', name: 'AWP | Wildfire', price: 4500, img: baseImg + 'awp_wildfire.png' },
-            { id: '37', name: 'AK-47 | Case Hardened', price: 5000, img: baseImg + 'ak47_case_hardened.png' },
-            { id: '38', name: 'Desert Eagle | Blaze', price: 5500, img: baseImg + 'desert_eagle_blaze.png' },
-            { id: '39', name: 'AWP | Containment Breach', price: 6000, img: baseImg + 'awp_containment_breach.png' },
-            { id: '40', name: 'AK-47 | Fire Serpent', price: 7000, img: baseImg + 'ak47_fire_serpent.png' },
-            { id: '41', name: 'AWP | Medusa', price: 8000, img: baseImg + 'awp_medusa.png' },
-            { id: '42', name: 'M4A4 | Poseidon', price: 9000, img: baseImg + 'm4a4_poseidon.png' },
-            { id: '43', name: 'AWP | Dragon Lore', price: 10000, img: baseImg + 'awp_dragon_lore.png' },
-            { id: '44', name: 'M4A4 | Howl', price: 12000, img: baseImg + 'm4a4_howl.png' },
-            { id: '45', name: 'AWP | Gungnir', price: 15000, img: baseImg + 'awp_gungnir.png' },
-            { id: '46', name: 'AK-47 | Wild Lotus', price: 18000, img: baseImg + 'ak47_wild_lotus.png' },
-            { id: '47', name: 'AWP | The Prince', price: 20000, img: baseImg + 'awp_the_prince.png' },
-            { id: '48', name: '★ Karambit | Doppler', price: 25000, img: baseImg + 'knife_karambit_doppler.png' },
-            { id: '49', name: '★ Butterfly Knife | Fade', price: 30000, img: baseImg + 'knife_butterfly_fade.png' },
-            { id: '50', name: '★ M9 Bayonet | Crimson Web', price: 35000, img: baseImg + 'knife_m9_bayonet_crimson_web.png' }
-        ];
-
-        const STORAGE_KEY = 'cs_upgrader_v16';
+        let ITEMS = []; // Сюда загрузятся скины
         let state = loadState();
         let selectedLeft = [];
-        let selectedRight = ITEMS[16]; 
+        let selectedRight = null; 
         let upgradeCounter = 0; 
-        
         let currentBuyItem = null;
         let currentBuyQty = 1;
         let sellItemIndex = -1;
+
+        // Загрузка скинов из API
+        async function fetchSkins() {
+            try {
+                const response = await fetch('https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins.json');
+                const data = await response.json();
+                
+                // Фильтруем и сортируем (берем только оружие и ножи, сортируем по цене)
+                // Так как в API нет реальных цен, мы придумываем их на основе редкости
+                let idCounter = 1;
+                data.forEach(skin => {
+                    if (skin.image && skin.name && !skin.name.includes('★ StatTrak')) {
+                        let basePrice = 10;
+                        if (skin.rarity.name === 'Consumer Grade') basePrice = 10;
+                        else if (skin.rarity.name === 'Industrial Grade') basePrice = 50;
+                        else if (skin.rarity.name === 'Mil-Spec Grade') basePrice = 150;
+                        else if (skin.rarity.name === 'Restricted') basePrice = 400;
+                        else if (skin.rarity.name === 'Classified') basePrice = 1000;
+                        else if (skin.rarity.name === 'Covert') basePrice = 3000;
+                        else if (skin.rarity.name === 'Contraband') basePrice = 15000;
+                        else if (skin.rarity.name === '★') basePrice = 20000; // Ножи
+
+                        // Немного рандомизируем цену, чтобы не было все по одной
+                        let price = Math.floor(basePrice + (Math.random() * basePrice * 0.5));
+                        
+                        ITEMS.push({
+                            id: idCounter.toString(),
+                            name: skin.name,
+                            price: price,
+                            img: skin.image
+                        });
+                        idCounter++;
+                    }
+                });
+
+                // Сортируем по цене
+                ITEMS.sort((a, b) => a.price - b.price);
+                
+                // Обновляем цены, чтобы шаг был красивым
+                ITEMS.forEach((item, index) => {
+                    item.price = Math.floor(10 * Math.pow(1.15, index)); 
+                });
+
+                // Выбираем дефолтную цель (примерно 10-й скин)
+                selectedRight = ITEMS[10];
+
+                // Прячем лоадер, показываем сайт
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('appContent').style.display = 'block';
+
+                initApp();
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('loader').innerHTML = 'Ошибка загрузки базы скинов. Проверьте интернет и обновите страницу.';
+            }
+        }
 
         function loadState() {
             const saved = localStorage.getItem(STORAGE_KEY);
@@ -455,7 +457,8 @@
             }
         }
 
-        window.addEventListener('load', () => {
+        // --- ИНИЦИАЛИЗАЦИЯ ---
+        function initApp() {
             if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
                 if (tg.initDataUnsafe.user.id === ADMIN_ID) {
                     document.getElementById('adminBtn').style.display = 'flex';
@@ -463,7 +466,10 @@
             }
             checkPoorBonus();
             updateUI();
-        });
+            setRightItem(selectedRight.id);
+            renderShop();
+            renderInv();
+        }
 
         window.addMoney = function() {
             const amount = prompt("Сколько денег добавить на баланс?", "10000");
@@ -485,28 +491,22 @@
             if (tabId === 'section-profile') updateUI();
         }
 
-        // --- ПРОДАЖА СКИНА (Красивое окно) ---
         window.openSellModal = function(index, event) {
             if (event) event.stopPropagation(); 
-            
             sellItemIndex = index;
             const item = state.inventory[index];
-            
             document.getElementById('sellImg').src = item.img;
             document.getElementById('sellName').textContent = item.name;
-            document.getElementById('sellPrice').textContent = item.price.toLocaleString(); // Продажа за 100%
-            
+            document.getElementById('sellPrice').textContent = item.price.toLocaleString();
             document.getElementById('sellModal').classList.add('active');
         }
 
         window.executeSell = function() {
             if (sellItemIndex === -1) return;
-            
             const item = state.inventory[sellItemIndex];
-            state.balance += item.price; // Начисляем полную стоимость
+            state.balance += item.price; 
             state.inventory.splice(sellItemIndex, 1);
             
-            // Если этот скин был выбран для апгрейда, убираем его оттуда
             selectedLeft = selectedLeft.filter(i => i.index !== sellItemIndex);
             selectedLeft.forEach(i => { if (i.index > sellItemIndex) i.index--; });
             
@@ -516,7 +516,6 @@
             updateLeftPanel();
             closeModal('sellModal');
             showToast(`Скин продан за ${item.price.toLocaleString()} ₽`);
-            
             sellItemIndex = -1;
         }
 
@@ -529,7 +528,10 @@
             if (sort === 'asc') filtered.sort((a, b) => a.price - b.price);
             else if (sort === 'desc') filtered.sort((a, b) => b.price - a.price);
             
-            grid.innerHTML = filtered.map(item => `
+            // Для оптимизации рендерим только первые 100 скинов, чтобы не вешало браузер
+            const toRender = filtered.slice(0, 100);
+            
+            grid.innerHTML = toRender.map(item => `
                 <div class="shop-item">
                     <img src="${item.img}" class="skin-img" loading="lazy">
                     <div class="item-name" title="${item.name}">${item.name}</div>
@@ -572,7 +574,7 @@
             saveState();
             updateUI();
             closeModal('buyModal');
-            showToast(`Успешно куплено: ${currentBuyItem.name} (x${currentBuyQty})`);
+            showToast(`Успешно куплено: ${currentBuyItem.name}`);
             checkPoorBonus();
             updateUI();
         }
@@ -588,21 +590,18 @@
                     <img src="${item.img}" class="skin-img" loading="lazy">
                     <div class="item-name" title="${item.name}">${item.name}</div>
                     <div class="item-price">${item.price} ₽</div>
-                    <button class="btn-sell" onclick="openSellModal(${index}, event)">Продать за ${item.price} ₽</button>
+                    <button class="btn-sell" onclick="openSellModal(${index}, event)">Продать</button>
                 </div>
             `).join('');
         }
 
-        let modalMode = 'left'; 
-        
         window.openSelectModal = function(mode) {
-            modalMode = mode;
             const grid = document.getElementById('modalGrid');
-            document.getElementById('modalTitle').textContent = mode === 'left' ? 'Ваша ставка (можно несколько)' : 'Выберите цель';
+            document.getElementById('modalTitle').textContent = mode === 'left' ? 'Ваша ставка' : 'Выберите цель';
             
             if (mode === 'left') {
                 if (state.inventory.length === 0) {
-                    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#888;">Инвентарь пуст. Купите скины в магазине.</div>';
+                    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#888;">Инвентарь пуст.</div>';
                 } else {
                     grid.innerHTML = state.inventory.map((item, index) => {
                         const isSelected = selectedLeft.some(i => i.index === index);
@@ -616,7 +615,8 @@
                     }).join('');
                 }
             } else {
-                grid.innerHTML = ITEMS.map(item => `
+                // В цель выводим первые 150 скинов для оптимизации
+                grid.innerHTML = ITEMS.slice(0, 150).map(item => `
                     <div class="modal-item" onclick="setRightItem('${item.id}')">
                         <img src="${item.img}" class="skin-img">
                         <div class="item-name">${item.name.split('|')[0]}</div>
@@ -716,6 +716,7 @@
             setRightItem(closest.id);
         }
 
+        // --- ЛОГИКА АПГРЕЙДА И КРУТЯЩАЯСЯ СТРЕЛКА ---
         document.getElementById('upgradeBtn').addEventListener('click', () => {
             const totalLeftPrice = selectedLeft.reduce((sum, item) => sum + item.price, 0);
             if (totalLeftPrice === 0) return alert('Выберите скины из инвентаря!');
@@ -730,8 +731,7 @@
                 upgradeCounter = 0;
                 if (Math.random() < 0.3) {
                     secretDrop = true;
-                    targetToWin = ITEMS[43];
-                    if (totalLeftPrice > 5000) targetToWin = ITEMS[47];
+                    targetToWin = ITEMS[ITEMS.length - 1]; // Самый дорогой скин
                 }
             }
 
@@ -741,15 +741,19 @@
             const arrow = document.getElementById('arrow');
             const win = secretDrop || (Math.random() < chance);
             
-            let targetDeg;
+            // Логика вращения стрелки
+            let targetDeg = 0;
             if (win) {
+                // Если выиграли, стрелка останавливается в желтой зоне
                 targetDeg = 360 * 5; 
             } else {
+                // Если проиграли, стрелка останавливается в серой зоне
                 const grayStart = chance * 360;
                 const randomPos = grayStart + Math.random() * (360 - grayStart);
                 targetDeg = 360 * 5 + randomPos;
             }
 
+            // Применяем вращение
             arrow.style.transform = `rotate(${targetDeg}deg)`;
 
             document.getElementById('upgradeBtn').disabled = true;
@@ -777,23 +781,22 @@
                 selectedLeft = [];
                 updateLeftPanel();
                 
+                // Возвращаем стрелку в исходное положение без анимации
                 setTimeout(() => {
                     arrow.style.transition = 'none';
                     arrow.style.transform = 'rotate(0deg)';
-                    setTimeout(() => arrow.style.transition = 'transform 3s cubic-bezier(0.1, 0.7, 0.1, 1);', 50);
+                    setTimeout(() => arrow.style.transition = 'transform 4s cubic-bezier(0.1, 0.7, 0.1, 1);', 50);
                 }, 1000);
 
                 document.getElementById('upgradeBtn').disabled = false;
                 
                 checkPoorBonus();
                 updateUI();
-            }, 3000);
+            }, 4000); // Ждем 4 секунды, пока крутится стрелка
         });
 
-        updateUI();
-        setRightItem('17');
-        renderShop();
-        renderInv();
+        // Запускаем загрузку скинов
+        fetchSkins();
     </script>
 </body>
 </html>
