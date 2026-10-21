@@ -1,3 +1,18 @@
+Отличная идея! Сделать поиск по цене очень просто. Я добавлю в магазин два поля: **"Цена от"** и **"Цена до"**. 
+
+Теперь ты сможешь ввести, например, от `1000` до `5000`, и магазин покажет только те скины, которые вписываются в этот диапазон. Работать это будет вместе с поиском по названию и сортировкой.
+
+### 🛠 Что делать:
+1. Открой `index.html` на GitHub и нажми карандаш.
+2. Нажми `Ctrl+A` (выделить всё) и удали старый код.
+3. Вставь код ниже.
+4. Нажми **Commit changes**.
+5. В **@BotFather** пропиши `/setmenubutton` и отправь ссылку с новым кэшем: `https://max03vah-byte.github.io/cs-upgrader/?v=13`
+6. Открой бота.
+
+Вот полный обновленный код:
+
+```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -112,11 +127,15 @@
         .result.lose { background: rgba(231, 76, 60, 0.1); border: 1px solid var(--lose); color: var(--lose); }
 
         /* --- МАГАЗИН и ИНВЕНТАРЬ --- */
-        .shop-controls { display: flex; gap: 10px; margin-bottom: 10px; }
+        .shop-controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+        .shop-row { display: flex; gap: 10px; }
         .shop-controls input, .shop-controls select {
             flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border);
             background: var(--panel-bg); color: #fff; outline: none; font-size: 14px;
+            min-width: 0;
         }
+        .shop-controls input:focus, .shop-controls select:focus { border-color: var(--accent); }
+        
         .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; padding-bottom: 20px; }
         .shop-item { background: var(--panel-bg); border-radius: 10px; padding: 10px; border: 1px solid var(--border); text-align: center; display: flex; flex-direction: column; position: relative; }
         .shop-item .skin-img { height: 60px; margin-top: 0; }
@@ -143,7 +162,6 @@
         .case-btn:hover:not(:disabled) { transform: scale(1.02); }
         .case-btn:disabled { background: #333; box-shadow: none; color: #888; cursor: not-allowed; }
 
-        /* Кнопка "Показать еще" */
         .load-more-btn {
             background: var(--panel-bg); border: 1px solid var(--accent); color: var(--accent);
             width: 100%; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold;
@@ -195,7 +213,6 @@
         .btn-cancel-sell { background: #2a2f3a; color: #fff; }
         .btn-confirm-sell { background: var(--gold-gradient); color: #000; }
 
-        /* Окно кейса */
         .case-modal-content {
             background: linear-gradient(180deg, #1e2538 0%, #131722 100%);
             border: 1px solid #8e44ad;
@@ -229,7 +246,6 @@
             padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-bottom: 10px;
         }
         .transfer-btn:hover { border-color: var(--accent); color: var(--accent); }
-
         .promo-btn { background: linear-gradient(135deg, #27ae60, #2ecc71); color: #fff; border: none; }
 
         /* НИЖНЕЕ МЕНЮ */
@@ -316,11 +332,19 @@
             <!-- МАГАЗИН -->
             <div id="section-shop" class="content-section">
                 <div class="shop-controls">
-                    <input type="text" id="searchInput" placeholder="Поиск..." oninput="renderShop(true)">
-                    <select id="sortSelect" onchange="renderShop(true)">
-                        <option value="asc">Дешевле</option>
-                        <option value="desc">Дороже</option>
-                    </select>
+                    <div class="shop-row">
+                        <input type="text" id="searchInput" placeholder="Поиск по названию..." oninput="renderShop(true)">
+                    </div>
+                    <div class="shop-row">
+                        <input type="number" id="minPriceInput" placeholder="Цена от (₽)" oninput="renderShop(true)">
+                        <input type="number" id="maxPriceInput" placeholder="Цена до (₽)" oninput="renderShop(true)">
+                    </div>
+                    <div class="shop-row">
+                        <select id="sortSelect" onchange="renderShop(true)">
+                            <option value="asc">По возрастанию цены</option>
+                            <option value="desc">По убыванию цены</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="shop-grid" id="shopGrid"></div>
                 <button class="load-more-btn" id="loadMoreBtn" onclick="loadMoreShop()" style="display: none;">Показать еще</button>
@@ -477,7 +501,7 @@
         if (tg) { tg.ready(); tg.expand(); }
 
         const ADMIN_ID = 1935313766; 
-        const STORAGE_KEY = 'cs_upgrader_v24';
+        const STORAGE_KEY = 'cs_upgrader_v25';
         
         let ITEMS = []; 
         let state = loadState();
@@ -494,7 +518,6 @@
         let caseCooldownInterval = null;
         const COOLDOWN_TIME = 3 * 60 * 1000; 
 
-        // Переменные для магазина (Пагинация)
         let currentShopItems = [];
         let renderedShopCount = 0;
         const SHOP_CHUNK = 100;
@@ -545,9 +568,7 @@
 
                 rawItems.sort((a, b) => a.basePrice - b.basePrice);
 
-                // Плавный рост цены (чтобы не было перегрузки)
                 rawItems.forEach((item, index) => {
-                    // От 10 до 500000
                     let price = 10 + Math.floor(Math.pow(index / rawItems.length, 2.5) * 500000);
                     item.price = price;
                 });
@@ -762,13 +783,21 @@
             }
         }
 
-        // --- ПАГИНАЦИЯ МАГАЗИНА ---
+        // --- ПОИСК И ПАГИНАЦИЯ МАГАЗИНА ---
         window.renderShop = function(reset = false) {
             if (reset) {
                 const query = document.getElementById('searchInput').value.toLowerCase();
+                const minPrice = Number(document.getElementById('minPriceInput').value) || 0;
+                const maxPrice = Number(document.getElementById('maxPriceInput').value) || Infinity;
                 const sort = document.getElementById('sortSelect').value;
                 
-                currentShopItems = ITEMS.filter(i => i.name.toLowerCase().includes(query));
+                // Фильтр по названию и цене
+                currentShopItems = ITEMS.filter(i => {
+                    const matchesName = i.name.toLowerCase().includes(query);
+                    const matchesPrice = i.price >= minPrice && i.price <= maxPrice;
+                    return matchesName && matchesPrice;
+                });
+
                 if (sort === 'asc') currentShopItems.sort((a, b) => a.price - b.price);
                 else if (sort === 'desc') currentShopItems.sort((a, b) => b.price - a.price);
                 
@@ -1118,3 +1147,4 @@
     </script>
 </body>
 </html>
+```
