@@ -170,32 +170,32 @@
             border: 1px solid var(--border);
             flex-grow: 1;
         }
-        .inv-title { font-size: 15px; color: var(--text-muted); margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .inv-title { font-size: 15px; color: var(--text-muted); margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 10px; position: sticky; top: 0; background: var(--panel-bg); z-index: 10; }
         
-        .inv-scroll {
-            display: flex;
-            overflow-x: auto;
-            gap: 10px;
-            padding-bottom: 10px;
-            scrollbar-width: thin;
-            scrollbar-color: var(--accent) var(--panel-bg);
+        .inv-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 5px;
         }
-        .inv-scroll::-webkit-scrollbar { height: 6px; }
-        .inv-scroll::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+        
+        .inv-grid::-webkit-scrollbar { width: 8px; }
+        .inv-grid::-webkit-scrollbar-track { background: var(--bg-color); border-radius: 10px; }
+        .inv-grid::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
         
         .inv-item {
-            min-width: 120px;
-            max-width: 120px;
             background: #252525;
             border-radius: 10px;
             padding: 10px;
             text-align: center;
             border: 1px solid #444;
             cursor: pointer;
-            transition: 0.2s;
+            transition: all 0.2s;
         }
-        .inv-item:hover { border-color: var(--accent); transform: translateY(-2px); }
-        .inv-item .skin-img { height: 50px; }
+        .inv-item:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(255, 215, 0, 0.1); }
+        .inv-item .skin-img { height: 60px; }
         
         @media (max-width: 600px) {
             .main-zone { flex-direction: column; }
@@ -203,6 +203,7 @@
             .wheel { width: 100px; height: 100px; margin-bottom: 0; }
             .wheel-inner { width: 75px; height: 75px; }
             .chance-text { font-size: 16px; }
+            .inv-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); max-height: 300px; }
         }
     </style>
 </head>
@@ -214,11 +215,10 @@
     </div>
 
     <div class="main-zone">
-        <!-- Левая панель: Ставка -->
         <div class="panel">
             <div class="panel-title">Ваша ставка</div>
             <div class="skin-card">
-                <img src="https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/items/weapon_cash.png" class="skin-img" alt="money" onerror="this.style.display='none'">
+                <div style="font-size: 40px; margin-bottom: 5px;">💵</div>
                 <div class="item-name">Виртуальные деньги</div>
                 <div class="input-group">
                     <input type="number" id="betInput" placeholder="Сумма" min="1">
@@ -226,7 +226,6 @@
             </div>
         </div>
 
-        <!-- Центральная панель -->
         <div class="wheel-zone">
             <div class="wheel" id="wheel">
                 <div class="wheel-inner">
@@ -240,7 +239,6 @@
             </div>
         </div>
 
-        <!-- Правая панель: Цель -->
         <div class="panel">
             <div class="panel-title">Цель апгрейда</div>
             <div class="skin-card selected" id="targetCard">
@@ -251,41 +249,73 @@
         </div>
     </div>
 
-    <!-- Нижняя панель: Выбор скинов -->
     <div class="inventory">
-        <div class="inv-title">Выберите скин для апгрейда</div>
-        <div class="inv-scroll" id="invGrid"></div>
+        <div class="inv-title">Выберите скин для апгрейда (50 шт.)</div>
+        <div class="inv-grid" id="invGrid"></div>
     </div>
 
     <script>
         const tg = window.Telegram?.WebApp;
         if (tg) { tg.ready(); tg.expand(); }
 
-        // Картинки берутся с публичного CDN Steam
         const ITEMS = [
-            { id: '1', name: 'AK-47 | Slate', price: 50, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/ak47_slate.png' },
-            { id: '2', name: 'USP-S | Ticket to Hell', price: 100, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/usp_s_ticket_to_hell.png' },
-            { id: '3', name: 'Glock-18 | Water Elemental', price: 150, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/glock18_water_elemental.png' },
-            { id: '4', name: 'M4A1-S | Cyrex', price: 250, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/m4a1_s_cyrex.png' },
-            { id: '5', name: 'AK-47 | Redline', price: 400, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/ak47_redline.png' },
-            { id: '6', name: 'Desert Eagle | Code Red', price: 600, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/desert_eagle_code_red.png' },
-            { id: '7', name: 'AWP | Neo-Noir', price: 800, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/awp_neonoir.png' },
-            { id: '8', name: 'M4A1-S | Printstream', price: 1000, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/m4a1_s_printstream.png' },
-            { id: '9', name: 'AK-47 | Bloodsport', price: 1200, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/ak47_bloodsport.png' },
-            { id: '10', name: 'AWP | Asiimov', price: 1500, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/awp_asiimov.png' },
-            { id: '11', name: 'AK-47 | The Empress', price: 1800, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/ak47_the_empress.png' },
-            { id: '12', name: 'USP-S | Kill Confirmed', price: 2200, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/usp_s_kill_confirmed.png' },
-            { id: '13', name: 'M4A4 | The Emperor', price: 2500, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/m4a4_the_emperor.png' },
-            { id: '14', name: 'AWP | Hyper Beast', price: 3000, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/awp_hyper_beast.png' },
-            { id: '15', name: 'AWP | Dragon Lore', price: 10000, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/awp_dragon_lore.png' },
-            { id: '16', name: 'M4A4 | Howl', price: 12000, img: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/skins/m4a4_howl.png' }
+            { id: '1', name: 'P250 | Sand Dune', price: 10, img: 'https://csgostash.com/img/skins/233.png' },
+            { id: '2', name: 'Glock-18 | Candy Apple', price: 20, img: 'https://csgostash.com/img/skins/135.png' },
+            { id: '3', name: 'USP-S | Forest Leaves', price: 30, img: 'https://csgostash.com/img/skins/243.png' },
+            { id: '4', name: 'AK-47 | Safari Mesh', price: 50, img: 'https://csgostash.com/img/skins/27.png' },
+            { id: '5', name: 'M4A4 | Urban DDPAT', price: 60, img: 'https://csgostash.com/img/skins/178.png' },
+            { id: '6', name: 'AWP | Safari Mesh', price: 80, img: 'https://csgostash.com/img/skins/8.png' },
+            { id: '7', name: 'Desert Eagle | Mudder', price: 100, img: 'https://csgostash.com/img/skins/72.png' },
+            { id: '8', name: 'AK-47 | Slate', price: 120, img: 'https://csgostash.com/img/skins/1042.png' },
+            { id: '9', name: 'USP-S | Ticket to Hell', price: 150, img: 'https://csgostash.com/img/skins/1189.png' },
+            { id: '10', name: 'Glock-18 | Water Elemental', price: 180, img: 'https://csgostash.com/img/skins/350.png' },
+            { id: '11', name: 'M4A1-S | Cyrex', price: 200, img: 'https://csgostash.com/img/skins/311.png' },
+            { id: '12', name: 'AWP | Worm God', price: 220, img: 'https://csgostash.com/img/skins/424.png' },
+            { id: '13', name: 'AK-47 | Blue Laminate', price: 250, img: 'https://csgostash.com/img/skins/281.png' },
+            { id: '14', name: 'M4A4 | Evil Daimyo', price: 280, img: 'https://csgostash.com/img/skins/471.png' },
+            { id: '15', name: 'Desert Eagle | Crimson Web', price: 300, img: 'https://csgostash.com/img/skins/96.png' },
+            { id: '16', name: 'AWP | Electric Hive', price: 350, img: 'https://csgostash.com/img/skins/346.png' },
+            { id: '17', name: 'AK-47 | Redline', price: 400, img: 'https://csgostash.com/img/skins/316.png' },
+            { id: '18', name: 'USP-S | Cyrex', price: 450, img: 'https://csgostash.com/img/skins/365.png' },
+            { id: '19', name: 'M4A1-S | Guardian', price: 500, img: 'https://csgostash.com/img/skins/305.png' },
+            { id: '20', name: 'Desert Eagle | Code Red', price: 600, img: 'https://csgostash.com/img/skins/622.png' },
+            { id: '21', name: 'AWP | Neo-Noir', price: 700, img: 'https://csgostash.com/img/skins/582.png' },
+            { id: '22', name: 'AK-47 | Point Disarray', price: 800, img: 'https://csgostash.com/img/skins/540.png' },
+            { id: '23', name: 'M4A1-S | Printstream', price: 1000, img: 'https://csgostash.com/img/skins/982.png' },
+            { id: '24', name: 'USP-S | Neo-Noir', price: 1100, img: 'https://csgostash.com/img/skins/587.png' },
+            { id: '25', name: 'AK-47 | Bloodsport', price: 1200, img: 'https://csgostash.com/img/skins/623.png' },
+            { id: '26', name: 'AWP | Asiimov', price: 1500, img: 'https://csgostash.com/img/skins/331.png' },
+            { id: '27', name: 'M4A4 | Desolate Space', price: 1600, img: 'https://csgostash.com/img/skins/677.png' },
+            { id: '28', name: 'AK-47 | The Empress', price: 1800, img: 'https://csgostash.com/img/skins/688.png' },
+            { id: '29', name: 'Desert Eagle | Printstream', price: 2000, img: 'https://csgostash.com/img/skins/981.png' },
+            { id: '30', name: 'USP-S | Kill Confirmed', price: 2200, img: 'https://csgostash.com/img/skins/433.png' },
+            { id: '31', name: 'M4A4 | The Emperor', price: 2500, img: 'https://csgostash.com/img/skins/687.png' },
+            { id: '32', name: 'AK-47 | Vulcan', price: 2800, img: 'https://csgostash.com/img/skins/364.png' },
+            { id: '33', name: 'AWP | Hyper Beast', price: 3000, img: 'https://csgostash.com/img/skins/460.png' },
+            { id: '34', name: 'M4A1-S | Hyper Beast', price: 3500, img: 'https://csgostash.com/img/skins/461.png' },
+            { id: '35', name: 'AK-47 | Neon Revolution', price: 4000, img: 'https://csgostash.com/img/skins/555.png' },
+            { id: '36', name: 'AWP | Wildfire', price: 4500, img: 'https://csgostash.com/img/skins/520.png' },
+            { id: '37', name: 'AK-47 | Case Hardened', price: 5000, img: 'https://csgostash.com/img/skins/287.png' },
+            { id: '38', name: 'Desert Eagle | Blaze', price: 5500, img: 'https://csgostash.com/img/skins/68.png' },
+            { id: '39', name: 'AWP | Containment Breach', price: 6000, img: 'https://csgostash.com/img/skins/811.png' },
+            { id: '40', name: 'AK-47 | Fire Serpent', price: 7000, img: 'https://csgostash.com/img/skins/302.png' },
+            { id: '41', name: 'AWP | Medusa', price: 8000, img: 'https://csgostash.com/img/skins/500.png' },
+            { id: '42', name: 'M4A4 | Poseidon', price: 9000, img: 'https://csgostash.com/img/skins/279.png' },
+            { id: '43', name: 'AWP | Dragon Lore', price: 10000, img: 'https://csgostash.com/img/skins/144.png' },
+            { id: '44', name: 'M4A4 | Howl', price: 12000, img: 'https://csgostash.com/img/skins/256.png' },
+            { id: '45', name: 'AWP | Gungnir', price: 15000, img: 'https://csgostash.com/img/skins/769.png' },
+            { id: '46', name: 'AK-47 | Wild Lotus', price: 18000, img: 'https://csgostash.com/img/skins/789.png' },
+            { id: '47', name: 'AWP | The Prince', price: 20000, img: 'https://csgostash.com/img/skins/788.png' },
+            { id: '48', name: '★ Karambit | Doppler', price: 25000, img: 'https://csgostash.com/img/skins/626.png' },
+            { id: '49', name: '★ Butterfly Knife | Fade', price: 30000, img: 'https://csgostash.com/img/skins/429.png' },
+            { id: '50', name: '★ M9 Bayonet | Crimson Web', price: 35000, img: 'https://csgostash.com/img/skins/382.png' }
         ];
 
-        const STORAGE_KEY = 'cs_upgrader_state_v3';
+        const STORAGE_KEY = 'cs_upgrader_state_v7';
         const DEFAULT_BALANCE = 1000;
         
         let state = loadState();
-        let selectedTarget = ITEMS[4]; // По умолчанию AK Redline
+        let selectedTarget = ITEMS[16]; // По умолчанию AK Redline
 
         function loadState() {
             const saved = localStorage.getItem(STORAGE_KEY);
@@ -300,8 +330,8 @@
             const grid = document.getElementById('invGrid');
             grid.innerHTML = ITEMS.map(item => `
                 <div class="inv-item" onclick="selectTarget('${item.id}')">
-                    <img src="${item.img}" class="skin-img" loading="lazy">
-                    <div class="item-name">${item.name.split('|')[0]}</div>
+                    <img src="${item.img}" class="skin-img" loading="lazy" onerror="this.style.opacity='0'">
+                    <div class="item-name" title="${item.name}">${item.name}</div>
                     <div class="item-price">$${item.price}</div>
                 </div>
             `).join('');
@@ -390,7 +420,7 @@
         // Инициализация
         updateBalance();
         renderGrid();
-        selectTarget('5');
+        selectTarget('17'); // AK Redline
     </script>
 </body>
 </html>
