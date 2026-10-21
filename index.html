@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -58,7 +57,6 @@
         .arrow-pointer {
             font-size: 30px; color: var(--accent); transform-origin: 50% 50%;
             filter: drop-shadow(0 0 5px rgba(255, 215, 0, 1));
-            /* Transition задается в JS */
         }
 
         .wheel {
@@ -509,7 +507,7 @@
         if (tg) { tg.ready(); tg.expand(); }
 
         const ADMIN_ID = 1935313766; 
-        const STORAGE_KEY = 'cs_upgrader_v29';
+        const STORAGE_KEY = 'cs_upgrader_v31';
         
         let ITEMS = []; 
         let state = loadState();
@@ -1086,7 +1084,7 @@
             setRightItem(closest.id);
         }
 
-        // --- ИСПРАВЛЕННАЯ ЛОГИКА ВРАЩЕНИЯ И ЧЕСТНОГО ШАНСА ---
+        // --- ЛОГИКА АПГРЕЙДА ---
         document.getElementById('upgradeBtn').addEventListener('click', () => {
             if (isSpinning) return; 
             
@@ -1096,7 +1094,6 @@
 
             isSpinning = true;
             
-            // Честный шанс с учетом админского множителя
             const baseChance = totalLeftPrice / selectedRight.price;
             const realChance = Math.min(baseChance * (state.adminMultiplier || 1.0), 1.0);
             
@@ -1116,24 +1113,21 @@
             indicesToRemove.forEach(idx => state.inventory.splice(idx, 1));
 
             const arrow = document.getElementById('arrow');
-            const win = secretDrop || (Math.random() < realChance); // Используем реальный шанс
+            const win = secretDrop || (Math.random() < realChance); 
             
-            // Оптимизация: сброс позиции без анимации
             arrow.style.transition = 'none';
             arrow.style.transform = 'rotate(0deg)';
-            void arrow.offsetWidth; // Принудительный рефлоу
+            void arrow.offsetWidth; 
             
             let targetDeg = 0;
             if (win) {
                 targetDeg = 360 * 5; 
             } else {
-                // Визуально останавливаем в серой зоне (даже если шанс 99%)
                 const grayStart = (baseChance > 0.95 ? 0.95 : baseChance) * 360;
                 const randomPos = grayStart + Math.random() * (360 - grayStart);
                 targetDeg = 360 * 5 + randomPos;
             }
 
-            // Включаем анимацию и крутим
             setTimeout(() => {
                 arrow.style.transition = 'transform 4s cubic-bezier(0.1, 0.7, 0.1, 1)';
                 arrow.style.transform = `rotate(${targetDeg}deg)`;
@@ -1172,6 +1166,7 @@
             }, 4000); 
         });
 
+        // --- ЛОГИКА КЕЙСА С ШАНСАМИ ---
         window.openCaseModal = function() {
             if (Date.now() - state.lastCaseTime < COOLDOWN_TIME) return;
             
@@ -1192,25 +1187,42 @@
             
             if (userAnswer === currentCaseAnswer) {
                 currentCaseRewards = [];
-                const randomIndices = new Set();
-                while(randomIndices.size < 3) {
-                    randomIndices.add(Math.floor(Math.random() * ITEMS.length));
-                }
-                
                 const grid = document.getElementById('caseRewardsGrid');
                 grid.innerHTML = '';
                 
-                randomIndices.forEach(idx => {
-                    const item = ITEMS[idx];
-                    currentCaseRewards.push(item);
+                // Генерируем 3 награды с разными шансами
+                for (let i = 0; i < 3; i++) {
+                    let roll = Math.random();
+                    let targetPrice = 0;
+                    
+                    if (roll < 0.01) {
+                        // 1% шанс на ДЖЕКПОТ (10 млн - 500 млн)
+                        targetPrice = 10000000 + Math.random() * (500000000 - 10000000);
+                    } else if (roll < 0.06) {
+                        // 5% шанс на средний дроп (до 1 млн)
+                        targetPrice = 100000 + Math.random() * 900000;
+                    } else {
+                        // 94% шанс на обычный дроп (100 - 50000)
+                        targetPrice = 100 + Math.random() * 49900;
+                    }
+                    
+                    // Ищем ближайший скин по цене
+                    let closest = ITEMS[0];
+                    let minDiff = Infinity;
+                    for (let item of ITEMS) {
+                        const diff = Math.abs(item.price - targetPrice);
+                        if (diff < minDiff) { minDiff = diff; closest = item; }
+                    }
+                    
+                    currentCaseRewards.push(closest);
                     
                     grid.innerHTML += `
-                        <div class="modal-item" onclick="claimCaseReward('${item.id}')">
-                            <img src="${item.img}" class="skin-img">
-                            <div class="item-name">${item.name}</div>
+                        <div class="modal-item" onclick="claimCaseReward('${closest.id}')">
+                            <img src="${closest.img}" class="skin-img">
+                            <div class="item-name">${closest.name}</div>
                         </div>
                     `;
-                });
+                }
                 
                 document.getElementById('caseQuestionBox').style.display = 'none';
                 document.getElementById('caseRewardsBox').style.display = 'block';
@@ -1238,4 +1250,3 @@
     </script>
 </body>
 </html>
-```
