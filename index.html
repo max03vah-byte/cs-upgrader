@@ -60,14 +60,23 @@
             position: relative; margin: 10px 0; height: 200px;
         }
         
+        /* НОВАЯ ПАЛКА-УКАЗАТЕЛЬ */
         .arrow-container {
             position: absolute; top: 0; left: 50%; transform: translateX(-50%);
             width: 180px; height: 180px; z-index: 10; pointer-events: none;
             display: flex; justify-content: center;
         }
         .arrow-pointer {
-            font-size: 30px; color: var(--accent); transform-origin: 50% 50%;
-            filter: drop-shadow(0 0 5px rgba(255, 215, 0, 1));
+            position: absolute; bottom: 50%; left: 50%; transform-origin: 50% 100%;
+            width: 4px; height: 85px; background: var(--accent);
+            border-radius: 4px; box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent);
+            transform: translateX(-50%) rotate(0deg);
+        }
+        /* Кончик палки */
+        .arrow-pointer::after {
+            content: ''; position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+            border-left: 8px solid transparent; border-right: 8px solid transparent;
+            border-bottom: 12px solid var(--accent);
         }
 
         .wheel {
@@ -75,12 +84,14 @@
             background: conic-gradient(var(--accent) 0deg, var(--accent) 0deg, #222 0deg);
             display: flex; align-items: center; justify-content: center;
             border: 4px solid #333;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
         }
         .wheel-inner {
             width: 150px; height: 150px; border-radius: 50%;
             background: var(--bg-color); display: flex; flex-direction: column;
             align-items: center; justify-content: center; text-align: center;
             border: 2px solid var(--border);
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
         }
         .chance-text { font-size: 28px; font-weight: bold; color: var(--accent); }
         .chance-label { font-size: 12px; color: var(--text-muted); }
@@ -382,8 +393,9 @@
                                 <div class="chance-label">Шанс</div>
                             </div>
                         </div>
+                        <!-- Палка-указатель -->
                         <div class="arrow-container">
-                            <div class="arrow-pointer" id="arrow">▼</div>
+                            <div class="arrow-pointer" id="arrow"></div>
                         </div>
                     </div>
 
@@ -653,7 +665,7 @@
         if (tg) { tg.ready(); tg.expand(); }
 
         const ADMIN_ID = 1935313766; 
-        const STORAGE_KEY = 'cs_upgrader_v34';
+        const STORAGE_KEY = 'cs_upgrader_v35';
         
         let ITEMS = []; 
         let state = loadState();
@@ -1330,7 +1342,6 @@
             setRightItem(closest.id);
         }
 
-        // --- ИСПРАВЛЕННАЯ ЛОГИКА АПГРЕЙДА ---
         document.getElementById('upgradeBtn').addEventListener('click', () => {
             if (isSpinning) return; 
             
@@ -1355,10 +1366,10 @@
                 }
             }
 
-            // Сохраняем скины, которые ставим, чтобы потом их удалить
-            const itemsToRemoveIds = selectedLeft.map(i => i.index);
+            const indicesToRemove = selectedLeft.map(i => i.index).sort((a,b) => b-a);
+            indicesToRemove.forEach(idx => state.inventory.splice(idx, 1));
+
             const leftItem = selectedLeft[0];
-            
             const historyRecord = {
                 win: false,
                 chance: (baseChance * 100).toFixed(1),
@@ -1374,13 +1385,12 @@
             const arrow = document.getElementById('arrow');
             const win = secretDrop || (Math.random() < realChance); 
             
-            // Оптимизация от лагов
             arrow.style.transition = 'none';
-            arrow.style.transform = 'rotate(0deg)';
+            arrow.style.transform = 'translateX(-50%) rotate(0deg)';
             void arrow.offsetWidth; 
             
             let targetDeg = 0;
-            const spinDuration = isFastMode ? 2 : 4; 
+            const spinDuration = isFastMode ? 2 : 4;
             
             if (win) {
                 const maxDeg = baseChance * 360;
@@ -1392,7 +1402,7 @@
 
             setTimeout(() => {
                 arrow.style.transition = `transform ${spinDuration}s cubic-bezier(0.1, 0.7, 0.1, 1)`;
-                arrow.style.transform = `rotate(${targetDeg}deg)`;
+                arrow.style.transform = `translateX(-50%) rotate(${targetDeg}deg)`;
             }, 50);
 
             document.getElementById('upgradeBtn').disabled = true;
@@ -1402,9 +1412,6 @@
                 const box = document.getElementById('resultBox');
                 historyRecord.win = win;
                 
-                // САМОЕ ВАЖНОЕ: Удаляем скины из ставки В ЛЮБОМ СЛУЧАЕ
-                state.inventory = state.inventory.filter((_, idx) => !itemsToRemoveIds.includes(idx));
-
                 if (win) {
                     state.inventory.push(targetToWin);
                     state.upgradesCount++;
@@ -1431,7 +1438,6 @@
                 updateUI();
                 renderInv();
                 
-                // Очищаем выбор
                 selectedLeft = [];
                 updateLeftPanel();
                 
@@ -1520,4 +1526,4 @@
         fetchSkins();
     </script>
 </body>
-</html>
+    </html>
