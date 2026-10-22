@@ -38,6 +38,20 @@
             background-image: radial-gradient(circle at 50% 30%, #1A2232 0%, #0B0E14 70%);
         }
         
+        /* ЭКРАН ЗАГРУЗКИ */
+        .loading-screen {
+            position: fixed; inset: 0; background: var(--bg-color); z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+        .loading-screen.hidden { opacity: 0; pointer-events: none; }
+        .load-logo { width: 60px; height: 60px; margin-bottom: 20px; }
+        .load-logo path { fill: url(#goldGrad); }
+        .load-title { font-size: 16px; font-weight: 900; letter-spacing: 4px; margin-bottom: 20px; color: #fff; }
+        .load-bar-container { width: 200px; height: 4px; background: #1F2735; border-radius: 2px; overflow: hidden; position: relative; }
+        .load-bar { width: 50%; height: 100%; background: var(--gold-gradient); border-radius: 2px; animation: loadAnim 1s infinite alternate ease-in-out; }
+        @keyframes loadAnim { 0% { margin-left: -50%; } 100% { margin-left: 100%; } }
+
         .header {
             display: flex; justify-content: space-between; align-items: center;
             padding: 10px 15px; background: var(--panel-bg);
@@ -142,17 +156,55 @@
         .cheat-slider { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px; background: #0B0E14; outline: none; }
         .cheat-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); cursor: pointer; }
 
+        /* ПАНЕЛЬ ПОИСКА И ФИЛЬТРОВ */
+        .search-panel {
+            background: var(--panel-bg); border: 1px solid var(--border); border-radius: 10px;
+            padding: 10px; width: 100%; margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px;
+        }
+        .search-row { display: flex; gap: 10px; }
+        .search-input-wrap {
+            flex: 1; background: #0B0E14; border: 1px solid var(--border); border-radius: 8px;
+            display: flex; align-items: center; padding: 0 10px; height: 35px;
+        }
+        .search-input-wrap input {
+            background: none; border: none; color: var(--text-main); outline: none;
+            width: 100%; font-size: 12px; margin-left: 5px;
+        }
+        .filter-btn {
+            background: #0B0E14; border: 1px solid var(--border); color: var(--text-main);
+            border-radius: 8px; padding: 0 10px; height: 35px; font-size: 12px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .filter-btn.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; }
+        .price-inputs { display: flex; gap: 10px; }
+        .price-inputs input {
+            background: #0B0E14; border: 1px solid var(--border); border-radius: 8px;
+            padding: 8px; color: var(--text-main); font-size: 12px; width: 100%; outline: none;
+        }
+
         /* Магазин и Инвентарь */
         .grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            display: grid; grid-template-columns: repeat(2, 1fr); /* 2 колонки как на скрине 5 */
             gap: 10px; width: 100%; padding-bottom: 20px;
         }
+        @media (min-width: 400px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+
         .item-card {
             background: var(--panel-bg); border: 1px solid var(--border);
             border-radius: 10px; padding: 10px; text-align: center; cursor: pointer;
-            position: relative; overflow: hidden;
+            position: relative; overflow: hidden; display: flex; flex-direction: column;
+            transition: transform 0.1s;
         }
-        /* Подсветка редкости */
+        .item-card:active { transform: scale(0.98); }
+        
+        /* Градиентная подсветка фона */
+        .item-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 60%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.05) 0%, transparent 100%);
+            pointer-events: none;
+        }
+        
+        /* Подсветка редкости (полоса снизу) */
         .rarity-consumer { border-bottom: 3px solid var(--rar-consumer); }
         .rarity-industrial { border-bottom: 3px solid var(--rar-industrial); }
         .rarity-milspec { border-bottom: 3px solid var(--rar-milspec); }
@@ -162,11 +214,13 @@
         .rarity-contraband { border-bottom: 3px solid var(--rar-contraband); }
         .rarity-knife { border-bottom: 3px solid var(--rar-knife); }
 
-        .item-card img { width: 100%; height: 50px; object-fit: contain; }
-        .item-card .name { font-size: 10px; font-weight: bold; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .item-card .price { font-size: 11px; color: var(--accent); font-weight: bold; margin-top: 2px; }
+        /* Названия редкостей */
+        .item-card .rarity-name { font-size: 9px; color: var(--text-muted); margin-bottom: 3px; }
+        .item-card img { width: 100%; height: 60px; object-fit: contain; z-index: 1; position: relative; }
+        .item-card .name { font-size: 10px; font-weight: bold; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 1; }
+        .item-card .price { font-size: 11px; color: var(--accent); font-weight: bold; margin-top: 2px; z-index: 1; }
         
-        .btn-buy { background: var(--accent); color: #000; border: none; padding: 6px; border-radius: 6px; font-weight: bold; font-size: 10px; margin-top: 5px; width: 100%; }
+        .btn-buy { background: var(--accent); color: #000; border: none; padding: 6px; border-radius: 6px; font-weight: bold; font-size: 10px; margin-top: 5px; width: 100%; z-index: 1; }
 
         /* Профиль */
         .profile-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; width: 100%; }
@@ -178,7 +232,7 @@
             background: var(--panel-bg); border-top: 1px solid var(--border);
             display: flex; justify-content: space-around; z-index: 100;
         }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); font-size: 10px; gap: 2px; width: 25%; position: relative; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); font-size: 10px; gap: 2px; width: 25%; position: relative; cursor: pointer; }
         .nav-item.active { color: var(--accent); }
         .nav-icon { font-size: 18px; }
 
@@ -189,7 +243,13 @@
         .modal-header { padding: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .modal-title { font-size: 14px; font-weight: bold; }
         .close-modal { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; }
-        .modal-body { flex: 1; overflow-y: auto; padding: 10px; display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; }
+        .modal-body { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; }
+        
+        .modal-search {
+            width: 100%; padding: 10px; background: #0B0E14; border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text-main); font-size: 12px; margin-bottom: 10px; outline: none;
+        }
+        .modal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; }
 
         .promo-modal-content { max-width: 300px; padding: 20px; text-align: center; }
         .promo-input { width: 100%; padding: 12px; background: #0B0E14; border: 1px solid var(--border); border-radius: 8px; color: var(--accent); font-size: 16px; text-align: center; margin-bottom: 10px; outline: none; }
@@ -214,19 +274,38 @@
 
         .hidden { display: none !important; }
 
-        /* Стили для нового окна покупки */
         .buy-modal-content { max-width: 320px; height: auto; padding: 20px; border-radius: 12px; }
         .buy-qty-btn { background: #0B0E14; color: var(--text-main); border: 1px solid var(--border); width: 35px; height: 35px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .buy-qty-btn:active { background: var(--border); }
     </style>
 </head>
 <body>
+
+    <!-- ЭКРАН ЗАГРУЗКИ -->
+    <div class="loading-screen" id="loadingScreen">
+        <svg class="load-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#D4AF37;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+            <path d="M12 2L22 12L19 15L12 8L5 15L2 12L12 2Z" />
+            <path d="M12 10L22 20L19 23L12 16L5 23L2 20L12 10Z" />
+        </svg>
+        <div class="load-title">UPGRADER</div>
+        <div class="load-bar-container">
+            <div class="load-bar"></div>
+        </div>
+    </div>
+
     <div class="header">
         <div class="logo-area"><span class="logo-icon">≪</span> UPGRADER</div>
         <div class="balance-box">БАЛАНС: <span id="balanceDisplay">1000 ₽</span></div>
     </div>
 
     <div class="main-content">
+        <!-- ВКЛАДКА АПГРЕЙД -->
         <div id="tab-upgrade" class="tab-content active">
             <div class="circle-zone">
                 <div class="wheel-wrapper">
@@ -281,25 +360,42 @@
                     <button class="quick-btn" onclick="setQuickTarget('75')">75%</button>
                 </div>
 
-                <!-- Слайдер подкрутки (только для админа) -->
+                <!-- ПОДКРУТКА -->
                 <div class="cheat-container" id="adminCheatPanel" style="display: none;">
                     <div class="cheat-header">
-                        <span>ПОДКРУТКА ШАНСА (В ПОЛЬЗУ ИГРОКА)</span>
-                        <span id="cheatValueDisplay">0%</span>
+                        <span>ПОДКРУТКА (В ЗАВИСИМОСТИ ОТ ЦЕНЫ)</span>
+                        <span id="cheatValueDisplay">0</span>
                     </div>
-                    <input type="range" class="cheat-slider" id="cheatSlider" min="0" max="90" value="0" oninput="document.getElementById('cheatValueDisplay').textContent = this.value + '%'">
+                    <input type="range" class="cheat-slider" id="cheatSlider" min="0" max="100" value="0" oninput="document.getElementById('cheatValueDisplay').textContent = this.value">
                 </div>
             </div>
         </div>
 
+        <!-- ВКЛАДКА МАГАЗИН -->
         <div id="tab-shop" class="tab-content">
+            <div class="search-panel">
+                <div class="search-row">
+                    <div class="search-input-wrap">
+                        <span style="color:var(--text-muted);">🔍</span>
+                        <input type="text" id="shopSearch" placeholder="Поиск по названию..." oninput="renderShop()">
+                    </div>
+                    <button class="filter-btn" onclick="toggleSort()" id="sortBtn">↕ Цена</button>
+                    <button class="filter-btn" onclick="renderShop()">🔄</button>
+                </div>
+                <div class="price-inputs">
+                    <input type="number" id="priceMin" placeholder="от, ₽" oninput="renderShop()">
+                    <input type="number" id="priceMax" placeholder="до, ₽" oninput="renderShop()">
+                </div>
+            </div>
             <div class="grid" id="shopGrid"></div>
         </div>
 
+        <!-- ВКЛАДКА ИНВЕНТАРЬ -->
         <div id="tab-inventory" class="tab-content">
             <div class="grid" id="invGrid"></div>
         </div>
 
+        <!-- ВКЛАДКА ПРОФИЛЬ -->
         <div id="tab-profile" class="tab-content">
             <div style="text-align: center; margin-bottom: 20px; width: 100%;">
                 <div style="width: 60px; height: 60px; background: #1F2735; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 30px;">👤</div>
@@ -313,11 +409,14 @@
         </div>
     </div>
 
-    <!-- Модалка выбора скинов -->
+    <!-- Модалка выбора скинов (с поиском) -->
     <div class="modal" id="selectModal">
         <div class="modal-content">
             <div class="modal-header"><div class="modal-title" id="modalTitle">Выберите скин</div><button class="close-modal" onclick="closeModal('selectModal')">×</button></div>
-            <div class="modal-body" id="modalGrid"></div>
+            <div class="modal-body">
+                <input type="text" class="modal-search" id="modalSearch" placeholder="Поиск скина..." oninput="filterModalItems()">
+                <div class="modal-grid" id="modalGrid"></div>
+            </div>
         </div>
     </div>
 
@@ -415,6 +514,8 @@
         
         let currentBuyItem = null;
         let buyQuantity = 1;
+        let isSortAsc = true;
+        let modalMode = 'left'; // 'left' или 'right'
 
         // Промокоды
         const PROMO_CODES = {
@@ -450,6 +551,7 @@
             document.getElementById('profileIdText').textContent = `ID: ${currentUserId}`;
         }
 
+        // --- ЗАГРУЗКА 1000+ СКИНОВ ---
         async function loadSkinsFromJSON() {
             try {
                 const response = await fetch('./skins.json');
@@ -487,8 +589,9 @@
                     }
                 });
 
+                // Генерация 1000+ скинов
                 const rarities = ['consumer', 'industrial', 'milspec', 'restricted', 'classified', 'covert', 'contraband', 'knife'];
-                for(let i = 0; i < 1000; i++) {
+                for(let i = 0; i < 1200; i++) {
                     const rar = rarities[Math.floor(Math.random() * rarities.length)];
                     let bPrice = 10;
                     if (rar === 'industrial') bPrice = 40;
@@ -501,7 +604,7 @@
 
                     rawItems.push({
                         id: idCounter.toString(),
-                        name: `Generated Skin #${i+1}`,
+                        name: `${rar.toUpperCase()} Skin #${i+1}`,
                         basePrice: bPrice,
                         img: 'https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERN4KXwMCoYW28IlINc6uYqG0GZQ-RoN1k0uKcr9n2MWKHgB8I54b6DT1v',
                         category: 'Сгенерировано',
@@ -512,8 +615,10 @@
 
                 rawItems.sort((a, b) => a.basePrice - b.basePrice);
 
+                // РАСЧЕТ ЦЕНЫ ДО 500 МИЛЛИАРДОВ
                 rawItems.forEach((item, index) => {
                     let ratio = index / rawItems.length;
+                    // Формула: 10 + (ratio^4) * 500 000 000 000
                     let price = 10 + Math.floor(Math.pow(ratio, 4) * 500000000000);
                     item.price = price;
                 });
@@ -523,9 +628,15 @@
                 updateRightPanel();
                 renderShop();
                 
+                // Скрываем загрузку
+                setTimeout(() => {
+                    document.getElementById('loadingScreen').classList.add('hidden');
+                }, 1000);
+                
             } catch (e) {
                 console.error(e);
                 showToast('Ошибка загрузки skins.json');
+                document.getElementById('loadingScreen').classList.add('hidden'); // Скрываем в случае ошибки
             }
         }
 
@@ -540,17 +651,44 @@
             if (tab === 'inventory') renderInventory();
         }
 
+        window.toggleSort = function() {
+            isSortAsc = !isSortAsc;
+            document.getElementById('sortBtn').innerHTML = isSortAsc ? '↕ Цена (по возр.)' : '↕ Цена (по убыв.)';
+            renderShop();
+        }
+
+        // --- МАГАЗИН С ФИЛЬТРАМИ ---
         function renderShop() {
             const grid = document.getElementById('shopGrid');
-            const toRender = ITEMS.slice(0, 100);
+            const query = document.getElementById('shopSearch').value.toLowerCase();
+            const minPrice = parseInt(document.getElementById('priceMin').value) || 0;
+            const maxPrice = parseInt(document.getElementById('priceMax').value) || Infinity;
+            
+            let filtered = ITEMS.filter(item => {
+                const matchName = item.name.toLowerCase().includes(query);
+                const matchPrice = item.price >= minPrice && item.price <= maxPrice;
+                return matchName && matchPrice;
+            });
+
+            // Сортировка
+            filtered.sort((a, b) => isSortAsc ? a.price - b.price : b.price - a.price);
+            
+            // Ограничиваем рендер 100 элементами для производительности
+            const toRender = filtered.slice(0, 100);
+            
             grid.innerHTML = toRender.map(item => `
                 <div class="item-card rarity-${item.rarity}">
+                    <div class="rarity-name" style="color: var(--rar-${item.rarity});">${item.rarity.toUpperCase()}</div>
                     <img src="${item.img}" loading="lazy">
                     <div class="name">${item.name}</div>
                     <div class="price">${formatMoney(item.price)}</div>
                     <button class="btn-buy" onclick="event.stopPropagation(); buyItem('${item.id}')">Купить</button>
                 </div>
             `).join('');
+            
+            if (toRender.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #888; padding: 20px;">Ничего не найдено</div>';
+            }
         }
 
         window.buyItem = function(id) {
@@ -634,6 +772,7 @@
             }
             grid.innerHTML = state.inventory.map((item, index) => `
                 <div class="item-card rarity-${item.rarity}">
+                    <div class="rarity-name" style="color: var(--rar-${item.rarity});">${item.rarity.toUpperCase()}</div>
                     <img src="${item.img}" loading="lazy">
                     <div class="name">${item.name}</div>
                     <div class="price">${formatMoney(item.price)}</div>
@@ -641,34 +780,49 @@
             `).join('');
         }
 
+        // --- МОДАЛКА ВЫБОРА (С ПОИСКОМ) ---
         window.openSelectModal = function(mode) {
+            modalMode = mode;
             document.getElementById('selectModal').classList.add('active');
-            const grid = document.getElementById('modalGrid');
+            document.getElementById('modalSearch').value = ''; // Очищаем поиск
+            document.getElementById('modalTitle').textContent = mode === 'left' ? 'Ваша ставка' : 'Выберите цель';
             
-            if (mode === 'left') {
-                document.getElementById('modalTitle').textContent = 'Ваша ставка';
-                if (state.inventory.length === 0) {
-                    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #888;">Пусто</div>';
-                    return;
-                }
-                grid.innerHTML = state.inventory.map((item, index) => `
-                    <div class="inv-item rarity-${item.rarity}" onclick="pickLeft(${index})" style="background: #0B0E14; border: 1px solid #1F2735; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer;">
-                        <img src="${item.img}" style="width: 100%; height: 45px; object-fit: contain;">
-                        <div class="name" style="font-size: 9px; font-weight: bold; margin-top: 5px;">${item.name}</div>
-                        <div class="price" style="font-size: 10px; color: #FFCC00; font-weight: bold;">${formatMoney(item.price)}</div>
-                    </div>
-                `).join('');
-            } else {
-                document.getElementById('modalTitle').textContent = 'Выберите цель';
-                const toRender = ITEMS.slice(0, 40);
-                grid.innerHTML = toRender.map(item => `
-                    <div class="inv-item rarity-${item.rarity}" onclick="pickRight('${item.id}')" style="background: #0B0E14; border: 1px solid #1F2735; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer;">
-                        <img src="${item.img}" style="width: 100%; height: 45px; object-fit: contain;">
-                        <div class="name" style="font-size: 9px; font-weight: bold; margin-top: 5px;">${item.name}</div>
-                        <div class="price" style="font-size: 10px; color: #FFCC00; font-weight: bold;">${formatMoney(item.price)}</div>
-                    </div>
-                `).join('');
+            filterModalItems();
+        }
+
+        window.filterModalItems = function() {
+            const grid = document.getElementById('modalGrid');
+            const query = document.getElementById('modalSearch').value.toLowerCase();
+            
+            let sourceItems = modalMode === 'left' ? state.inventory : ITEMS;
+            
+            if (modalMode === 'left' && sourceItems.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #888;">Инвентарь пуст</div>';
+                return;
             }
+
+            let filtered = sourceItems.filter(item => item.name.toLowerCase().includes(query));
+            // Ограничиваем до 40 элементов для скорости
+            let toRender = filtered.slice(0, 40);
+            
+            if (toRender.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #888;">Ничего не найдено</div>';
+                return;
+            }
+
+            grid.innerHTML = toRender.map(item => {
+                // Для левой панели нужно передавать индекс в инвентаре
+                let clickAction = modalMode === 'left' 
+                    ? `pickLeft(${state.inventory.indexOf(item)})` 
+                    : `pickRight('${item.id}')`;
+                
+                return `
+                <div class="inv-item rarity-${item.rarity}" onclick="${clickAction}" style="background: #0B0E14; border: 1px solid #1F2735; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; border-bottom: 3px solid var(--rar-${item.rarity});">
+                    <img src="${item.img}" style="width: 100%; height: 45px; object-fit: contain;">
+                    <div class="name" style="font-size: 9px; font-weight: bold; margin-top: 5px;">${item.name}</div>
+                    <div class="price" style="font-size: 10px; color: #FFCC00; font-weight: bold;">${formatMoney(item.price)}</div>
+                </div>
+            `}).join('');
         }
 
         window.pickLeft = function(index) {
@@ -748,6 +902,7 @@
             wheel.style.background = `conic-gradient(from 180deg, var(--accent) 0deg, var(--accent) ${deg}deg, #0B0E14 ${deg}deg)`;
         }
 
+        // --- АПГРЕЙД (С ПОДКРУТКОЙ) ---
         document.getElementById('upgradeBtn').addEventListener('click', () => {
             if (isSpinning) return;
             if (!selectedLeft) return alert('Выберите скин для ставки!');
@@ -759,9 +914,16 @@
             if (baseChance > 1) baseChance = 1;
             
             let finalChance = baseChance;
+            // Подкрутка зависит от цены: чем дороже скин, тем меньше бонус
             if (isAdmin) {
-                const cheatValue = parseInt(document.getElementById('cheatSlider').value) / 100;
-                finalChance = Math.min(1, baseChance + cheatValue);
+                const cheatVal = parseInt(document.getElementById('cheatSlider').value); // от 0 до 100
+                if (cheatVal > 0) {
+                    // Формула: (cheatVal / 10000) * (1000000 / targetPrice)
+                    // Это значит, что подкрутка сильно падает на дорогих скинах
+                    let bonus = (cheatVal / 100) * (50000000 / selectedRight.price);
+                    if (bonus > 0.9) bonus = 0.9; // Максимальный бонус 90%
+                    finalChance = Math.min(1, baseChance + bonus);
+                }
             }
 
             const win = Math.random() < finalChance;
@@ -845,17 +1007,13 @@
             }
         }
 
-        // --- ЛОГИКА ПРОМОКОДОВ (РАЗ В 24 ЧАСА) ---
-        window.openPromoModal = function() { 
-            document.getElementById('promoModal').classList.add('active'); 
-        }
+        window.openPromoModal = function() { document.getElementById('promoModal').classList.add('active'); }
         
         window.executePromo = function() {
             const val = document.getElementById('promoInput').value.trim().toUpperCase();
             const now = Date.now();
-            const cooldown = 24 * 60 * 60 * 1000; // 24 часа в миллисекундах
+            const cooldown = 24 * 60 * 60 * 1000;
 
-            // Проверка кулдауна
             if (now - state.lastPromoTime < cooldown) {
                 const timeLeft = cooldown - (now - state.lastPromoTime);
                 const hours = Math.floor(timeLeft / (1000 * 60 * 60));
@@ -864,21 +1022,16 @@
             }
             
             if (PROMO_CODES[val]) {
-                if (state.usedPromos.includes(val)) {
-                    return showToast('Этот промокод уже использован');
-                }
+                if (state.usedPromos.includes(val)) return showToast('Этот промокод уже использован');
                 
-                // Начисляем баланс
                 state.balance += PROMO_CODES[val].amount;
                 state.usedPromos.push(val);
-                state.lastPromoTime = now; // Записываем время активации
+                state.lastPromoTime = now;
                 
-                saveState(); 
-                updateBalance();
+                saveState(); updateBalance();
                 showToast(`Промокод активирован! +${PROMO_CODES[val].amount.toLocaleString('ru-RU')} ₽`);
                 closeModal('promoModal');
                 document.getElementById('promoInput').value = '';
-                
             } else {
                 showToast('Неверный промокод');
             }
@@ -886,7 +1039,6 @@
 
         updateBalance();
         loadSkinsFromJSON();
-
     </script>
 </body>
 </html>
