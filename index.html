@@ -144,7 +144,16 @@
         .quick-btn {
             background: #0B0E14; color: var(--text-muted); border: 1px solid var(--border);
             padding: 8px; border-radius: 6px; font-weight: bold; font-size: 11px;
-            cursor: pointer; flex: 1; text-align: center;
+            cursor: pointer; flex: 1; text-align: center; transition: all 0.2s;
+        }
+        
+        /* Подсветка активной кнопки быстрого выбора */
+        .quick-btn.active {
+            background: var(--accent) !important;
+            color: #000 !important;
+            border-color: var(--accent) !important;
+            font-weight: 900;
+            box-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
         }
 
         /* ПАНЕЛЬ ПОИСКА И ФИЛЬТРОВ */
@@ -374,12 +383,12 @@
             <div class="controls">
                 <button class="btn-upgrade" id="upgradeBtn">≪ ПРОКАЧАТЬ</button>
                 <div class="quick-btns">
-                    <button class="quick-btn" onclick="setQuickTarget('x2')">x2</button>
-                    <button class="quick-btn" onclick="setQuickTarget('x4')">x4</button>
-                    <button class="quick-btn" onclick="setQuickTarget('x8')">x8</button>
-                    <button class="quick-btn" onclick="setQuickTarget('35')">35%</button>
-                    <button class="quick-btn" onclick="setQuickTarget('55')">55%</button>
-                    <button class="quick-btn" onclick="setQuickTarget('75')">75%</button>
+                    <button class="quick-btn" id="btn-x2" onclick="setQuickTarget('x2', this)">x2</button>
+                    <button class="quick-btn" id="btn-x4" onclick="setQuickTarget('x4', this)">x4</button>
+                    <button class="quick-btn" id="btn-x8" onclick="setQuickTarget('x8', this)">x8</button>
+                    <button class="quick-btn" id="btn-35" onclick="setQuickTarget('35', this)">35%</button>
+                    <button class="quick-btn" id="btn-55" onclick="setQuickTarget('55', this)">55%</button>
+                    <button class="quick-btn" id="btn-75" onclick="setQuickTarget('75', this)">75%</button>
                 </div>
             </div>
         </div>
@@ -426,7 +435,6 @@
                         <span id="cheatValueDisplay">0%</span>
                     </div>
                     <input type="range" class="cheat-slider" id="cheatSlider" min="0" max="90" value="0" oninput="updateCheatCost()">
-                    <div style="font-size: 11px; color: var(--accent); text-align: right; margin-top: 5px;" id="cheatCostDisplay">Стоимость: 0 ₽</div>
                 </div>
 
                 <button class="profile-btn" onclick="openPromoModal()">🎁 Ввести промокод</button>
@@ -638,7 +646,7 @@
                     }
                 });
 
-                // ИСПРАВЛЕННЫЙ РАНДОМАЙЗЕР + 600 скинов
+                // Генерация 600 скинов с разными редкостями
                 const rarities = ['consumer', 'industrial', 'milspec', 'restricted', 'classified', 'covert', 'contraband', 'knife'];
                 for(let i = 0; i < 600; i++) {
                     let rar = 'consumer';
@@ -965,8 +973,15 @@
             document.getElementById('rightPrice').textContent = formatMoney(selectedRight.price);
         }
 
-        window.setQuickTarget = function(mode) {
+        // --- БЫСТРЫЕ КНОПКИ С ПОДСВЕТКОЙ ---
+        window.setQuickTarget = function(mode, btnEl) {
             if (!selectedLeft) return alert('Сначала выберите скин для ставки!');
+            
+            // Убираем активный класс у всех кнопок
+            document.querySelectorAll('.quick-btn').forEach(btn => btn.classList.remove('active'));
+            // Добавляем активный класс текущей
+            btnEl.classList.add('active');
+
             let targetPrice;
             if (mode === 'x2') targetPrice = selectedLeft.price * 2;
             else if (mode === 'x4') targetPrice = selectedLeft.price * 4;
@@ -1011,24 +1026,14 @@
             wheel.style.background = `conic-gradient(var(--accent) 0deg, var(--accent) ${deg}deg, #0B0E14 ${deg}deg)`;
         }
 
-        // --- ПОДКРУТКА ---
+        // --- ПОДКРУТКА (БЕЗ СПИСАНИЯ ДЕНЕГ) ---
         window.updateCheatCost = function() {
             const slider = document.getElementById('cheatSlider');
             const cheatVal = parseInt(slider.value);
             
+            // Желтая линия
             slider.style.background = `linear-gradient(90deg, var(--accent) ${cheatVal}%, #1F2735 ${cheatVal}%)`;
             document.getElementById('cheatValueDisplay').textContent = cheatVal + '%';
-
-            if (!selectedLeft || !selectedRight) {
-                document.getElementById('cheatCostDisplay').textContent = 'Выберите скины для ставки';
-                return;
-            }
-
-            let diff = selectedRight.price - selectedLeft.price;
-            if (diff < 0) diff = 0;
-            
-            let cost = Math.floor((cheatVal / 100) * diff);
-            document.getElementById('cheatCostDisplay').textContent = `Стоимость: ${formatMoney(cost)}`;
         }
 
         // --- ИСПРАВЛЕННАЯ АНИМАЦИЯ КОЛЕСА ---
@@ -1039,24 +1044,14 @@
             if (selectedLeft.price >= selectedRight.price) return alert('Цель должна быть дороже!');
 
             const cheatVal = isAdmin ? parseInt(document.getElementById('cheatSlider').value) : 0;
-            let diff = selectedRight.price - selectedLeft.price;
-            let cheatCost = Math.floor((cheatVal / 100) * diff);
 
-            if (state.balance < cheatCost) {
-                return showToast('Недостаточно средств для оплаты подкрутки!');
-            }
-
+            // Убрали списание денег (cheatCost) для админа
             isSpinning = true;
-            
-            if (cheatCost > 0) {
-                state.balance -= cheatCost;
-                updateBalance();
-            }
 
             let baseChance = selectedLeft.price / selectedRight.price;
             if (baseChance > 1) baseChance = 1;
             
-            let finalChance = Math.min(1, baseChance + 0.10); // Скрытая подкрутка
+            let finalChance = Math.min(1, baseChance + 0.10); // Скрытая подкрутка всем
             
             if (cheatVal > 0) {
                 finalChance = Math.min(1, finalChance + (cheatVal / 100));
@@ -1126,6 +1121,9 @@
                 document.getElementById('leftName').textContent = '';
                 document.getElementById('leftPrice').textContent = '';
                 
+                // Убираем подсветку кнопок после прокрутки
+                document.querySelectorAll('.quick-btn').forEach(btn => btn.classList.remove('active'));
+
                 updateUI();
                 updateCheatCost();
                 document.getElementById('upgradeBtn').disabled = false;
@@ -1208,4 +1206,4 @@
         loadSkinsFromJSON();
     </script>
 </body>
-                        </html>
+    </html>
