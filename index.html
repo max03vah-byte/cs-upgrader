@@ -60,18 +60,25 @@
             position: relative; margin: 10px 0; height: 200px;
         }
         
-        /* НОВЫЙ КРАСИВЫЙ ТРЕУГОЛЬНИК */
-        .arrow-container {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 180px; height: 180px; z-index: 10; pointer-events: none;
+        .wheel-wrapper {
+            position: relative;
+            width: 180px; height: 180px;
         }
+        
+        /* ТРЕУГОЛЬНИК */
         .arrow-pointer {
-            position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            margin-left: -15px;
             width: 0; height: 0;
-            border-left: 15px solid transparent; border-right: 15px solid transparent;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
             border-top: 25px solid var(--accent);
             filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8)) drop-shadow(0 0 15px rgba(255, 215, 0, 0.4));
-            transform-origin: 50% 105px; /* Ось вращения (от центра) */
+            transform-origin: 50% 105px; /* Вращение вокруг центра */
+            z-index: 10;
+            transition: none; /* По умолчанию без анимации */
         }
 
         .wheel {
@@ -382,15 +389,14 @@
             <div id="section-upgrader" class="content-section active">
                 <div class="upgrader-layout">
                     <div class="circle-zone">
-                        <div class="wheel" id="wheel">
-                            <div class="wheel-inner">
-                                <div class="chance-text" id="chanceText">0%</div>
-                                <div class="chance-label">Шанс</div>
-                            </div>
-                        </div>
-                        <!-- НОВЫЙ ТРЕУГОЛЬНИК -->
-                        <div class="arrow-container">
+                        <div class="wheel-wrapper">
                             <div class="arrow-pointer" id="arrow"></div>
+                            <div class="wheel" id="wheel">
+                                <div class="wheel-inner">
+                                    <div class="chance-text" id="chanceText">0%</div>
+                                    <div class="chance-label">Шанс</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -660,7 +666,7 @@
         if (tg) { tg.ready(); tg.expand(); }
 
         const ADMIN_ID = 1935313766; 
-        const STORAGE_KEY = 'cs_upgrader_v37';
+        const STORAGE_KEY = 'cs_upgrader_v39';
         
         let ITEMS = []; 
         let state = loadState();
@@ -899,6 +905,11 @@
             renderShop(true);
             renderInv();
             updateCaseButton();
+            
+            // СБРОС СТРЕЛКИ ПРИ ЗАГРУЗКЕ
+            const arrow = document.getElementById('arrow');
+            arrow.style.transition = 'none';
+            arrow.style.transform = 'rotate(0deg)';
         }
 
         window.editProfileName = function() {
@@ -1337,7 +1348,7 @@
             setRightItem(closest.id);
         }
 
-        // --- ИСПРАВЛЕННАЯ ЛОГИКА ВРАЩЕНИЯ ---
+        // --- ЛОГИКА АПГРЕЙДА С ПОЛНЫМ СБРОСОМ ---
         document.getElementById('upgradeBtn').addEventListener('click', () => {
             if (isSpinning) return; 
             
@@ -1381,14 +1392,17 @@
             const arrow = document.getElementById('arrow');
             const win = secretDrop || (Math.random() < realChance); 
             
-            // Оптимизация: сброс поворота
+            // 1. Жесткий сброс в исходное положение (без анимации)
             arrow.style.transition = 'none';
             arrow.style.transform = 'rotate(0deg)';
-            void arrow.offsetWidth; // Принудительный рефлоу
+            
+            // 2. Принудительный рефлоу
+            void arrow.offsetWidth;
             
             let targetDeg = 0;
             const spinDuration = isFastMode ? 2 : 4;
             
+            // Вычисляем угол
             if (win) {
                 const maxDeg = baseChance * 360;
                 targetDeg = 360 * 5 + (Math.random() * maxDeg); 
@@ -1397,7 +1411,7 @@
                 targetDeg = 360 * 5 + (minDeg + Math.random() * (360 - minDeg));
             }
 
-            // Включаем анимацию
+            // 3. Включаем анимацию и крутим
             setTimeout(() => {
                 arrow.style.transition = `transform ${spinDuration}s cubic-bezier(0.1, 0.7, 0.1, 1)`;
                 arrow.style.transform = `rotate(${targetDeg}deg)`;
@@ -1444,6 +1458,13 @@
                 
                 checkPoorBonus();
                 updateUI();
+
+                // 4. СБРОС СТРЕЛКИ ОБРАТНО В 0 (без анимации)
+                setTimeout(() => {
+                    arrow.style.transition = 'none';
+                    arrow.style.transform = 'rotate(0deg)';
+                }, 100);
+                
             }, spinDuration * 1000); 
         });
 
