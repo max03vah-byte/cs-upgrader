@@ -16,7 +16,6 @@
             --win: #2ecc71;
             --lose: #e74c3c;
             --gold-gradient: linear-gradient(180deg, #F1C40F 0%, #D4AC0D 100%);
-            
             --rar-consumer: #b0c3d9;
             --rar-industrial: #5e98d9;
             --rar-milspec: #4b69ff;
@@ -38,12 +37,7 @@
             background-image: radial-gradient(circle at 50% 30%, #1A2232 0%, #0B0E14 70%);
         }
         
-        /* ЭКРАН ЗАГРУЗКИ */
-        .loading-screen {
-            position: fixed; inset: 0; background: var(--bg-color); z-index: 9999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 0.5s ease;
-        }
+        .loading-screen { position: fixed; inset: 0; background: var(--bg-color); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease; }
         .loading-screen.hidden { opacity: 0; pointer-events: none; }
         .load-logo { width: 60px; height: 60px; margin-bottom: 20px; }
         .load-logo path { fill: url(#goldGrad); }
@@ -52,77 +46,39 @@
         .load-bar { width: 50%; height: 100%; background: var(--gold-gradient); border-radius: 2px; animation: loadAnim 1s infinite alternate ease-in-out; }
         @keyframes loadAnim { 0% { margin-left: -50%; } 100% { margin-left: 100%; } }
 
-        .header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 15px; background: var(--panel-bg);
-            border-bottom: 1px solid var(--border); z-index: 100;
-        }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: var(--panel-bg); border-bottom: 1px solid var(--border); z-index: 100; }
         .logo-area { display: flex; align-items: center; gap: 5px; font-weight: 900; font-size: 16px; }
         .logo-icon { color: var(--accent); font-size: 18px; }
-        .balance-box {
-            background: #0B0E14; padding: 5px 10px; border-radius: 6px;
-            border: 1px solid #2A3441; font-weight: bold; font-size: 12px;
-        }
+        .balance-box { background: #0B0E14; padding: 5px 10px; border-radius: 6px; border: 1px solid #2A3441; font-weight: bold; font-size: 12px; }
         .balance-box span { color: var(--accent); }
 
         .main-content { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; align-items: center; }
         .tab-content { display: none; width: 100%; max-width: 500px; }
         .tab-content.active { display: flex; flex-direction: column; align-items: center; }
 
-        /* Колесо */
-        .circle-zone {
-            display: flex; justify-content: center; align-items: center;
-            position: relative; margin: 15px 0; height: 220px;
-        }
+        .circle-zone { display: flex; justify-content: center; align-items: center; position: relative; margin: 15px 0; height: 220px; }
         .wheel-wrapper { position: relative; width: 200px; height: 200px; }
-        .wheel {
-            width: 200px; height: 200px; border-radius: 50%;
-            background: conic-gradient(from 180deg, var(--accent) 0deg, var(--accent) 0deg, #0B0E14 0deg);
-            display: flex; align-items: center; justify-content: center;
-            border: 2px solid var(--border); transition: all 0.3s;
-        }
+        .wheel { width: 200px; height: 200px; border-radius: 50%; background: conic-gradient(from 180deg, var(--accent) 0deg, var(--accent) 0deg, #0B0E14 0deg); display: flex; align-items: center; justify-content: center; border: 2px solid var(--border); transition: all 0.3s; }
         .wheel.win-border { border-color: var(--win); box-shadow: 0 0 30px rgba(46, 204, 113, 0.2); }
         .wheel.lose-border { border-color: var(--lose); box-shadow: 0 0 30px rgba(231, 76, 60, 0.2); }
         
-        .wheel-inner {
-            width: 170px; height: 170px; border-radius: 50%;
-            background: var(--panel-bg); display: flex; flex-direction: column;
-            align-items: center; justify-content: center; text-align: center;
-            z-index: 2; position: relative; overflow: hidden;
-        }
+        .wheel-inner { width: 170px; height: 170px; border-radius: 50%; background: var(--panel-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; z-index: 2; position: relative; overflow: hidden; }
         .chance-text { font-size: 26px; font-weight: 900; color: var(--text-main); display: none; }
         .chance-label { font-size: 10px; color: var(--text-muted); margin-top: 3px; text-transform: uppercase; display: none; }
         
         .choose-text { color: var(--text-muted); font-size: 13px; text-align: center; line-height: 1.4; display: block; }
 
-        .arrow-pointer {
-            position: absolute; top: -12px; left: 50%; margin-left: -8px;
-            width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent;
-            border-top: 16px solid var(--accent); filter: drop-shadow(0 0 8px var(--accent));
-            transform-origin: 50% 112px; z-index: 10;
-        }
+        .arrow-pointer { position: absolute; top: -12px; left: 50%; margin-left: -8px; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 16px solid var(--accent); filter: drop-shadow(0 0 8px var(--accent)); transform-origin: 50% 112px; z-index: 10; }
 
-        /* Оверлей результата */
-        .result-overlay {
-            position: absolute; inset: 0; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; text-align: center;
-            z-index: 3; background: var(--panel-bg); border-radius: 50%;
-            opacity: 0; pointer-events: none; transition: opacity 0.3s;
-        }
+        .result-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; z-index: 3; background: var(--panel-bg); border-radius: 50%; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
         .result-overlay.show { opacity: 1; }
         .result-title { font-size: 14px; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; }
         .result-img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 5px; }
         .result-name { font-size: 10px; font-weight: bold; margin-bottom: 2px; white-space: nowrap; overflow: hidden; max-width: 150px; text-overflow: ellipsis; }
         .result-price { font-size: 14px; font-weight: 900; }
 
-        /* Панели */
         .panels-container { display: flex; gap: 10px; width: 100%; margin-bottom: 15px; }
-        .skin-panel {
-            flex: 1; height: 120px; background: var(--panel-bg);
-            border: 1px solid var(--border); border-radius: 10px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            position: relative; padding: 8px; text-align: center; cursor: pointer;
-        }
+        .skin-panel { flex: 1; height: 120px; background: var(--panel-bg); border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; padding: 8px; text-align: center; cursor: pointer; }
         .skin-panel-title { position: absolute; top: 6px; font-size: 9px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; }
         .skin-panel img { width: 80px; height: 50px; object-fit: contain; margin-top: 10px; }
         .skin-panel-name { font-size: 10px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; margin-top: 5px; }
@@ -131,70 +87,29 @@
         .empty-panel-icon { font-size: 25px; color: #1F2735; margin-top: 10px; }
         .empty-panel-text { color: var(--text-muted); font-size: 10px; margin-top: 5px; }
 
-        /* Кнопки */
         .controls { display: flex; flex-direction: column; align-items: center; width: 100%; }
-        .btn-upgrade {
-            background: var(--gold-gradient); color: #000;
-            width: 100%; padding: 14px; border-radius: 10px; border: none;
-            font-size: 14px; font-weight: 900; text-transform: uppercase; cursor: pointer;
-        }
+        .btn-upgrade { background: var(--gold-gradient); color: #000; width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 14px; font-weight: 900; text-transform: uppercase; cursor: pointer; }
         .btn-upgrade:disabled { background: #2A3441; color: #555; cursor: not-allowed; }
 
         .quick-btns { display: flex; justify-content: center; gap: 6px; margin-top: 10px; width: 100%; }
-        .quick-btn {
-            background: #0B0E14; color: var(--text-muted); border: 1px solid var(--border);
-            padding: 8px; border-radius: 6px; font-weight: bold; font-size: 11px;
-            cursor: pointer; flex: 1; text-align: center;
-        }
+        .quick-btn { background: #0B0E14; color: var(--text-muted); border: 1px solid var(--border); padding: 8px; border-radius: 6px; font-weight: bold; font-size: 11px; cursor: pointer; flex: 1; text-align: center; }
 
-        /* ПАНЕЛЬ ПОИСКА И ФИЛЬТРОВ */
-        .search-panel {
-            background: var(--panel-bg); border: 1px solid var(--border); border-radius: 10px;
-            padding: 10px; width: 100%; margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px;
-        }
+        .search-panel { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px; width: 100%; margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px; }
         .search-row { display: flex; gap: 10px; }
-        .search-input-wrap {
-            flex: 1; background: #0B0E14; border: 1px solid var(--border); border-radius: 8px;
-            display: flex; align-items: center; padding: 0 10px; height: 35px;
-        }
-        .search-input-wrap input {
-            background: none; border: none; color: var(--text-main); outline: none;
-            width: 100%; font-size: 12px; margin-left: 5px;
-        }
-        .filter-btn {
-            background: #0B0E14; border: 1px solid var(--border); color: var(--text-main);
-            border-radius: 8px; padding: 0 10px; height: 35px; font-size: 12px;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
+        .search-input-wrap { flex: 1; background: #0B0E14; border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; padding: 0 10px; height: 35px; }
+        .search-input-wrap input { background: none; border: none; color: var(--text-main); outline: none; width: 100%; font-size: 12px; margin-left: 5px; }
+        .filter-btn { background: #0B0E14; border: 1px solid var(--border); color: var(--text-main); border-radius: 8px; padding: 0 10px; height: 35px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .filter-btn.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; }
         .price-inputs { display: flex; gap: 10px; }
-        .price-inputs input {
-            background: #0B0E14; border: 1px solid var(--border); border-radius: 8px;
-            padding: 8px; color: var(--text-main); font-size: 12px; width: 100%; outline: none;
-        }
+        .price-inputs input { background: #0B0E14; border: 1px solid var(--border); border-radius: 8px; padding: 8px; color: var(--text-main); font-size: 12px; width: 100%; outline: none; }
 
-        /* Магазин и Инвентарь */
-        .grid {
-            display: grid; grid-template-columns: repeat(2, 1fr);
-            gap: 10px; width: 100%; padding-bottom: 20px;
-        }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; padding-bottom: 20px; }
         @media (min-width: 400px) { .grid { grid-template-columns: repeat(3, 1fr); } }
 
-        .item-card {
-            background: var(--panel-bg); border: 1px solid var(--border);
-            border-radius: 10px; padding: 10px; text-align: center; cursor: pointer;
-            position: relative; overflow: hidden; display: flex; flex-direction: column;
-            transition: transform 0.1s;
-        }
+        .item-card { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px; text-align: center; cursor: pointer; position: relative; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.1s; }
         .item-card:active { transform: scale(0.98); }
+        .item-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 60%; background: linear-gradient(to bottom, rgba(255,255,255,0.05) 0%, transparent 100%); pointer-events: none; }
         
-        .item-card::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 60%;
-            background: linear-gradient(to bottom, rgba(255,255,255,0.05) 0%, transparent 100%);
-            pointer-events: none;
-        }
-        
-        /* Подсветка редкостей */
         .rarity-consumer { border-bottom: 3px solid var(--rar-consumer); }
         .rarity-industrial { border-bottom: 3px solid var(--rar-industrial); }
         .rarity-milspec { border-bottom: 3px solid var(--rar-milspec); }
@@ -208,31 +123,18 @@
         .item-card img { width: 100%; height: 60px; object-fit: contain; z-index: 1; position: relative; }
         .item-card .name { font-size: 10px; font-weight: bold; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 1; }
         .item-card .price { font-size: 11px; color: var(--accent); font-weight: bold; margin-top: 2px; z-index: 1; }
-        
         .btn-buy { background: var(--accent); color: #000; border: none; padding: 6px; border-radius: 6px; font-weight: bold; font-size: 10px; margin-top: 5px; width: 100%; z-index: 1; }
 
-        /* Кнопка продать всё */
-        .sell-all-btn {
-            background: var(--lose); color: #fff; border: none; padding: 10px;
-            border-radius: 8px; font-weight: bold; font-size: 13px; width: 100%;
-            margin-bottom: 10px; cursor: pointer; display: none;
-        }
+        .sell-all-btn { background: var(--lose); color: #fff; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 13px; width: 100%; margin-bottom: 10px; cursor: pointer; display: none; }
 
-        /* Профиль */
         .profile-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; width: 100%; }
         .profile-btn { background: #1C2331; color: #fff; border: 1px solid var(--border); padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
 
-        /* Нижнее меню */
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
-            background: var(--panel-bg); border-top: 1px solid var(--border);
-            display: flex; justify-content: space-around; z-index: 100;
-        }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: var(--panel-bg); border-top: 1px solid var(--border); display: flex; justify-content: space-around; z-index: 100; }
         .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); font-size: 10px; gap: 2px; width: 25%; position: relative; cursor: pointer; }
         .nav-item.active { color: var(--accent); }
         .nav-icon { font-size: 18px; }
 
-        /* Модалки */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
         .modal.active { display: flex; }
         .modal-content { background: var(--panel-bg); width: 95%; max-width: 400px; height: 80vh; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
@@ -240,11 +142,7 @@
         .modal-title { font-size: 14px; font-weight: bold; }
         .close-modal { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; }
         .modal-body { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; }
-        
-        .modal-search {
-            width: 100%; padding: 10px; background: #0B0E14; border: 1px solid var(--border);
-            border-radius: 8px; color: var(--text-main); font-size: 12px; margin-bottom: 10px; outline: none;
-        }
+        .modal-search { width: 100%; padding: 10px; background: #0B0E14; border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); font-size: 12px; margin-bottom: 10px; outline: none; }
         .modal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; }
 
         .promo-modal-content { max-width: 300px; padding: 20px; text-align: center; }
@@ -254,51 +152,25 @@
         .btn-cancel { background: #2A3441; color: #fff; }
         .btn-apply { background: var(--gold-gradient); color: #000; }
 
-        .pay-modal-content {
-            background: var(--panel-bg); border: 2px solid var(--win);
-            padding: 30px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            max-width: 250px; text-align: center;
-        }
+        .pay-modal-content { background: var(--panel-bg); border: 2px solid var(--win); padding: 30px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; max-width: 250px; text-align: center; }
         .pay-spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--win); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        .toast {
-            position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
-            background: var(--win); color: #fff; padding: 10px 20px; border-radius: 8px;
-            font-weight: bold; z-index: 2000; display: none; font-size: 13px;
-        }
-
+        .toast { position: fixed; top: 15px; left: 50%; transform: translateX(-50%); background: var(--win); color: #fff; padding: 10px 20px; border-radius: 8px; font-weight: bold; z-index: 2000; display: none; font-size: 13px; }
         .hidden { display: none !important; }
-
         .buy-modal-content { max-width: 320px; height: auto; padding: 20px; border-radius: 12px; }
         .buy-qty-btn { background: #0B0E14; color: var(--text-main); border: 1px solid var(--border); width: 35px; height: 35px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .buy-qty-btn:active { background: var(--border); }
-
-        /* Стили для окна продажи (как на скрине) */
         .sell-modal-content { max-width: 320px; height: auto; padding: 20px; border-radius: 12px; }
-        .sell-info-box {
-            background: #0B0E14; border: 1px solid var(--border); border-radius: 10px;
-            padding: 15px; margin-bottom: 20px; text-align: left;
-        }
+        .sell-info-box { background: #0B0E14; border: 1px solid var(--border); border-radius: 10px; padding: 15px; margin-bottom: 20px; text-align: left; }
         .sell-info-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
         .sell-info-value { font-size: 22px; font-weight: 900; color: var(--accent); }
         .sell-btns { display: flex; gap: 10px; }
         .btn-sell-cancel { background: #1C2331; color: #fff; }
         .btn-sell-confirm { background: var(--gold-gradient); color: #000; }
-
-        /* Слайдер подкрутки */
-        .admin-cheat-box {
-            background: #0B0E14; border: 1px solid var(--border); border-radius: 10px;
-            padding: 15px; margin-top: 10px; width: 100%; display: flex; flex-direction: column; gap: 5px;
-        }
-        .cheat-slider {
-            -webkit-appearance: none; width: 100%; height: 8px; border-radius: 4px;
-            background: #1F2735; outline: none;
-        }
-        .cheat-slider::-webkit-slider-thumb {
-            -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
-            background: var(--accent); cursor: pointer; border: 2px solid #fff;
-        }
+        .admin-cheat-box { background: #0B0E14; border: 1px solid var(--border); border-radius: 10px; padding: 15px; margin-top: 10px; width: 100%; display: flex; flex-direction: column; gap: 5px; }
+        .cheat-slider { -webkit-appearance: none; width: 100%; height: 8px; border-radius: 4px; background: #1F2735; outline: none; }
+        .cheat-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 2px solid #fff; }
     </style>
 </head>
 <body>
@@ -417,11 +289,9 @@
                 <div style="color: var(--text-muted); font-size: 12px;" id="profileIdText">ID: #1337</div>
             </div>
             <div class="profile-actions">
-                <!-- Админские кнопки -->
                 <button class="profile-btn" id="addMoneyBtn" onclick="openAddMoneyModal()" style="display: none;">💰 Добавить деньги</button>
                 <button class="profile-btn" id="removeMoneyBtn" onclick="removeMoney()" style="display: none; color: var(--lose);">🗑 Удалить все деньги</button>
                 
-                <!-- Панель подкрутки (только для админа) -->
                 <div class="admin-cheat-box" id="adminCheatPanel" style="display: none;">
                     <div style="display:flex; justify-content:space-between; font-size: 11px; color:var(--text-muted); margin-bottom: 5px;">
                         <span>ШАНС ПОДКРУТКИ</span>
@@ -508,7 +378,7 @@
         </div>
     </div>
 
-    <!-- МОДАЛКА ПРОДАЖИ (КАК НА СКРИНЕ) -->
+    <!-- МОДАЛКА ПРОДАЖИ -->
     <div class="modal" id="sellConfirmModal" style="z-index: 2500;">
         <div class="modal-content sell-modal-content">
             <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 5px;" id="sellItemCategory">КАТЕГОРИЯ</div>
@@ -549,7 +419,7 @@
 
         const ADMIN_ID = 1935313766;
         const tgUser = tg?.initDataUnsafe?.user;
-        const currentUserId = tgUser ? tgUser.id : ADMIN_ID; // Для теста в браузере считаем админом
+        const currentUserId = tgUser ? tgUser.id : ADMIN_ID;
         const isAdmin = currentUserId === ADMIN_ID;
 
         let ITEMS = [];
@@ -563,7 +433,6 @@
         let isSortAsc = true;
         let modalMode = 'left';
         
-        // Для продажи
         let currentSellIndex = -1;
         let isSellAllMode = false;
 
@@ -579,7 +448,6 @@
         function loadState() {
             const saved = localStorage.getItem('upgrader_v4');
             if (saved) { try { return JSON.parse(saved); } catch (e) {} }
-            // Новый игрок получает 1000
             return { balance: 1000, inventory: [], usedPromos: [], lastPromoTime: 0 };
         }
 
@@ -604,7 +472,7 @@
             document.getElementById('profileIdText').textContent = `ID: ${currentUserId}`;
         }
 
-        // --- ЗАГРУЗКА СКИНОВ ---
+        // --- ИСПРАВЛЕННЫЙ РАНДОМАЙЗЕР (ГЕНЕРАЦИЯ СКИНОВ И ЦЕН) ---
         async function loadSkinsFromJSON() {
             try {
                 const response = await fetch('./skins.json');
@@ -642,10 +510,21 @@
                     }
                 });
 
-                // Генерация 500 скинов
+                // ИСПРАВЛЕННЫЙ РАНДОМАЙЗЕР + 600 скинов
                 const rarities = ['consumer', 'industrial', 'milspec', 'restricted', 'classified', 'covert', 'contraband', 'knife'];
-                for(let i = 0; i < 500; i++) {
-                    const rar = rarities[Math.floor(Math.random() * rarities.length)];
+                for(let i = 0; i < 600; i++) {
+                    // Случайная редкость, но с разными шансами (чем круче, тем реже)
+                    let rar = 'consumer';
+                    let randRar = Math.random();
+                    if (randRar > 0.99) rar = 'knife';
+                    else if (randRar > 0.95) rar = 'contraband';
+                    else if (randRar > 0.88) rar = 'covert';
+                    else if (randRar > 0.75) rar = 'classified';
+                    else if (randRar > 0.55) rar = 'restricted';
+                    else if (randRar > 0.30) rar = 'milspec';
+                    else if (randRar > 0.10) rar = 'industrial';
+                    else rar = 'consumer';
+
                     let bPrice = 2;
                     if (rar === 'industrial') bPrice = 40;
                     if (rar === 'milspec') bPrice = 150;
@@ -655,7 +534,6 @@
                     if (rar === 'contraband') bPrice = 10000;
                     if (rar === 'knife') bPrice = 15000;
 
-                    // Дефолтная картинка, чтобы не было пустых мест
                     rawItems.push({
                         id: idCounter.toString(),
                         name: `${rar.charAt(0).toUpperCase() + rar.slice(1)} Skin #${i+1}`,
@@ -667,12 +545,18 @@
                     idCounter++;
                 }
 
+                // Сортируем по базовой цене, чтобы можно было распределить
                 rawItems.sort((a, b) => a.basePrice - b.basePrice);
 
-                // Цены от 2 до 500 млрд
+                // Плавное распределение цены от 2 до 500 000 000 000
                 rawItems.forEach((item, index) => {
                     let ratio = index / rawItems.length;
-                    let price = 2 + Math.floor(Math.pow(ratio, 5) * 500000000000);
+                    // Добавляем немного случайности, чтобы не было монотонного ряда
+                    let randomFactor = 0.9 + (Math.random() * 0.2); 
+                    let price = 2 + Math.floor(Math.pow(ratio, 4.5) * 500000000000 * randomFactor);
+                    
+                    // Гарантируем минимальную цену
+                    if (price < 2) price = 2;
                     item.price = price;
                 });
                 
@@ -709,7 +593,6 @@
             renderShop();
         }
 
-        // --- МАГАЗИН ---
         function renderShop() {
             const grid = document.getElementById('shopGrid');
             const query = document.getElementById('shopSearch').value.toLowerCase();
@@ -1005,14 +888,12 @@
             wheel.style.background = `conic-gradient(from 180deg, var(--accent) 0deg, var(--accent) ${deg}deg, #0B0E14 ${deg}deg)`;
         }
 
-        // --- ПОДКРУТКА (В ПРОФИЛЕ) ---
+        // --- ПОДКРУТКА ---
         window.updateCheatCost = function() {
             const slider = document.getElementById('cheatSlider');
             const cheatVal = parseInt(slider.value);
             
-            // Желтая линия
             slider.style.background = `linear-gradient(90deg, var(--accent) ${cheatVal}%, #1F2735 ${cheatVal}%)`;
-
             document.getElementById('cheatValueDisplay').textContent = cheatVal + '%';
 
             if (!selectedLeft || !selectedRight) {
@@ -1027,7 +908,7 @@
             document.getElementById('cheatCostDisplay').textContent = `Стоимость: ${formatMoney(cost)}`;
         }
 
-        // --- АПГРЕЙД ---
+        // --- ИСПРАВЛЕННАЯ АНИМАЦИЯ КОЛЕСА (СЛУЧАЙНЫЙ УГОЛ) ---
         document.getElementById('upgradeBtn').addEventListener('click', () => {
             if (isSpinning) return;
             if (!selectedLeft) return alert('Выберите скин для ставки!');
@@ -1052,9 +933,11 @@
             let baseChance = selectedLeft.price / selectedRight.price;
             if (baseChance > 1) baseChance = 1;
             
-            let finalChance = baseChance;
+            // Скрытая подкрутка (чтобы не было обидно)
+            let finalChance = Math.min(1, baseChance + 0.10); 
+            
             if (cheatVal > 0) {
-                finalChance = Math.min(1, baseChance + (cheatVal / 100));
+                finalChance = Math.min(1, finalChance + (cheatVal / 100));
             }
 
             const win = Math.random() < finalChance;
@@ -1067,12 +950,33 @@
             arrow.style.transition = 'none';
             arrow.style.transform = 'rotate(0deg)';
             void arrow.offsetWidth;
+
+            // --- РАНДОМАЙЗЕР УГЛА ---
+            // Базовые обороты (5 полных кругов)
+            let baseRotation = 360 * 5;
             
-            let targetDeg = win ? (360 * 5) : (360 * 5 + (baseChance * 360 + Math.random() * (360 - baseChance * 360)));
+            // Если победа, стрелка должна упасть в желтую зону (от 0 до baseChance*360)
+            // Если проигрыш, стрелка падает в темную зону (от baseChance*360 до 360)
+            let targetAngle;
+            
+            if (win) {
+                // Выпадает в желтую зону. Угол от 5 до 355 градусов, чтобы было видно
+                let winZoneDeg = baseChance * 360;
+                // Добавляем рандом внутри выигрышной зоны
+                targetAngle = Math.random() * winZoneDeg;
+            } else {
+                // Выпадает в темную зону
+                let winZoneDeg = baseChance * 360;
+                let loseZoneDeg = 360 - winZoneDeg;
+                targetAngle = winZoneDeg + (Math.random() * loseZoneDeg);
+            }
+
+            // Итоговый поворот = базовые круги + случайный угол
+            let totalRotation = baseRotation + targetAngle;
 
             setTimeout(() => {
                 arrow.style.transition = 'transform 4s cubic-bezier(0.1, 0.7, 0.1, 1)';
-                arrow.style.transform = `rotate(${targetDeg}deg)`;
+                arrow.style.transform = `rotate(${totalRotation}deg)`;
             }, 50);
 
             document.getElementById('upgradeBtn').disabled = true;
