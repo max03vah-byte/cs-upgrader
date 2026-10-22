@@ -1,9 +1,1607 @@
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="background:black; color:lime; text-align:center; padding-top:50px;">
-    <h1 style="font-size:40px;">ВЕРСИЯ 50 — РАБОТАЕТ</h1>
-    <p>Если ты видишь этот текст, значит GitHub обновился.</p>
-    <button onclick="alert('Кнопка работает!')" style="padding:20px; font-size:20px;">Нажми меня</button>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CS2 Апгрейдер</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: #0d0f14;
+            --panel-bg: #161a23;
+            --accent: #ffd700;
+            --text-main: #ffffff;
+            --text-muted: #888;
+            --border: #2a2f3a;
+            --win: #2ecc71;
+            --lose: #e74c3c;
+            --sell: #3498db;
+            --gold-gradient: linear-gradient(135deg, #f1c40f, #f39c12);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 70px;
+            user-select: none;
+            overflow: hidden;
+        }
+        
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 15px; background: var(--panel-bg);
+            border-bottom: 2px solid var(--accent); z-index: 100;
+            position: relative;
+        }
+        .balance { font-size: 18px; font-weight: bold; color: var(--accent); transition: color 0.2s; }
+
+        .money-float {
+            position: absolute; right: 15px; top: 15px;
+            font-size: 16px; font-weight: bold; pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+            opacity: 0;
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
+
+        .speed-btn {
+            background: #2a2f3a; border: 1px solid var(--border); color: #fff;
+            width: 35px; height: 35px; border-radius: 8px; font-size: 18px;
+            cursor: pointer; display: flex; justify-content: center; align-items: center;
+            transition: all 0.2s;
+        }
+        .speed-btn.active {
+            background: var(--accent); color: #000; border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .main-content { flex: 1; overflow-y: auto; padding: 10px; }
+        .content-section { display: none; }
+        .content-section.active { display: flex; flex-direction: column; height: 100%; }
+
+        /* --- АПГРЕЙДЕР --- */
+        .upgrader-layout { display: flex; flex-direction: column; height: 100%; }
+        
+        .circle-zone {
+            display: flex; justify-content: center; align-items: center;
+            position: relative; margin: 10px 0; height: 200px;
+        }
+        
+        .wheel-wrapper {
+            position: relative;
+            width: 180px; height: 180px;
+        }
+        
+        .arrow-pointer {
+            position: absolute;
+            top: -15px; left: 50%; margin-left: -15px;
+            width: 0; height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid var(--accent);
+            filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8)) drop-shadow(0 0 15px rgba(255, 215, 0, 0.4));
+            transform-origin: 50% 105px;
+            z-index: 10;
+        }
+
+        .wheel {
+            width: 180px; height: 180px; border-radius: 50%;
+            background: conic-gradient(var(--accent) 0deg, var(--accent) 0deg, #222 0deg);
+            display: flex; align-items: center; justify-content: center;
+            border: 4px solid #333;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+        .wheel-inner {
+            width: 150px; height: 150px; border-radius: 50%;
+            background: var(--bg-color); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center;
+            border: 2px solid var(--border);
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+        .chance-text { font-size: 28px; font-weight: bold; color: var(--accent); }
+        .chance-label { font-size: 12px; color: var(--text-muted); }
+
+        .up-panels { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+        .up-panel {
+            flex: 1; background: var(--panel-bg); border-radius: 12px; padding: 10px;
+            display: flex; flex-direction: column; align-items: center;
+            border: 1px solid var(--border); text-align: center;
+            position: relative; min-height: 130px; justify-content: center;
+            cursor: pointer; transition: 0.2s;
+        }
+        .up-panel:hover { border-color: var(--accent); }
+        .up-panel-title { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; width: 100%; position: absolute; top: 10px; left: 0; }
+        
+        .skin-img { width: 100%; height: 50px; object-fit: contain; margin-top: 15px; margin-bottom: 5px; }
+        .item-name { font-size: 11px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+        .item-price { font-size: 13px; color: var(--accent); font-weight: bold; }
+
+        .quick-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 10px; width: 100%; }
+        .quick-btn {
+            background: #222; color: #fff; border: 1px solid #444; padding: 6px;
+            border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold;
+        }
+        .quick-btn:hover { background: var(--accent); color: #000; }
+
+        .btn-upgrade {
+            background: var(--accent); color: #000; border: none; padding: 15px;
+            font-size: 18px; font-weight: 900; border-radius: 10px; cursor: pointer;
+            text-transform: uppercase; width: 100%; transition: all 0.2s; margin-top: 10px;
+        }
+        .btn-upgrade:hover { background: #ffea00; }
+
+        .result {
+            margin-top: 10px; padding: 10px; border-radius: 8px; text-align: center;
+            font-weight: bold; display: none; font-size: 14px; width: 100%;
+        }
+        .result.win { background: rgba(46, 204, 113, 0.1); border: 1px solid var(--win); color: var(--win); }
+        .result.lose { background: rgba(231, 76, 60, 0.1); border: 1px solid var(--lose); color: var(--lose); }
+
+        /* --- МАГАЗИН и ИНВЕНТАРЬ --- */
+        .shop-controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+        .shop-row { display: flex; gap: 10px; }
+        .shop-controls input, .shop-controls select {
+            flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border);
+            background: var(--panel-bg); color: #fff; outline: none; font-size: 14px;
+            min-width: 0;
+        }
+        .shop-controls input:focus, .shop-controls select:focus { border-color: var(--accent); }
+        
+        .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; padding-bottom: 20px; }
+        .shop-item { background: var(--panel-bg); border-radius: 10px; padding: 10px; border: 1px solid var(--border); text-align: center; display: flex; flex-direction: column; position: relative; }
+        .shop-item .skin-img { height: 60px; margin-top: 0; }
+        .btn-buy { background: var(--accent); color: #000; border: none; padding: 6px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: auto; font-size: 12px; }
+        
+        .btn-sell { background: #3b4252; color: #fff; border: 1px solid var(--border); padding: 6px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 5px; font-size: 12px; }
+        .btn-sell:hover { background: var(--sell); border-color: var(--sell); }
+
+        .sell-all-btn {
+            background: rgba(255, 215, 0, 0.1); border: 1px solid var(--accent); color: var(--accent);
+            width: 100%; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: bold;
+            margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+            transition: 0.2s;
+        }
+        .sell-all-btn:hover { background: rgba(255, 215, 0, 0.2); }
+
+        .case-btn {
+            background: linear-gradient(135deg, #8e44ad, #9b59b6); border: none; color: #fff;
+            width: 100%; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: bold;
+            margin-bottom: 10px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px;
+            box-shadow: 0 4px 15px rgba(142, 68, 173, 0.4); transition: 0.2s;
+        }
+        .case-btn:hover:not(:disabled) { transform: scale(1.02); }
+        .case-btn:disabled { background: #333; box-shadow: none; color: #888; cursor: not-allowed; }
+
+        .load-more-btn {
+            background: var(--panel-bg); border: 1px solid var(--accent); color: var(--accent);
+            width: 100%; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold;
+            cursor: pointer; margin-top: 10px; transition: 0.2s;
+        }
+        .load-more-btn:hover { background: rgba(255, 215, 0, 0.1); }
+
+        /* --- ПРОФИЛЬ --- */
+        .profile-section {
+            background: var(--panel-bg); border-radius: 16px; padding: 15px;
+            border: 1px solid var(--border); margin-bottom: 15px;
+        }
+        
+        .profile-top {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 15px;
+        }
+        
+        .profile-left { display: flex; gap: 15px; align-items: center; }
+        .avatar-circle {
+            width: 70px; height: 70px; border-radius: 50%; background: #2a2f3a;
+            display: flex; justify-content: center; align-items: center; font-size: 40px;
+            border: 2px solid var(--accent);
+        }
+        
+        .profile-info { display: flex; flex-direction: column; gap: 5px; }
+        .profile-name { font-size: 20px; font-weight: bold; }
+        .profile-id { font-size: 12px; color: var(--text-muted); }
+        .profile-balance { font-size: 18px; font-weight: bold; color: var(--accent); margin-top: 5px; }
+        
+        .btn-edit { background: #2a2f3a; border: 1px solid var(--border); color: #fff; padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; margin-top: 5px; width: fit-content; }
+        
+        .best-drop {
+            text-align: right;
+            display: flex; flex-direction: column; align-items: flex-end;
+        }
+        .best-drop-title { font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
+        .best-drop-img { width: 80px; height: 50px; object-fit: contain; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 5px; margin-bottom: 5px; border: 1px solid var(--border); }
+        .best-drop-price { font-size: 14px; color: var(--win); font-weight: bold; }
+
+        .level-bar-container {
+            background: #0d1017; border-radius: 10px; padding: 10px; margin-bottom: 15px; border: 1px solid var(--border);
+        }
+        .level-header { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
+        .level-title { font-size: 16px; font-weight: bold; color: var(--accent); }
+        .level-progress-bg { width: 100%; height: 8px; background: #2a2f3a; border-radius: 4px; overflow: hidden; }
+        .level-progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
+
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+        }
+        .stat-box {
+            background: #1e232e; border-radius: 12px; padding: 15px;
+            border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center;
+        }
+        .stat-icon { font-size: 16px; margin-bottom: 5px; }
+        .stat-val { font-size: 18px; font-weight: bold; color: var(--accent); }
+        .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; }
+        .stat-val.win { color: var(--win); }
+        .stat-val.lose { color: var(--lose); }
+        
+        .action-buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+        .transfer-btn {
+            background: #2a2f3a; color: #fff; border: 1px solid var(--border); width: 100%;
+            padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        .transfer-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .promo-btn { background: linear-gradient(135deg, #27ae60, #2ecc71); color: #fff; border: none; }
+        .admin-btn { background: linear-gradient(135deg, #e74c3c, #c0392b); color: #fff; border: none; }
+
+        /* --- ИСТОРИЯ АПГРЕЙДОВ --- */
+        .history-section {
+            background: var(--panel-bg); border-radius: 16px; padding: 15px;
+            border: 1px solid var(--border);
+        }
+        .history-header {
+            font-size: 14px; color: var(--text-muted); margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            font-weight: bold;
+        }
+        .history-item {
+            background: #1e232e; border-radius: 10px; padding: 10px; margin-bottom: 10px;
+            border: 1px solid var(--border);
+            display: flex; flex-direction: column; gap: 5px;
+        }
+        .history-item.win { border-color: rgba(46, 204, 113, 0.3); }
+        .history-item.lose { border-color: rgba(231, 76, 60, 0.3); }
+        
+        .history-top { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; }
+        .history-status.win { color: var(--win); }
+        .history-status.lose { color: var(--lose); }
+        .history-chance { color: var(--accent); }
+        
+        .history-content {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 5px;
+        }
+        
+        .history-skin {
+            display: flex; gap: 10px; align-items: center; flex: 1;
+            overflow: hidden;
+        }
+        .history-img {
+            width: 50px; height: 40px; object-fit: contain; background: rgba(0,0,0,0.2); border-radius: 6px; padding: 2px;
+        }
+        .history-details {
+            display: flex; flex-direction: column; overflow: hidden; width: 100%;
+        }
+        .history-name { font-size: 12px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .history-price { font-size: 11px; color: var(--text-muted); }
+        
+        .history-arrow { font-size: 18px; color: var(--text-muted); margin: 0 10px; }
+
+        /* --- МОДАЛЬНЫЕ ОКНА --- */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;
+            padding: 20px;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: var(--panel-bg); width: 100%; max-width: 400px; border-radius: 16px;
+            padding: 20px; border: 1px solid var(--border); text-align: center;
+            max-height: 80vh; display: flex; flex-direction: column;
+        }
+        .modal-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: var(--accent); }
+        
+        .modal-search {
+            width: 100%; padding: 10px; background: #0d1017; border: 1px solid var(--border);
+            border-radius: 8px; color: #fff; font-size: 14px; margin-bottom: 10px; outline: none;
+        }
+        .modal-search:focus { border-color: var(--accent); }
+
+        .modal-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 10px; overflow-y: auto; padding-right: 5px; max-height: 50vh;
+        }
+        .modal-item {
+            background: #1e232e; border-radius: 8px; padding: 5px; cursor: pointer;
+            border: 1px solid var(--border); transition: 0.2s; position: relative;
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .modal-item:hover { border-color: var(--accent); }
+        .modal-item.selected { border: 2px solid var(--accent); background: #2a2f3a; }
+        .modal-item .skin-img { height: 40px; margin-top: 0; }
+        
+        .close-btn { background: #333; color: #fff; border: none; padding: 10px; border-radius: 8px; margin-top: 15px; cursor: pointer; font-weight: bold; width: 100%; }
+
+        .sell-modal-content {
+            background: linear-gradient(180deg, #1e2538 0%, #131722 100%);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+        .sell-modal-header { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; text-align: left; }
+        .sell-modal-item-name { font-size: 20px; font-weight: bold; color: #fff; margin-bottom: 15px; text-align: left; }
+        .sell-modal-price-box {
+            background: #0d1017; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: left;
+        }
+        .sell-modal-price-label { font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
+        .sell-modal-price-val { font-size: 26px; font-weight: bold; color: var(--accent); }
+        .sell-modal-buttons { display: flex; gap: 10px; }
+        .sell-modal-buttons button { flex: 1; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; border: none; }
+        .btn-cancel-sell { background: #2a2f3a; color: #fff; }
+        .btn-confirm-sell { background: var(--gold-gradient); color: #000; }
+
+        .case-modal-content {
+            background: linear-gradient(180deg, #1e2538 0%, #131722 100%);
+            border: 1px solid #8e44ad;
+        }
+        .math-question { font-size: 32px; font-weight: bold; color: var(--accent); margin: 20px 0; letter-spacing: 2px; }
+        .math-input {
+            width: 100%; padding: 12px; background: #0d1017; border: 1px solid var(--border);
+            border-radius: 8px; color: #fff; font-size: 20px; text-align: center; font-weight: bold; outline: none;
+        }
+        .math-input:focus { border-color: var(--accent); }
+        .btn-answer { background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 15px; }
+
+        .qty-control { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 20px 0; }
+        .qty-btn { background: #333; color: #fff; border: none; width: 40px; height: 40px; border-radius: 8px; font-size: 20px; cursor: pointer; }
+        .qty-val { font-size: 24px; font-weight: bold; color: var(--accent); }
+
+        /* Окно оплаты */
+        .pay-modal-content {
+            background: var(--panel-bg);
+            border: 2px solid var(--win);
+            padding: 40px 20px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .pay-spinner {
+            width: 50px; height: 50px; border: 4px solid var(--border); border-top-color: var(--win);
+            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* НИЖНЕЕ МЕНЮ */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: var(--panel-bg); border-top: 1px solid var(--border);
+            display: flex; justify-content: space-around; padding: 10px 0; z-index: 100;
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); cursor: pointer; font-size: 10px; gap: 4px; }
+        .nav-item.active { color: var(--accent); }
+        .nav-icon { font-size: 20px; }
+
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--win); color: #fff; padding: 10px 20px; border-radius: 8px;
+            font-weight: bold; z-index: 2000; display: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        
+        .loader { text-align: center; padding: 50px; font-size: 18px; color: var(--accent); }
+    </style>
+</head>
+<body>
+    <div class="header" id="mainHeader">
+        <div style="font-weight: bold; font-size: 16px;">CS2 UPGRADER</div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <button id="speedBtn" class="speed-btn" onclick="toggleSpeed()">⚡</button>
+            <div class="balance" id="balanceDisplay">0 ₽</div>
+            <button id="adminBtn" onclick="addMoney()" style="display:none; background: var(--accent); color: #000; border: none; width: 30px; height: 30px; border-radius: 8px; font-size: 20px; font-weight: bold; cursor: pointer; justify-content: center; align-items: center;">+</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Успешно!</div>
+
+    <div class="main-content" id="mainContent">
+        <div class="loader" id="loader">Загрузка базы скинов...</div>
+        
+        <div id="appContent" style="display: none;">
+            <!-- АПГРЕЙД -->
+            <div id="section-upgrader" class="content-section active">
+                <div class="upgrader-layout">
+                    <div class="circle-zone">
+                        <div class="wheel-wrapper">
+                            <div class="arrow-pointer" id="arrow"></div>
+                            <div class="wheel" id="wheel">
+                                <div class="wheel-inner">
+                                    <div class="chance-text" id="chanceText">0%</div>
+                                    <div class="chance-label">Шанс</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="up-panels">
+                        <div class="up-panel" onclick="openSelectModal('left')">
+                            <div class="up-panel-title">ВАША СТАВКА</div>
+                            <img src="" id="leftImg" class="skin-img" style="display:none;">
+                            <div id="leftEmpty" style="color:var(--text-muted); font-size:30px;">📦</div>
+                            <div class="item-name" id="leftName">Выбрать скины</div>
+                            <div class="item-price" id="leftPrice"></div>
+                        </div>
+                        <div style="display: flex; align-items: center; color: var(--text-muted);">→</div>
+                        <div class="up-panel" onclick="openSelectModal('right')">
+                            <div class="up-panel-title">ЦЕЛЬ</div>
+                            <img src="" id="rightImg" class="skin-img">
+                            <div class="item-name" id="rightName"></div>
+                            <div class="item-price" id="rightPrice"></div>
+                        </div>
+                    </div>
+
+                    <div class="quick-btns">
+                        <button class="quick-btn" onclick="setQuickTarget('x2')">x2</button>
+                        <button class="quick-btn" onclick="setQuickTarget('x4')">x4</button>
+                        <button class="quick-btn" onclick="setQuickTarget('x8')">x8</button>
+                        <button class="quick-btn" onclick="setQuickTarget('35')">35%</button>
+                        <button class="quick-btn" onclick="setQuickTarget('55')">55%</button>
+                        <button class="quick-btn" onclick="setQuickTarget('75')">75%</button>
+                    </div>
+
+                    <button class="btn-upgrade" id="upgradeBtn">УЛУЧШИТЬ</button>
+                    <div class="result" id="resultBox"></div>
+                </div>
+            </div>
+
+            <!-- МАГАЗИН -->
+            <div id="section-shop" class="content-section">
+                <div class="shop-controls">
+                    <div class="shop-row">
+                        <input type="text" id="searchInput" placeholder="Поиск по названию..." oninput="renderShop(true)">
+                    </div>
+                    <div class="shop-row">
+                        <input type="number" id="minPriceInput" placeholder="Цена от (₽)" oninput="renderShop(true)">
+                        <input type="number" id="maxPriceInput" placeholder="Цена до (₽)" oninput="renderShop(true)">
+                    </div>
+                    <div class="shop-row">
+                        <select id="sortSelect" onchange="renderShop(true)">
+                            <option value="asc">По возрастанию цены</option>
+                            <option value="desc">По убыванию цены</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="shop-grid" id="shopGrid"></div>
+                <button class="load-more-btn" id="loadMoreBtn" onclick="loadMoreShop()" style="display: none;">Показать еще</button>
+            </div>
+
+            <!-- ИНВЕНТАРЬ -->
+            <div id="section-inv" class="content-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h2 style="font-size:16px; color:var(--text-muted);">МОЙ ИНВЕНТАРЬ</h2>
+                </div>
+                
+                <button class="case-btn" id="caseBtn" onclick="openCaseModal()">🎁 Кейс за правильный ответ</button>
+
+                <button class="sell-all-btn" id="sellAllBtn" onclick="sellAll()">
+                    <span>💳 ПРОДАТЬ ВСЁ</span>
+                    <span id="sellAllTotal"></span>
+                </button>
+                <div class="shop-grid" id="invGridFull"></div>
+            </div>
+
+            <!-- ПРОФИЛЬ -->
+            <div id="section-profile" class="content-section">
+                <div class="profile-section">
+                    <div class="profile-top">
+                        <div class="profile-left">
+                            <div class="avatar-circle">👤</div>
+                            <div class="profile-info">
+                                <div class="profile-name" id="profileNameDisplay">MAK...</div>
+                                <div class="profile-id">ID: #1337</div>
+                                <button class="btn-edit" onclick="editProfileName()">✎ Изменить</button>
+                            </div>
+                        </div>
+                        <div class="best-drop">
+                            <div class="best-drop-title">Лучший дроп</div>
+                            <img src="" id="bestDropImg" class="best-drop-img" style="display:none;">
+                            <div id="bestDropEmpty" style="font-size:20px; color:var(--text-muted);">Нет</div>
+                            <div class="best-drop-price" id="bestDropPrice">0 ₽</div>
+                        </div>
+                    </div>
+
+                    <div class="level-bar-container">
+                        <div class="level-header">
+                            <div class="level-title" id="levelDisplay">УРОВЕНЬ 1</div>
+                            <div style="color:var(--text-muted); font-size:11px;" id="levelProgressText">0 / 10</div>
+                        </div>
+                        <div class="level-progress-bg">
+                            <div class="level-progress-fill" id="levelProgressBar"></div>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-icon">🔄</div>
+                            <div class="stat-val" id="statTotalUpgrades">0</div>
+                            <div class="stat-label">Апгрейды</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-icon">✅</div>
+                            <div class="stat-val win" id="statWins">0</div>
+                            <div class="stat-label">Победы</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-icon">❌</div>
+                            <div class="stat-val lose" id="statLosses">0</div>
+                            <div class="stat-label">Поражения</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-icon">📈</div>
+                            <div class="stat-val" id="statWinrate" style="color:var(--accent);">0%</div>
+                            <div class="stat-label">Винрейт</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-icon">🔥</div>
+                            <div class="stat-val" id="statStreak" style="color:#f39c12;">0</div>
+                            <div class="stat-label">Серия</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-icon">💵</div>
+                            <div class="stat-val" id="statTurnover" style="color:var(--sell);">0 ₽</div>
+                            <div class="stat-label">Оборот</div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="transfer-btn" onclick="openTransferModal()">💸 Перевести деньги</button>
+                        <button class="transfer-btn promo-btn" onclick="openPromoModal()">🎁 Ввести промокод</button>
+                        <button class="transfer-btn admin-btn" id="adminSettingsBtn" onclick="openAdminModal()" style="display: none;">⚙️ Настройки шанса</button>
+                    </div>
+                </div>
+
+                <div class="history-section">
+                    <div class="history-header">
+                        <span>ИСТОРИЯ АПГРЕЙДОВ</span>
+                    </div>
+                    <div id="historyList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('section-upgrader', this)">
+            <div class="nav-icon">⚡</div><div>Апгрейд</div>
+        </div>
+        <div class="nav-item" onclick="switchTab('section-shop', this)">
+            <div class="nav-icon">🛒</div><div>Магазин</div>
+        </div>
+        <div class="nav-item" onclick="switchTab('section-inv', this)">
+            <div class="nav-icon">🎒</div><div>Инвентарь</div>
+        </div>
+        <div class="nav-item" onclick="switchTab('section-profile', this)">
+            <div class="nav-icon">👤</div><div>Профиль</div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНЫЕ ОКНА -->
+    <div class="modal" id="selectModal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle">Выберите скин</div>
+            <input type="text" class="modal-search" id="modalSearchInput" placeholder="Поиск по названию..." oninput="filterModalGrid()">
+            <div class="modal-grid" id="modalGrid"></div>
+            <button class="close-btn" onclick="closeModal('selectModal')">Закрыть</button>
+        </div>
+    </div>
+
+    <div class="modal" id="buyModal">
+        <div class="modal-content" style="max-width: 300px;">
+            <div class="modal-title">Покупка</div>
+            <img src="" id="buyImg" style="width:100px; height:80px; object-fit:contain; margin:0 auto;">
+            <div style="font-weight:bold; margin-top:10px;" id="buyName"></div>
+            <div style="color:var(--accent); font-weight:bold; font-size:18px; margin-top:5px;" id="buyPrice"></div>
+            <div class="qty-control">
+                <button class="qty-btn" onclick="changeQty(-1)">-</button>
+                <div class="qty-val" id="buyQty">1</div>
+                <button class="qty-btn" onclick="changeQty(1)">+</button>
+            </div>
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Итого: <span id="buyTotal" style="color:#fff;">0</span> ₽</div>
+            <button class="btn-buy" style="padding:12px; font-size:16px;" onclick="confirmBuy()">Оплатить</button>
+            <button class="close-btn" onclick="closeModal('buyModal')">Отмена</button>
+        </div>
+    </div>
+
+    <!-- ОКНО ОПЛАТЫ -->
+    <div class="modal" id="payModal" style="z-index: 3000;">
+        <div class="modal-content pay-modal-content">
+            <div class="pay-spinner"></div>
+            <div style="font-size: 18px; font-weight: bold; color: var(--win); margin-bottom: 10px;">Оплата прошла...</div>
+            <div style="font-size: 14px; color: var(--text-muted);">Зачисление предмета</div>
+        </div>
+    </div>
+
+    <div class="modal" id="sellModal">
+        <div class="modal-content sell-modal-content">
+            <div class="sell-modal-header" id="sellItemWeapon">Оружие</div>
+            <div class="sell-modal-item-name" id="sellItemName">Скин</div>
+            <div class="sell-modal-price-box">
+                <div class="sell-modal-price-label">ВЫ ПОЛУЧИТЕ</div>
+                <div class="sell-modal-price-val" id="sellItemPrice">0 ₽</div>
+            </div>
+            <div class="sell-modal-buttons">
+                <button class="btn-cancel-sell" onclick="closeModal('sellModal')">Отмена</button>
+                <button class="btn-confirm-sell" onclick="executeSell()">ПРОДАТЬ</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="transferModal">
+        <div class="modal-content sell-modal-content">
+            <div class="modal-title" style="text-align: left; margin-bottom: 5px;">Перевод средств</div>
+            <div style="font-size: 12px; color: var(--text-muted); text-align: left; margin-bottom: 15px;">Введите ID получателя и сумму</div>
+            <input type="text" class="math-input" id="transferIdInput" placeholder="ID (напр. 12345678)" style="margin-bottom: 10px;">
+            <input type="number" class="math-input" id="transferSumInput" placeholder="Сумма в ₽" min="1">
+            <div class="sell-modal-buttons" style="margin-top: 15px;">
+                <button class="btn-cancel-sell" onclick="closeModal('transferModal')">Отмена</button>
+                <button class="btn-confirm-sell" onclick="executeTransfer()">ПЕРЕВЕСТИ</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="promoModal">
+        <div class="modal-content sell-modal-content" style="border-color: #2ecc71;">
+            <div class="modal-title" style="color: #2ecc71; text-align: left; margin-bottom: 5px;">Ввод промокода</div>
+            <div style="font-size: 12px; color: var(--text-muted); text-align: left; margin-bottom: 15px;">Введите секретный код</div>
+            <input type="text" class="math-input" id="promoInput" placeholder="ПРОМОКОД" style="text-transform: uppercase;">
+            <div class="sell-modal-buttons" style="margin-top: 15px;">
+                <button class="btn-cancel-sell" onclick="closeModal('promoModal')">Отмена</button>
+                <button class="btn-confirm-sell" style="background: #2ecc71;" onclick="executePromo()">АКТИВИРОВАТЬ</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="adminModal">
+        <div class="modal-content sell-modal-content" style="border-color: #e74c3c;">
+            <div class="modal-title" style="color: #e74c3c; text-align: left; margin-bottom: 5px;">Настройка шанса</div>
+            <div style="font-size: 12px; color: var(--text-muted); text-align: left; margin-bottom: 15px;">Введите множитель (1 = честно, 2 = х2 шанс)</div>
+            <input type="number" class="math-input" id="adminChanceInput" placeholder="Множитель (напр. 1.5)" step="0.1" min="0">
+            <div class="sell-modal-buttons" style="margin-top: 15px;">
+                <button class="btn-cancel-sell" onclick="closeModal('adminModal')">Отмена</button>
+                <button class="btn-confirm-sell" style="background: #e74c3c;" onclick="saveAdminChance()">СОХРАНИТЬ</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="caseModal">
+        <div class="modal-content case-modal-content">
+            <div class="modal-title" style="color: #9b59b6;">Кейс за правильный ответ</div>
+            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Реши пример, чтобы получить 3 скина на выбор</div>
+            
+            <div id="caseQuestionBox">
+                <div class="math-question" id="mathQuestion">32 + 44</div>
+                <input type="number" class="math-input" id="mathAnswerInput" placeholder="Ответ">
+                <button class="btn-answer" onclick="checkAnswer()">ПРОВЕРИТЬ</button>
+            </div>
+
+            <div id="caseRewardsBox" style="display: none;">
+                <div style="font-size: 14px; color: var(--win); font-weight: bold; margin-bottom: 15px;">Правильно! Выбери один скин:</div>
+                <div class="modal-grid" id="caseRewardsGrid"></div>
+            </div>
+            
+            <button class="close-btn" onclick="closeModal('caseModal')">Закрыть</button>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram?.WebApp;
+        if (tg) { tg.ready(); tg.expand(); }
+
+        const ADMIN_ID = 1935313766; 
+        const STORAGE_KEY = 'cs_upgrader_v50';
+        
+        let ITEMS = []; 
+        let state = loadState();
+        let selectedLeft = [];
+        let selectedRight = null; 
+        let upgradeCounter = 0; 
+        let currentBuyItem = null;
+        let currentBuyQty = 1;
+        let sellItemIndex = -1;
+        
+        let currentCaseAnswer = 0;
+        let currentCaseRewards = [];
+        let isClaimingCase = false; 
+        
+        let caseCooldownInterval = null;
+        const COOLDOWN_TIME = 3 * 60 * 1000; 
+
+        let currentShopItems = [];
+        let renderedShopCount = 0;
+        const SHOP_CHUNK = 100;
+
+        let currentModalMode = 'left';
+        let isSpinning = false;
+        let isFastMode = false;
+
+        const PROMOCODES = {
+            'LEGEND100M': { type: 'money', value: 100000000 },
+            'JACKPOT10M': { type: 'money', value: 10000000 },
+            'MILLION1M': { type: 'money', value: 1000000 },
+            'START': { type: 'money', value: 5000 },
+            'CS2': { type: 'money', value: 10000 },
+            'UPGRADE': { type: 'money', value: 3000 }
+        };
+        
+        if (!state.usedPromos) state.usedPromos = [];
+        if (!state.history) state.history = [];
+
+        window.toggleSpeed = function() {
+            isFastMode = !isFastMode;
+            const btn = document.getElementById('speedBtn');
+            if (isFastMode) {
+                btn.classList.add('active');
+                showToast('Ускорение включено!');
+            } else {
+                btn.classList.remove('active');
+                showToast('Ускорение выключено');
+            }
+        }
+
+        async function fetchSkins() {
+            try {
+                const response = await fetch('https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins.json');
+                const data = await response.json();
+                
+                let idCounter = 1;
+                let rawItems = [];
+
+                data.forEach(skin => {
+                    if (skin.image && skin.name) {
+                        let basePrice = 10;
+                        if (skin.category.name === 'Knives') basePrice = 15000;
+                        else if (skin.category.name === 'Gloves') basePrice = 8000;
+                        else {
+                            if (skin.rarity.name === 'Consumer Grade') basePrice = 10;
+                            else if (skin.rarity.name === 'Industrial Grade') basePrice = 40;
+                            else if (skin.rarity.name === 'Mil-Spec Grade') basePrice = 150;
+                            else if (skin.rarity.name === 'Restricted') basePrice = 400;
+                            else if (skin.rarity.name === 'Classified') basePrice = 1000;
+                            else if (skin.rarity.name === 'Covert') basePrice = 3000;
+                            else if (skin.rarity.name === 'Contraband') basePrice = 10000;
+                        }
+
+                        rawItems.push({
+                            id: idCounter.toString(),
+                            name: skin.name,
+                            basePrice: basePrice,
+                            img: skin.image
+                        });
+                        idCounter++;
+                    }
+                });
+
+                rawItems.sort((a, b) => a.basePrice - b.basePrice);
+
+                rawItems.forEach((item, index) => {
+                    let ratio = index / rawItems.length;
+                    let price = 10 + Math.floor(Math.pow(ratio, 4) * 500000000000);
+                    item.price = price;
+                });
+                
+                ITEMS = rawItems;
+                selectedRight = ITEMS[10];
+
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('appContent').style.display = 'block';
+
+                initApp();
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('loader').innerHTML = 'Ошибка загрузки базы скинов.';
+            }
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            let currentState = { 
+                balance: 1000, 
+                inventory: [], 
+                bestDrop: 0, 
+                upgradesCount: 0, 
+                lastCaseTime: 0, 
+                usedPromos: [], 
+                adminMultiplier: 1.0,
+                history: [],
+                wins: 0,
+                losses: 0,
+                streak: 0,
+                turnover: 0
+            };
+            if (saved) { try { currentState = JSON.parse(saved); } catch (e) {} }
+            return currentState;
+        }
+
+        function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+        
+        function formatMoney(amount) {
+            return amount.toLocaleString('ru-RU') + ' ₽';
+        }
+
+        function updateUI() {
+            document.getElementById('balanceDisplay').textContent = formatMoney(state.balance);
+            document.getElementById('statBalance').textContent = formatMoney(state.balance);
+            document.getElementById('statBestDrop').textContent = formatMoney(state.bestDrop);
+            document.getElementById('statInvCount').textContent = state.inventory.length;
+            
+            document.getElementById('profileNameDisplay').textContent = state.profileName || 'MAK...';
+            document.getElementById('statTotalUpgrades').textContent = state.upgradesCount;
+            document.getElementById('statWins').textContent = state.wins || 0;
+            document.getElementById('statLosses').textContent = state.losses || 0;
+            
+            const totalGames = (state.wins || 0) + (state.losses || 0);
+            const winrate = totalGames > 0 ? Math.round(((state.wins || 0) / totalGames) * 100) : 0;
+            document.getElementById('statWinrate').textContent = winrate + '%';
+            
+            document.getElementById('statStreak').textContent = state.streak || 0;
+            document.getElementById('statTurnover').textContent = formatMoney(state.turnover || 0);
+            
+            if (state.bestDrop > 0) {
+                const bestItem = ITEMS.find(i => i.price === state.bestDrop);
+                if (bestItem) {
+                    document.getElementById('bestDropImg').src = bestItem.img;
+                    document.getElementById('bestDropImg').style.display = 'block';
+                    document.getElementById('bestDropEmpty').style.display = 'none';
+                }
+            } else {
+                document.getElementById('bestDropImg').style.display = 'none';
+                document.getElementById('bestDropEmpty').style.display = 'block';
+            }
+            document.getElementById('bestDropPrice').textContent = formatMoney(state.bestDrop);
+
+            const level = Math.floor(state.upgradesCount / 10) + 1;
+            const progress = (state.upgradesCount % 10) * 10;
+            document.getElementById('levelDisplay').textContent = `УРОВЕНЬ ${level}`;
+            document.getElementById('levelProgressBar').style.width = progress + '%';
+            document.getElementById('levelProgressText').textContent = `${state.upgradesCount % 10} / 10`;
+
+            renderHistory();
+            
+            if (state.inventory.length > 0) {
+                const total = state.inventory.reduce((sum, item) => sum + item.price, 0);
+                document.getElementById('sellAllBtn').style.display = 'flex';
+                document.getElementById('sellAllTotal').textContent = `+ ${formatMoney(total)}`;
+            } else {
+                document.getElementById('sellAllBtn').style.display = 'none';
+            }
+        }
+
+        function animateMoney(amount, isPositive) {
+            const header = document.getElementById('mainHeader');
+            const float = document.createElement('div');
+            float.className = 'money-float';
+            float.textContent = (isPositive ? '+' : '-') + formatMoney(Math.abs(amount));
+            float.style.color = isPositive ? 'var(--win)' : 'var(--lose)';
+            header.appendChild(float);
+            
+            const balDisplay = document.getElementById('balanceDisplay');
+            const originalColor = balDisplay.style.color;
+            balDisplay.style.color = isPositive ? 'var(--win)' : 'var(--lose)';
+            
+            setTimeout(() => {
+                balDisplay.style.color = originalColor || 'var(--accent)';
+            }, 500);
+
+            setTimeout(() => float.remove(), 1000);
+        }
+        
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            if (!state.history || state.history.length === 0) {
+                list.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:12px; padding:10px;">История пуста</div>';
+                return;
+            }
+            list.innerHTML = state.history.map(h => `
+                <div class="history-item ${h.win ? 'win' : 'lose'}">
+                    <div class="history-top">
+                        <span class="history-status ${h.win ? 'win' : 'lose'}">${h.win ? '↑ ПОБЕДА' : '↓ ПРОИГРЫШ'}</span>
+                        <span class="history-chance">${h.chance}%</span>
+                    </div>
+                    <div class="history-content">
+                        <div class="history-skin">
+                            <img src="${h.leftImg}" class="history-img">
+                            <div class="history-details">
+                                <div class="history-name">${h.leftName}</div>
+                                <div class="history-price">${formatMoney(h.leftPrice)}</div>
+                            </div>
+                        </div>
+                        <div class="history-arrow">→</div>
+                        <div class="history-skin">
+                            <img src="${h.rightImg}" class="history-img">
+                            <div class="history-details">
+                                <div class="history-name">${h.rightName}</div>
+                                <div class="history-price">${formatMoney(h.rightPrice)}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function showToast(text) {
+            const t = document.getElementById('toast');
+            t.textContent = text;
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 2500);
+        }
+
+        function checkPoorBonus() {
+            if (state.balance < 10) {
+                state.balance += 400;
+                saveState();
+                showToast("Вам начислено 400 ₽ (бонус)!");
+            }
+        }
+
+        function initApp() {
+            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                if (tg.initDataUnsafe.user.id === ADMIN_ID) {
+                    document.getElementById('adminBtn').style.display = 'flex';
+                    document.getElementById('adminSettingsBtn').style.display = 'block';
+                }
+            }
+            checkPoorBonus();
+            updateUI();
+            setRightItem(selectedRight.id);
+            renderShop(true);
+            renderInv();
+            updateCaseButton();
+            
+            const arrow = document.getElementById('arrow');
+            arrow.style.transition = 'none';
+            arrow.style.transform = 'rotate(0deg)';
+        }
+
+        window.editProfileName = function() {
+            const newName = prompt("Введите новый никнейм:", state.profileName || "MAK...");
+            if (newName && newName.trim()) {
+                state.profileName = newName.trim();
+                saveState();
+                updateUI();
+            }
+        }
+
+        window.openAdminModal = function() {
+            document.getElementById('adminChanceInput').value = state.adminMultiplier || 1.0;
+            document.getElementById('adminModal').classList.add('active');
+        }
+
+        window.saveAdminChance = function() {
+            const val = parseFloat(document.getElementById('adminChanceInput').value);
+            if (!isNaN(val) && val >= 0) {
+                state.adminMultiplier = val;
+                saveState();
+                closeModal('adminModal');
+                showToast(`Множитель шанса изменен на x${val}`);
+            }
+        }
+
+        function updateCaseButton() {
+            const now = Date.now();
+            const timePassed = now - state.lastCaseTime;
+            const btn = document.getElementById('caseBtn');
+            
+            if (timePassed < COOLDOWN_TIME) {
+                btn.disabled = true;
+                if (caseCooldownInterval) clearInterval(caseCooldownInterval);
+                
+                caseCooldownInterval = setInterval(() => {
+                    const left = COOLDOWN_TIME - (Date.now() - state.lastCaseTime);
+                    if (left <= 0) {
+                        clearInterval(caseCooldownInterval);
+                        btn.disabled = false;
+                        btn.innerHTML = '🎁 Кейс за правильный ответ';
+                    } else {
+                        const m = Math.floor(left / 60000);
+                        const s = Math.floor((left % 60000) / 1000);
+                        btn.innerHTML = `⏳ Доступен через: ${m}:${s.toString().padStart(2, '0')}`;
+                    }
+                }, 1000);
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = '🎁 Кейс за правильный ответ';
+                if (caseCooldownInterval) clearInterval(caseCooldownInterval);
+            }
+        }
+
+        window.addMoney = function() {
+            const amount = prompt("Сколько денег добавить на баланс?", "10000");
+            if (amount !== null && !isNaN(amount) && Number(amount) > 0) {
+                state.balance += Number(amount);
+                saveState();
+                updateUI();
+                animateMoney(Number(amount), true);
+                showToast(`Баланс пополнен`);
+            }
+        }
+
+        window.openPromoModal = function() {
+            document.getElementById('promoInput').value = '';
+            document.getElementById('promoModal').classList.add('active');
+        }
+
+        window.executePromo = function() {
+            const code = document.getElementById('promoInput').value.trim().toUpperCase();
+            
+            if (!code) return alert('Введите промокод!');
+            if (state.usedPromos.includes(code)) return alert('Вы уже активировали этот промокод!');
+            
+            const promo = PROMOCODES[code];
+            if (!promo) return alert('Неверный промокод!');
+
+            if (promo.type === 'money') {
+                state.balance += promo.value;
+                animateMoney(promo.value, true);
+                showToast(`Промокод активирован!`);
+            }
+            
+            state.usedPromos.push(code);
+            saveState();
+            updateUI();
+            closeModal('promoModal');
+        }
+
+        window.openTransferModal = function() {
+            document.getElementById('transferIdInput').value = '';
+            document.getElementById('transferSumInput').value = '';
+            document.getElementById('transferModal').classList.add('active');
+        }
+
+        window.executeTransfer = function() {
+            const targetId = document.getElementById('transferIdInput').value.trim();
+            const sum = Number(document.getElementById('transferSumInput').value);
+
+            if (!targetId) return alert('Введите ID получателя!');
+            if (targetId === '1337') return alert('Вы не можете перевести деньги самому себе!');
+            if (!sum || sum <= 0) return alert('Введите корректную сумму!');
+            if (sum > state.balance) return alert('Недостаточно средств на балансе!');
+
+            state.balance -= sum;
+            animateMoney(sum, false);
+            saveState();
+            updateUI();
+            closeModal('transferModal');
+            showToast(`Успешно переведено игроку #${targetId}`);
+        }
+
+        window.switchTab = function(tabId, el) {
+            document.querySelectorAll('.content-section').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            el.classList.add('active');
+            if (tabId === 'section-shop') renderShop(true);
+            if (tabId === 'section-inv') renderInv();
+            if (tabId === 'section-profile') updateUI();
+        }
+
+        window.openSellModal = function(index) {
+            sellItemIndex = index;
+            const item = state.inventory[index];
+            
+            const nameParts = item.name.split('|');
+            document.getElementById('sellItemWeapon').textContent = nameParts[0].trim();
+            document.getElementById('sellItemName').textContent = nameParts[1] ? nameParts[1].trim() : item.name;
+            
+            document.getElementById('sellItemPrice').textContent = formatMoney(item.price);
+            document.getElementById('sellModal').classList.add('active');
+        }
+
+        window.executeSell = function() {
+            if (sellItemIndex === -1) return;
+            const item = state.inventory[sellItemIndex];
+            state.balance += item.price; 
+            animateMoney(item.price, true);
+            state.inventory.splice(sellItemIndex, 1);
+            
+            selectedLeft = selectedLeft.filter(i => i.index !== sellItemIndex);
+            selectedLeft.forEach(i => { if (i.index > sellItemIndex) i.index--; });
+            
+            saveState();
+            updateUI();
+            renderInv();
+            updateLeftPanel();
+            closeModal('sellModal');
+            showToast(`Скин продан`);
+            sellItemIndex = -1;
+        }
+
+        window.sellAll = function() {
+            if (state.inventory.length === 0) return;
+            
+            const total = state.inventory.reduce((sum, item) => sum + item.price, 0);
+            if (confirm(`Вы уверены, что хотите продать ВСЕ скины за ${formatMoney(total)}?`)) {
+                state.balance += total;
+                animateMoney(total, true);
+                state.inventory = [];
+                selectedLeft = [];
+                
+                saveState();
+                updateUI();
+                renderInv();
+                updateLeftPanel();
+                showToast(`Весь инвентарь продан`);
+            }
+        }
+
+        window.renderShop = function(reset = false) {
+            if (reset) {
+                const query = document.getElementById('searchInput').value.toLowerCase();
+                const minPrice = Number(document.getElementById('minPriceInput').value) || 0;
+                const maxPrice = Number(document.getElementById('maxPriceInput').value) || Infinity;
+                const sort = document.getElementById('sortSelect').value;
+                
+                currentShopItems = ITEMS.filter(i => {
+                    const matchesName = i.name.toLowerCase().includes(query);
+                    const matchesPrice = i.price >= minPrice && i.price <= maxPrice;
+                    return matchesName && matchesPrice;
+                });
+
+                if (sort === 'asc') currentShopItems.sort((a, b) => a.price - b.price);
+                else if (sort === 'desc') currentShopItems.sort((a, b) => b.price - a.price);
+                
+                renderedShopCount = 0;
+                document.getElementById('shopGrid').innerHTML = '';
+            }
+
+            const grid = document.getElementById('shopGrid');
+            const nextChunk = currentShopItems.slice(renderedShopCount, renderedShopCount + SHOP_CHUNK);
+            
+            nextChunk.forEach(item => {
+                grid.innerHTML += `
+                    <div class="shop-item">
+                        <img src="${item.img}" class="skin-img" loading="lazy">
+                        <div class="item-name" title="${item.name}">${item.name}</div>
+                        <div class="item-price">${formatMoney(item.price)}</div>
+                        <button class="btn-buy" onclick="openBuyModal('${item.id}')">Купить</button>
+                    </div>
+                `;
+            });
+
+            renderedShopCount += SHOP_CHUNK;
+            
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
+            if (renderedShopCount < currentShopItems.length) {
+                loadMoreBtn.style.display = 'block';
+            } else {
+                loadMoreBtn.style.display = 'none';
+            }
+        }
+
+        window.loadMoreShop = function() {
+            renderShop(false);
+        }
+
+        window.openBuyModal = function(id) {
+            currentBuyItem = ITEMS.find(i => i.id === id);
+            currentBuyQty = 1;
+            document.getElementById('buyImg').src = currentBuyItem.img;
+            document.getElementById('buyName').textContent = currentBuyItem.name;
+            document.getElementById('buyPrice').textContent = formatMoney(currentBuyItem.price);
+            document.getElementById('buyQty').textContent = currentBuyQty;
+            updateBuyTotal();
+            document.getElementById('buyModal').classList.add('active');
+        }
+
+        window.changeQty = function(amount) {
+            currentBuyQty += amount;
+            if (currentBuyQty < 1) currentBuyQty = 1;
+            document.getElementById('buyQty').textContent = currentBuyQty;
+            updateBuyTotal();
+        }
+
+        function updateBuyTotal() {
+            document.getElementById('buyTotal').textContent = formatMoney(currentBuyItem.price * currentBuyQty);
+        }
+
+        // ЖЕЛЕЗОБЕТОННАЯ ПОКУПКА С ПЕРЕЗАГРУЗКОЙ
+        window.confirmBuy = function() {
+            const totalPrice = currentBuyItem.price * currentBuyQty;
+            if (state.balance < totalPrice) return alert('Недостаточно средств!');
+            
+            state.balance -= totalPrice;
+            for(let i=0; i<currentBuyQty; i++) {
+                state.inventory.push(currentBuyItem);
+            }
+            saveState();
+            updateUI();
+            animateMoney(totalPrice, false);
+
+            // Скрываем окно покупки и показываем окно оплаты
+            document.getElementById('buyModal').classList.remove('active');
+            document.getElementById('payModal').classList.add('active');
+
+            // Ждем 1.5 сек и ПЕРЕЗАГРУЖАЕМ страницу (через хэш, чтобы 100% сработало)
+            setTimeout(() => {
+                window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
+            }, 1500);
+        }
+
+        function renderInv() {
+            const grid = document.getElementById('invGridFull');
+            if (state.inventory.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:var(--text-muted); padding:20px;">Пусто</div>';
+                return;
+            }
+            grid.innerHTML = state.inventory.map((item, index) => `
+                <div class="shop-item">
+                    <img src="${item.img}" class="skin-img" loading="lazy">
+                    <div class="item-name" title="${item.name}">${item.name}</div>
+                    <div class="item-price">${formatMoney(item.price)}</div>
+                    <button class="btn-sell" onclick="openSellModal(${index})">Продать</button>
+                </div>
+            `).join('');
+            updateUI();
+        }
+
+        window.openSelectModal = function(mode) {
+            currentModalMode = mode;
+            const grid = document.getElementById('modalGrid');
+            document.getElementById('modalTitle').textContent = mode === 'left' ? 'Ваша ставка' : 'Выберите цель';
+            document.getElementById('modalSearchInput').value = '';
+            
+            if (mode === 'left') {
+                if (state.inventory.length === 0) {
+                    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#888; padding:20px;">Инвентарь пуст.</div>';
+                } else {
+                    renderModalLeft();
+                }
+            } else {
+                renderModalRight();
+            }
+            document.getElementById('selectModal').classList.add('active');
+        }
+
+        window.filterModalGrid = function() {
+            if (currentModalMode === 'left') renderModalLeft();
+            else renderModalRight();
+        }
+
+        function renderModalLeft() {
+            const grid = document.getElementById('modalGrid');
+            const query = document.getElementById('modalSearchInput').value.toLowerCase();
+            let filtered = state.inventory.map((item, index) => ({...item, originalIndex: index}));
+            
+            if (query) {
+                filtered = filtered.filter(i => i.name.toLowerCase().includes(query));
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#888; padding:20px;">Ничего не найдено.</div>';
+                return;
+            }
+
+            grid.innerHTML = filtered.map(item => {
+                const isSelected = selectedLeft.some(i => i.index === item.originalIndex);
+                return `
+                <div class="modal-item ${isSelected ? 'selected' : ''}" onclick="toggleLeftItem(${item.originalIndex})">
+                    <img src="${item.img}" class="skin-img">
+                    <div class="item-name">${item.name.split('|')[0]}</div>
+                    <div class="item-price">${formatMoney(item.price)}</div>
+                </div>`;
+            }).join('');
+        }
+
+        function renderModalRight() {
+            const grid = document.getElementById('modalGrid');
+            const query = document.getElementById('modalSearchInput').value.toLowerCase();
+            let filtered = ITEMS;
+            
+            if (query) {
+                filtered = filtered.filter(i => i.name.toLowerCase().includes(query));
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#888; padding:20px;">Ничего не найдено.</div>';
+                return;
+            }
+
+            const toRender = filtered.slice(0, 150);
+            
+            grid.innerHTML = toRender.map(item => `
+                <div class="modal-item" onclick="setRightItem('${item.id}')">
+                    <img src="${item.img}" class="skin-img">
+                    <div class="item-name">${item.name.split('|')[0]}</div>
+                    <div class="item-price">${formatMoney(item.price)}</div>
+                </div>
+            `).join('');
+            
+            if (filtered.length > 150) {
+                grid.innerHTML += `<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); padding:10px;">Показаны первые 150. Уточните поиск.</div>`;
+            }
+        }
+
+        window.closeModal = function(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        window.toggleLeftItem = function(index) {
+            const item = state.inventory[index];
+            const existingIdx = selectedLeft.findIndex(i => i.index === index);
+            
+            if (existingIdx > -1) {
+                selectedLeft.splice(existingIdx, 1);
+            } else {
+                selectedLeft.push({ ...item, index });
+            }
+            renderModalLeft();
+            updateLeftPanel();
+        }
+
+        window.setRightItem = function(id) {
+            selectedRight = ITEMS.find(i => i.id === id);
+            updateRightPanel();
+            closeModal('selectModal');
+        }
+
+        function updateLeftPanel() {
+            const img = document.getElementById('leftImg');
+            const empty = document.getElementById('leftEmpty');
+            const name = document.getElementById('leftName');
+            const price = document.getElementById('leftPrice');
+            
+            if (selectedLeft.length === 0) {
+                img.style.display = 'none'; empty.style.display = 'block';
+                name.textContent = 'Выбрать скины'; price.textContent = '';
+            } else if (selectedLeft.length === 1) {
+                img.style.display = 'block'; empty.style.display = 'none';
+                img.src = selectedLeft[0].img;
+                name.textContent = selectedLeft[0].name;
+                price.textContent = formatMoney(selectedLeft[0].price);
+            } else {
+                img.style.display = 'none'; empty.style.display = 'block';
+                empty.textContent = '📦';
+                const total = selectedLeft.reduce((sum, item) => sum + item.price, 0);
+                name.textContent = `Выбрано: ${selectedLeft.length} шт.`;
+                price.textContent = formatMoney(total);
+            }
+            updateChanceUI();
+        }
+
+        function updateRightPanel() {
+            document.getElementById('rightImg').src = selectedRight.img;
+            document.getElementById('rightName').textContent = selectedRight.name;
+            document.getElementById('rightPrice').textContent = formatMoney(selectedRight.price);
+            updateChanceUI();
+        }
+
+        function updateChanceUI() {
+            const totalLeftPrice = selectedLeft.reduce((sum, item) => sum + item.price, 0);
+            if (totalLeftPrice === 0) {
+                document.getElementById('chanceText').textContent = '0%';
+                document.getElementById('wheel').style.background = `conic-gradient(var(--accent) 0deg, #222 0deg)`;
+                return;
+            }
+            let chance = totalLeftPrice / selectedRight.price;
+            if (chance > 1) chance = 1;
+            const percent = (chance * 100).toFixed(1);
+            document.getElementById('chanceText').textContent = percent + '%';
+            document.getElementById('wheel').style.background = `conic-gradient(var(--accent) ${chance * 360}deg, #222 ${chance * 360}deg)`;
+        }
+
+        window.setQuickTarget = function(mode) {
+            const totalLeftPrice = selectedLeft.reduce((sum, item) => sum + item.price, 0);
+            if (totalLeftPrice === 0) return alert('Выберите скины для ставки!');
+            
+            let targetPrice;
+            if (mode === 'x2') targetPrice = totalLeftPrice * 2;
+            else if (mode === 'x4') targetPrice = totalLeftPrice * 4;
+            else if (mode === 'x8') targetPrice = totalLeftPrice * 8;
+            else if (mode === '35') targetPrice = totalLeftPrice / 0.35;
+            else if (mode === '55') targetPrice = totalLeftPrice / 0.55;
+            else if (mode === '75') targetPrice = totalLeftPrice / 0.75;
+
+            let closest = ITEMS[0];
+            let minDiff = Infinity;
+            for (let item of ITEMS) {
+                const diff = Math.abs(item.price - targetPrice);
+                if (diff < minDiff) { minDiff = diff; closest = item; }
+            }
+            setRightItem(closest.id);
+        }
+
+        // --- ЖЕЛЕЗОБЕТОННАЯ ЛОГИКА АПГРЕЙДА С ПЕРЕЗАГРУЗКОЙ ---
+        document.getElementById('upgradeBtn').addEventListener('click', () => {
+            if (isSpinning) return; 
+            
+            const totalLeftPrice = selectedLeft.reduce((sum, item) => sum + item.price, 0);
+            if (totalLeftPrice === 0) return alert('Выберите скины из инвентаря!');
+            if (totalLeftPrice >= selectedRight.price) return alert('Ставка должна быть меньше цели!');
+
+            isSpinning = true;
+            
+            const baseChance = totalLeftPrice / selectedRight.price;
+            const realChance = Math.min(baseChance * (state.adminMultiplier || 1.0), 1.0);
+            
+            let targetToWin = selectedRight;
+            
+            upgradeCounter++;
+            let secretDrop = false;
+            if (upgradeCounter >= 15) {
+                upgradeCounter = 0;
+                if (Math.random() < 0.3) {
+                    secretDrop = true;
+                    targetToWin = ITEMS[ITEMS.length - 1]; 
+                }
+            }
+
+            const indicesToRemove = selectedLeft.map(i => i.index).sort((a,b) => b-a);
+            indicesToRemove.forEach(idx => state.inventory.splice(idx, 1));
+
+            const leftItem = selectedLeft[0];
+            const historyRecord = {
+                win: false,
+                chance: (baseChance * 100).toFixed(1),
+                leftImg: leftItem.img,
+                leftName: leftItem.name,
+                leftPrice: totalLeftPrice,
+                rightImg: selectedRight.img,
+                rightName: selectedRight.name,
+                rightPrice: selectedRight.price,
+                time: Date.now()
+            };
+
+            const arrow = document.getElementById('arrow');
+            const win = secretDrop || (Math.random() < realChance); 
+            
+            // 1. Жесткий сброс
+            arrow.style.transition = 'none';
+            arrow.style.transform = 'rotate(0deg)';
+            void arrow.offsetWidth;
+            
+            let targetDeg = 0;
+            const spinDuration = isFastMode ? 2 : 4;
+            
+            if (win) {
+                const maxDeg = baseChance * 360;
+                targetDeg = 360 * 5 + (Math.random() * maxDeg); 
+            } else {
+                const minDeg = baseChance * 360;
+                targetDeg = 360 * 5 + (minDeg + Math.random() * (360 - minDeg));
+            }
+
+            // 2. Запуск анимации
+            setTimeout(() => {
+                arrow.style.transition = `transform ${spinDuration}s cubic-bezier(0.1, 0.7, 0.1, 1)`;
+                arrow.style.transform = `rotate(${targetDeg}deg)`;
+            }, 50);
+
+            document.getElementById('upgradeBtn').style.opacity = '0.5';
+            document.getElementById('resultBox').style.display = 'none';
+
+            setTimeout(() => {
+                const box = document.getElementById('resultBox');
+                historyRecord.win = win;
+                
+                if (win) {
+                    state.inventory.push(targetToWin);
+                    state.upgradesCount++;
+                    state.wins = (state.wins || 0) + 1;
+                    state.streak = (state.streak || 0) + 1;
+                    if (targetToWin.price > state.bestDrop) state.bestDrop = targetToWin.price;
+                    box.className = 'result win';
+                    box.textContent = `🎉 Выигрыш! ${targetToWin.name}`;
+                } else {
+                    state.upgradesCount++;
+                    state.losses = (state.losses || 0) + 1;
+                    state.streak = 0;
+                    box.className = 'result lose';
+                    box.textContent = `💀 Не повезло. Скины сгорели.`;
+                }
+                
+                state.turnover = (state.turnover || 0) + totalLeftPrice;
+                state.history.unshift(historyRecord);
+                if (state.history.length > 50) state.history.pop();
+
+                box.style.display = 'block';
+                
+                saveState();
+                updateUI();
+                renderInv();
+                
+                selectedLeft = [];
+                updateLeftPanel();
+                
+                // ПЕРЕЗАГРУЗКА ЧЕРЕЗ 2 СЕКУНДЫ
+                setTimeout(() => {
+                    window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
+                }, 2000);
+                
+            }, spinDuration * 1000); 
+        });
+
+        window.openCaseModal = function() {
+            if (Date.now() - state.lastCaseTime < COOLDOWN_TIME) return;
+            
+            document.getElementById('caseQuestionBox').style.display = 'block';
+            document.getElementById('caseRewardsBox').style.display = 'none';
+            document.getElementById('mathAnswerInput').value = '';
+            isClaimingCase = false; 
+            
+            const num1 = Math.floor(Math.random() * 50) + 10;
+            const num2 = Math.floor(Math.random() * 50) + 10;
+            currentCaseAnswer = num1 + num2;
+            
+            document.getElementById('mathQuestion').textContent = `${num1} + ${num2}`;
+            document.getElementById('caseModal').classList.add('active');
+        }
+
+        window.checkAnswer = function() {
+            const userAnswer = parseInt(document.getElementById('mathAnswerInput').value);
+            
+            if (userAnswer === currentCaseAnswer) {
+                currentCaseRewards = [];
+                const grid = document.getElementById('caseRewardsGrid');
+                grid.innerHTML = '';
+                
+                for (let i = 0; i < 3; i++) {
+                    let roll = Math.random();
+                    let targetPrice = 0;
+                    
+                    if (roll < 0.01) {
+                        targetPrice = 10000000 + Math.random() * (500000000 - 10000000);
+                    } else if (roll < 0.06) {
+                        targetPrice = 100000 + Math.random() * 900000;
+                    } else {
+                        targetPrice = 100 + Math.random() * 49900;
+                    }
+                    
+                    let closest = ITEMS[0];
+                    let minDiff = Infinity;
+                    for (let item of ITEMS) {
+                        const diff = Math.abs(item.price - targetPrice);
+                        if (diff < minDiff) { minDiff = diff; closest = item; }
+                    }
+                    
+                    currentCaseRewards.push(closest);
+                    
+                    grid.innerHTML += `
+                        <div class="modal-item" onclick="claimCaseReward('${closest.id}')">
+                            <img src="${closest.img}" class="skin-img">
+                            <div class="item-name">${closest.name}</div>
+                        </div>
+                    `;
+                }
+                
+                document.getElementById('caseQuestionBox').style.display = 'none';
+                document.getElementById('caseRewardsBox').style.display = 'block';
+            } else {
+                showToast("Неправильный ответ! Попробуй еще раз.");
+                document.getElementById('mathAnswerInput').value = '';
+            }
+        }
+
+        window.claimCaseReward = function(id) {
+            if (isClaimingCase) return;
+            isClaimingCase = true;
+
+            const reward = currentCaseRewards.find(i => i.id === id);
+            state.inventory.push(reward);
+            
+            state.lastCaseTime = Date.now();
+            saveState();
+            
+            renderInv();
+            updateUI();
+            closeModal('caseModal');
+            showToast(`Вы получили скин из кейса!`);
+            updateCaseButton();
+            
+            // Перезагрузка через 1.5 секунды
+            setTimeout(() => {
+                window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
+            }, 1500);
+        }
+
+        fetchSkins();
+    </script>
 </body>
-</html>
+                                                           </html>
