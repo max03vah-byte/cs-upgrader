@@ -38,7 +38,6 @@
         }
         .balance { font-size: 18px; font-weight: bold; color: var(--accent); transition: color 0.2s; }
 
-        /* Всплывающие цифры денег */
         .money-float {
             position: absolute; right: 15px; top: 15px;
             font-size: 16px; font-weight: bold; pointer-events: none;
@@ -613,7 +612,7 @@
     </div>
 
     <!-- ОКНО ОПЛАТЫ -->
-    <div class="modal" id="payModal" style="z-index: 2000;">
+    <div class="modal" id="payModal" style="z-index: 3000;">
         <div class="modal-content pay-modal-content">
             <div class="pay-spinner"></div>
             <div style="font-size: 18px; font-weight: bold; color: var(--win); margin-bottom: 10px;">Оплата прошла...</div>
@@ -698,7 +697,7 @@
         if (tg) { tg.ready(); tg.expand(); }
 
         const ADMIN_ID = 1935313766; 
-        const STORAGE_KEY = 'cs_upgrader_v42';
+        const STORAGE_KEY = 'cs_upgrader_v43';
         
         let ITEMS = []; 
         let state = loadState();
@@ -1204,11 +1203,11 @@
             document.getElementById('buyTotal').textContent = formatMoney(currentBuyItem.price * currentBuyQty);
         }
 
+        // ЖЕЛЕЗОБЕТОННАЯ ПОКУПКА С ПЕРЕЗАГРУЗКОЙ
         window.confirmBuy = function() {
             const totalPrice = currentBuyItem.price * currentBuyQty;
             if (state.balance < totalPrice) return alert('Недостаточно средств!');
             
-            // Списываем деньги и сохраняем
             state.balance -= totalPrice;
             for(let i=0; i<currentBuyQty; i++) {
                 state.inventory.push(currentBuyItem);
@@ -1217,13 +1216,13 @@
             updateUI();
             animateMoney(totalPrice, false);
 
-            // Показываем окно оплаты
-            closeModal('buyModal');
+            // Скрываем окно покупки и показываем окно оплаты
+            document.getElementById('buyModal').classList.remove('active');
             document.getElementById('payModal').classList.add('active');
 
-            // Через 1.5 секунды перезагружаем страницу
+            // Ждем 1.5 сек и ПЕРЕЗАГРУЖАЕМ страницу (через хэш, чтобы 100% сработало)
             setTimeout(() => {
-                window.location.reload();
+                window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
             }, 1500);
         }
 
@@ -1512,9 +1511,9 @@
                 selectedLeft = [];
                 updateLeftPanel();
                 
-                // ЧЕРЕЗ 2 СЕКУНДЫ ПОСЛЕ ВЫПАДЕНИЯ ПЕРЕЗАГРУЖАЕМ СТРАНИЦУ
+                // ПЕРЕЗАГРУЗКА ЧЕРЕЗ 2 СЕКУНДЫ
                 setTimeout(() => {
-                    window.location.reload();
+                    window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
                 }, 2000);
                 
             }, spinDuration * 1000); 
@@ -1599,7 +1598,7 @@
             
             // Перезагрузка через 1.5 секунды
             setTimeout(() => {
-                window.location.reload();
+                window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
             }, 1500);
         }
 
