@@ -16,6 +16,16 @@
             --win: #2ecc71;
             --lose: #e74c3c;
             --gold-gradient: linear-gradient(180deg, #F1C40F 0%, #D4AC0D 100%);
+            
+            /* Цвета редкостей */
+            --rar-consumer: #b0c3d9;
+            --rar-industrial: #5e98d9;
+            --rar-milspec: #4b69ff;
+            --rar-restricted: #8847ff;
+            --rar-classified: #d32ce6;
+            --rar-covert: #eb4b4b;
+            --rar-contraband: #e4ae39;
+            --rar-knife: #ffd700;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         body {
@@ -124,6 +134,15 @@
             cursor: pointer; flex: 1; text-align: center;
         }
 
+        /* Слайдер подкрутки */
+        .cheat-container {
+            background: var(--panel-bg); border: 1px solid var(--border); border-radius: 10px;
+            padding: 10px; margin-top: 15px; width: 100%; display: flex; flex-direction: column; gap: 5px;
+        }
+        .cheat-header { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: var(--text-muted); }
+        .cheat-slider { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px; background: #0B0E14; outline: none; }
+        .cheat-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); cursor: pointer; }
+
         /* Магазин и Инвентарь */
         .grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -132,7 +151,18 @@
         .item-card {
             background: var(--panel-bg); border: 1px solid var(--border);
             border-radius: 10px; padding: 10px; text-align: center; cursor: pointer;
+            position: relative; overflow: hidden;
         }
+        /* Подсветка редкости */
+        .rarity-consumer { border-bottom: 3px solid var(--rar-consumer); }
+        .rarity-industrial { border-bottom: 3px solid var(--rar-industrial); }
+        .rarity-milspec { border-bottom: 3px solid var(--rar-milspec); }
+        .rarity-restricted { border-bottom: 3px solid var(--rar-restricted); }
+        .rarity-classified { border-bottom: 3px solid var(--rar-classified); }
+        .rarity-covert { border-bottom: 3px solid var(--rar-covert); }
+        .rarity-contraband { border-bottom: 3px solid var(--rar-contraband); }
+        .rarity-knife { border-bottom: 3px solid var(--rar-knife); }
+
         .item-card img { width: 100%; height: 50px; object-fit: contain; }
         .item-card .name { font-size: 10px; font-weight: bold; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .item-card .price { font-size: 11px; color: var(--accent); font-weight: bold; margin-top: 2px; }
@@ -251,6 +281,15 @@
                     <button class="quick-btn" onclick="setQuickTarget('55')">55%</button>
                     <button class="quick-btn" onclick="setQuickTarget('75')">75%</button>
                 </div>
+
+                <!-- Слайдер подкрутки (только для админа) -->
+                <div class="cheat-container" id="adminCheatPanel" style="display: none;">
+                    <div class="cheat-header">
+                        <span>ПОДКРУТКА ШАНСА (В ПОЛЬЗУ ИГРОКА)</span>
+                        <span id="cheatValueDisplay">0%</span>
+                    </div>
+                    <input type="range" class="cheat-slider" id="cheatSlider" min="0" max="90" value="0" oninput="document.getElementById('cheatValueDisplay').textContent = this.value + '%'">
+                </div>
             </div>
         </div>
 
@@ -266,10 +305,11 @@
             <div style="text-align: center; margin-bottom: 20px; width: 100%;">
                 <div style="width: 60px; height: 60px; background: #1F2735; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 30px;">👤</div>
                 <div style="font-size: 16px; font-weight: bold; margin-top: 10px;">Игрок</div>
-                <div style="color: var(--text-muted); font-size: 12px;">ID: #1337</div>
+                <div style="color: var(--text-muted); font-size: 12px;" id="profileIdText">ID: #1337</div>
             </div>
             <div class="profile-actions">
-                <button class="profile-btn" onclick="openAddMoneyModal()">💰 Добавить деньги</button>
+                <!-- Кнопка будет видна только админу -->
+                <button class="profile-btn" id="addMoneyBtn" onclick="openAddMoneyModal()" style="display: none;">💰 Добавить деньги</button>
                 <button class="profile-btn" onclick="openPromoModal()">🎁 Ввести промокод</button>
             </div>
         </div>
@@ -286,7 +326,7 @@
     <!-- Модалка добавления денег -->
     <div class="modal" id="addMoneyModal">
         <div class="modal-content promo-modal-content">
-            <div class="modal-title">Пополнение</div>
+            <div class="modal-title">Пополнение (Админ)</div>
             <input type="number" class="promo-input" id="moneyInput" placeholder="Сумма в ₽">
             <div class="promo-btns">
                 <button class="promo-btn btn-cancel" onclick="closeModal('addMoneyModal')">Отмена</button>
@@ -316,7 +356,7 @@
         </div>
     </div>
 
-    <!-- НОВАЯ Модалка подтверждения покупки (с последнего скрина) -->
+    <!-- Модалка подтверждения покупки -->
     <div class="modal" id="buyConfirmModal" style="z-index: 2500;">
         <div class="modal-content buy-modal-content">
             <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 5px;" id="buyItemCategory">КАТЕГОРИЯ</div>
@@ -364,20 +404,34 @@
         const tg = window.Telegram?.WebApp;
         if (tg) { tg.ready(); tg.expand(); }
 
+        // ID Админа
+        const ADMIN_ID = 1935313766;
+        
+        // Получаем ID пользователя. Если мы в браузере и tg нет, делаем заглушку для теста
+        const tgUser = tg?.initDataUnsafe?.user;
+        const currentUserId = tgUser ? tgUser.id : ADMIN_ID; // В браузере ты будешь админом
+        const isAdmin = currentUserId === ADMIN_ID;
+
         let ITEMS = [];
         let state = loadState();
         let selectedLeft = null;
         let selectedRight = null;
         let isSpinning = false;
         
-        // Переменные для окна покупки
         let currentBuyItem = null;
         let buyQuantity = 1;
+
+        // Промокоды
+        const PROMO_CODES = {
+            '100M': { amount: 100000000, used: false },
+            'FREE1000': { amount: 1000, used: false },
+            'WELCOME': { amount: 500, used: false }
+        };
 
         function loadState() {
             const saved = localStorage.getItem('upgrader_v4');
             if (saved) { try { return JSON.parse(saved); } catch (e) {} }
-            return { balance: 1000, inventory: [] };
+            return { balance: 1000, inventory: [], usedPromos: [] };
         }
 
         function saveState() { localStorage.setItem('upgrader_v4', JSON.stringify(state)); }
@@ -392,6 +446,15 @@
 
         window.closeModal = function(id) { document.getElementById(id).classList.remove('active'); }
 
+        // Проверка на админа при загрузке
+        if (isAdmin) {
+            document.getElementById('adminCheatPanel').style.display = 'flex';
+            document.getElementById('addMoneyBtn').style.display = 'block';
+            document.getElementById('profileIdText').textContent = `ID: ${currentUserId} (АДМИН)`;
+        } else {
+            document.getElementById('profileIdText').textContent = `ID: ${currentUserId}`;
+        }
+
         // ЗАГРУЗКА ИЗ ФАЙЛА SKINS.JSON
         async function loadSkinsFromJSON() {
             try {
@@ -401,19 +464,22 @@
                 let idCounter = 1;
                 let rawItems = [];
 
+                // Стандартная загрузка
                 data.forEach(skin => {
                     if (skin.image && skin.name) {
                         let basePrice = 10;
-                        if (skin.category && skin.category.name === 'Knives') basePrice = 15000;
-                        else if (skin.category && skin.category.name === 'Gloves') basePrice = 8000;
+                        let rarityClass = 'consumer';
+                        
+                        if (skin.category && skin.category.name === 'Knives') { basePrice = 15000; rarityClass = 'knife'; }
+                        else if (skin.category && skin.category.name === 'Gloves') { basePrice = 8000; rarityClass = 'knife'; }
                         else if (skin.rarity) {
-                            if (skin.rarity.name === 'Consumer Grade') basePrice = 10;
-                            else if (skin.rarity.name === 'Industrial Grade') basePrice = 40;
-                            else if (skin.rarity.name === 'Mil-Spec Grade') basePrice = 150;
-                            else if (skin.rarity.name === 'Restricted') basePrice = 400;
-                            else if (skin.rarity.name === 'Classified') basePrice = 1000;
-                            else if (skin.rarity.name === 'Covert') basePrice = 3000;
-                            else if (skin.rarity.name === 'Contraband') basePrice = 10000;
+                            if (skin.rarity.name === 'Consumer Grade') { basePrice = 10; rarityClass = 'consumer'; }
+                            else if (skin.rarity.name === 'Industrial Grade') { basePrice = 40; rarityClass = 'industrial'; }
+                            else if (skin.rarity.name === 'Mil-Spec Grade') { basePrice = 150; rarityClass = 'milspec'; }
+                            else if (skin.rarity.name === 'Restricted') { basePrice = 400; rarityClass = 'restricted'; }
+                            else if (skin.rarity.name === 'Classified') { basePrice = 1000; rarityClass = 'classified'; }
+                            else if (skin.rarity.name === 'Covert') { basePrice = 3000; rarityClass = 'covert'; }
+                            else if (skin.rarity.name === 'Contraband') { basePrice = 10000; rarityClass = 'contraband'; }
                         }
 
                         rawItems.push({
@@ -421,11 +487,36 @@
                             name: skin.name,
                             basePrice: basePrice,
                             img: skin.image,
-                            category: skin.category?.name || 'Предмет'
+                            category: skin.category?.name || 'Предмет',
+                            rarity: rarityClass
                         });
                         idCounter++;
                     }
                 });
+
+                // Генерация +1000 скинов
+                const rarities = ['consumer', 'industrial', 'milspec', 'restricted', 'classified', 'covert', 'contraband', 'knife'];
+                for(let i = 0; i < 1000; i++) {
+                    const rar = rarities[Math.floor(Math.random() * rarities.length)];
+                    let bPrice = 10;
+                    if (rar === 'industrial') bPrice = 40;
+                    if (rar === 'milspec') bPrice = 150;
+                    if (rar === 'restricted') bPrice = 400;
+                    if (rar === 'classified') bPrice = 1000;
+                    if (rar === 'covert') bPrice = 3000;
+                    if (rar === 'contraband') bPrice = 10000;
+                    if (rar === 'knife') bPrice = 15000;
+
+                    rawItems.push({
+                        id: idCounter.toString(),
+                        name: `Generated Skin #${i+1}`,
+                        basePrice: bPrice,
+                        img: 'https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERN4KXwMCoYW28IlINc6uYqG0GZQ-RoN1k0uKcr9n2MWKHgB8I54b6DT1v', // Заглушка картинки (можно заменить на свою)
+                        category: 'Сгенерировано',
+                        rarity: rar
+                    });
+                    idCounter++;
+                }
 
                 rawItems.sort((a, b) => a.basePrice - b.basePrice);
 
@@ -443,7 +534,7 @@
                 
             } catch (e) {
                 console.error(e);
-                showToast('Ошибка загрузки skins.json');
+                showToast('Ошибка загрузки skins.json (убедитесь, что он рядом)');
             }
         }
 
@@ -464,7 +555,7 @@
             const grid = document.getElementById('shopGrid');
             const toRender = ITEMS.slice(0, 100);
             grid.innerHTML = toRender.map(item => `
-                <div class="item-card">
+                <div class="item-card rarity-${item.rarity}">
                     <img src="${item.img}" loading="lazy">
                     <div class="name">${item.name}</div>
                     <div class="price">${formatMoney(item.price)}</div>
@@ -554,7 +645,7 @@
                 return;
             }
             grid.innerHTML = state.inventory.map((item, index) => `
-                <div class="item-card">
+                <div class="item-card rarity-${item.rarity}">
                     <img src="${item.img}" loading="lazy">
                     <div class="name">${item.name}</div>
                     <div class="price">${formatMoney(item.price)}</div>
@@ -574,7 +665,7 @@
                     return;
                 }
                 grid.innerHTML = state.inventory.map((item, index) => `
-                    <div class="inv-item" onclick="pickLeft(${index})" style="background: #0B0E14; border: 1px solid #1F2735; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer;">
+                    <div class="inv-item rarity-${item.rarity}" onclick="pickLeft(${index})" style="background: #0B0E14; border: 1px solid #1F2735; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer;">
                         <img src="${item.img}" style="width: 100%; height: 45px; object-fit: contain;">
                         <div class="name" style="font-size: 9px; font-weight: bold; margin-top: 5px;">${item.name}</div>
                         <div class="price" style="font-size: 10px; color: #FFCC00; font-weight: bold;">${formatMoney(item.price)}</div>
@@ -582,9 +673,9 @@
                 `).join('');
             } else {
                 document.getElementById('modalTitle').textContent = 'Выберите цель';
-                const toRender = ITEMS.slice(0, 40);
+                const toRender = ITEMS.slice(0, 40); // 40 скинов
                 grid.innerHTML = toRender.map(item => `
-                    <div class="inv-item" onclick="pickRight('${item.id}')" style="background: #0B0E14; border: 1px solid #1F2735; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer;">
+                    <div class="inv-item rarity-${item.rarity}" onclick="pickRight('${item.id}')" style="background: #0B0E14; border: 1px solid #1F2735; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer;">
                         <img src="${item.img}" style="width: 100%; height: 45px; object-fit: contain;">
                         <div class="name" style="font-size: 9px; font-weight: bold; margin-top: 5px;">${item.name}</div>
                         <div class="price" style="font-size: 10px; color: #FFCC00; font-weight: bold;">${formatMoney(item.price)}</div>
@@ -678,8 +769,17 @@
             if (selectedLeft.price >= selectedRight.price) return alert('Цель должна быть дороже!');
 
             isSpinning = true;
-            const chance = selectedLeft.price / selectedRight.price;
-            const win = Math.random() < chance;
+            let baseChance = selectedLeft.price / selectedRight.price;
+            if (baseChance > 1) baseChance = 1;
+            
+            // ПОДКРУТКА (Только для админа)
+            let finalChance = baseChance;
+            if (isAdmin) {
+                const cheatValue = parseInt(document.getElementById('cheatSlider').value) / 100; // 0.0 - 0.9
+                finalChance = Math.min(1, baseChance + cheatValue);
+            }
+
+            const win = Math.random() < finalChance;
             const wonItem = selectedRight;
 
             // Удаляем скин из инвентаря
@@ -691,8 +791,8 @@
             arrow.style.transform = 'rotate(0deg)';
             void arrow.offsetWidth;
             
-            // Анимация вращения
-            let targetDeg = win ? (360 * 5) : (360 * 5 + (chance * 360 + Math.random() * (360 - chance * 360)));
+            // Анимация вращения (визуально оставляем базовый шанс, чтобы не палить подкрутку)
+            let targetDeg = win ? (360 * 5) : (360 * 5 + (baseChance * 360 + Math.random() * (360 - baseChance * 360)));
 
             setTimeout(() => {
                 arrow.style.transition = 'transform 4s cubic-bezier(0.1, 0.7, 0.1, 1)';
@@ -740,18 +840,22 @@
                 document.getElementById('upgradeBtn').disabled = false;
                 isSpinning = false;
 
-                // Убираем оверлей через 3 секунды
                 setTimeout(() => {
                     overlay.classList.remove('show');
                     wheel.classList.remove('win-border', 'lose-border');
                 }, 3000);
 
-            }, 4000); // 4000мс = 4 секунды (длительность анимации)
+            }, 4000);
         });
 
-        // Вспомогательные функции профиля (заглушки)
-        window.openAddMoneyModal = function() { document.getElementById('addMoneyModal').classList.add('active'); }
+        // Профиль (Пополнение только для Админа)
+        window.openAddMoneyModal = function() { 
+            if (!isAdmin) return showToast('Доступ запрещен');
+            document.getElementById('addMoneyModal').classList.add('active'); 
+        }
+        
         window.executeAddMoney = function() {
+            if (!isAdmin) return showToast('Доступ запрещен');
             const val = parseInt(document.getElementById('moneyInput').value);
             if (val && val > 0) {
                 state.balance += val;
@@ -760,14 +864,26 @@
                 showToast('Баланс пополнен');
             }
         }
+
+        // Промокоды
         window.openPromoModal = function() { document.getElementById('promoModal').classList.add('active'); }
+        
         window.executePromo = function() {
-            const val = document.getElementById('promoInput').value.trim();
-            if (val === 'FREE1000') {
-                state.balance += 1000;
-                saveState(); updateBalance();
-                showToast('Промокод активирован!');
+            const val = document.getElementById('promoInput').value.trim().toUpperCase();
+            
+            if (PROMO_CODES[val]) {
+                if (state.usedPromos.includes(val)) {
+                    return showToast('Этот промокод уже использован');
+                }
+                
+                state.balance += PROMO_CODES[val].amount;
+                state.usedPromos.push(val);
+                
+                saveState(); 
+                updateBalance();
+                showToast(`Промокод активирован! +${PROMO_CODES[val].amount.toLocaleString('ru-RU')} ₽`);
                 closeModal('promoModal');
+                
             } else {
                 showToast('Неверный промокод');
             }
