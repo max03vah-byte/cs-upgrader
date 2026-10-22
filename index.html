@@ -1,11 +1,19 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CS2 Апгрейдер</title>
+    
+    <!-- PWA Подключение -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffd700">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Telegram Web App -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
     <style>
         :root {
             --bg-color: #0d0f14;
@@ -693,11 +701,16 @@
     </div>
 
     <script>
+        // Регистрируем Service Worker для PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW error:', err));
+        }
+
         const tg = window.Telegram?.WebApp;
         if (tg) { tg.ready(); tg.expand(); }
 
         const ADMIN_ID = 1935313766; 
-        const STORAGE_KEY = 'cs_upgrader_v53';
+        const STORAGE_KEY = 'cs_upgrader_v60';
         
         let ITEMS = []; 
         let state = loadState();
@@ -749,7 +762,8 @@
 
         async function fetchSkins() {
             try {
-                const response = await fetch('https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins.json');
+                // БЕРЕМ ЛОКАЛЬНЫЙ ФАЙЛ ИЗ ТВОЕГО РЕПОЗИТОРИЯ
+                const response = await fetch('./skins.json');
                 const data = await response.json();
                 
                 let idCounter = 1;
@@ -798,7 +812,7 @@
 
             } catch (e) {
                 console.error(e);
-                document.getElementById('loader').innerHTML = 'Ошибка загрузки базы скинов.';
+                document.getElementById('loader').innerHTML = 'Ошибка: Не удалось загрузить skins.json. Убедитесь, что файл загружен в репозиторий.';
             }
         }
 
@@ -1203,7 +1217,7 @@
             document.getElementById('buyTotal').textContent = formatMoney(currentBuyItem.price * currentBuyQty);
         }
 
-        // ЖЕЛЕЗОБЕТОННАЯ ПОКУПКА С ПЕРЕЗАГРУЗКОЙ
+        // --- ПОКУПКА С ОКНОМ ОПЛАТЫ ---
         window.confirmBuy = function() {
             const totalPrice = currentBuyItem.price * currentBuyQty;
             if (state.balance < totalPrice) return alert('Недостаточно средств!');
@@ -1220,7 +1234,7 @@
             document.getElementById('buyModal').classList.remove('active');
             document.getElementById('payModal').classList.add('active');
 
-            // Ждем 1.5 сек и ПЕРЕЗАГРУЖАЕМ страницу
+            // Перезагрузка через 1.5 секунды (чтобы обновить UI)
             setTimeout(() => {
                 window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
             }, 1500);
@@ -1605,4 +1619,3 @@
     </script>
 </body>
 </html>
-```
