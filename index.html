@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -34,8 +35,21 @@
             display: flex; justify-content: space-between; align-items: center;
             padding: 10px 15px; background: var(--panel-bg);
             border-bottom: 2px solid var(--accent); z-index: 100;
+            position: relative;
         }
-        .balance { font-size: 18px; font-weight: bold; color: var(--accent); }
+        .balance { font-size: 18px; font-weight: bold; color: var(--accent); transition: color 0.3s; }
+
+        /* Всплывающие цифры денег */
+        .money-float {
+            position: absolute; right: 15px; top: 15px;
+            font-size: 16px; font-weight: bold; pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+            opacity: 0;
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
 
         .speed-btn {
             background: #2a2f3a; border: 1px solid var(--border); color: #fff;
@@ -65,20 +79,17 @@
             width: 180px; height: 180px;
         }
         
-        /* ТРЕУГОЛЬНИК */
         .arrow-pointer {
             position: absolute;
-            top: -15px;
-            left: 50%;
-            margin-left: -15px;
+            top: -15px; left: 50%; margin-left: -15px;
             width: 0; height: 0;
             border-left: 15px solid transparent;
             border-right: 15px solid transparent;
             border-top: 25px solid var(--accent);
             filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8)) drop-shadow(0 0 15px rgba(255, 215, 0, 0.4));
-            transform-origin: 50% 105px; /* Вращение вокруг центра */
+            transform-origin: 50% 105px;
             z-index: 10;
-            transition: none; /* По умолчанию без анимации */
+            transition: none;
         }
 
         .wheel {
@@ -370,7 +381,7 @@
     </style>
 </head>
 <body>
-    <div class="header">
+    <div class="header" id="mainHeader">
         <div style="font-weight: bold; font-size: 16px;">CS2 UPGRADER</div>
         <div style="display: flex; align-items: center; gap: 10px;">
             <button id="speedBtn" class="speed-btn" onclick="toggleSpeed()">⚡</button>
@@ -666,7 +677,7 @@
         if (tg) { tg.ready(); tg.expand(); }
 
         const ADMIN_ID = 1935313766; 
-        const STORAGE_KEY = 'cs_upgrader_v39';
+        const STORAGE_KEY = 'cs_upgrader_v40';
         
         let ITEMS = []; 
         let state = loadState();
@@ -679,6 +690,7 @@
         
         let currentCaseAnswer = 0;
         let currentCaseRewards = [];
+        let isClaimingCase = false; // Флаг от бага с бесконечными скинами
         
         let caseCooldownInterval = null;
         const COOLDOWN_TIME = 3 * 60 * 1000; 
@@ -843,6 +855,27 @@
                 document.getElementById('sellAllBtn').style.display = 'none';
             }
         }
+
+        // Функция анимации денег
+        function animateMoney(amount, isPositive) {
+            const header = document.getElementById('mainHeader');
+            const float = document.createElement('div');
+            float.className = 'money-float';
+            float.textContent = (isPositive ? '+' : '-') + formatMoney(Math.abs(amount));
+            float.style.color = isPositive ? 'var(--win)' : 'var(--lose)';
+            header.appendChild(float);
+            
+            // Меняем цвет основного баланса
+            const balDisplay = document.getElementById('balanceDisplay');
+            const originalColor = balDisplay.style.color;
+            balDisplay.style.color = isPositive ? 'var(--win)' : 'var(--lose)';
+            
+            setTimeout(() => {
+                balDisplay.style.color = originalColor || 'var(--accent)';
+            }, 500);
+
+            setTimeout(() => float.remove(), 1000);
+        }
         
         function renderHistory() {
             const list = document.getElementById('historyList');
@@ -906,7 +939,6 @@
             renderInv();
             updateCaseButton();
             
-            // СБРОС СТРЕЛКИ ПРИ ЗАГРУЗКЕ
             const arrow = document.getElementById('arrow');
             arrow.style.transition = 'none';
             arrow.style.transform = 'rotate(0deg)';
@@ -970,7 +1002,8 @@
                 state.balance += Number(amount);
                 saveState();
                 updateUI();
-                showToast(`Баланс пополнен на ${formatMoney(Number(amount))}`);
+                animateMoney(Number(amount), true);
+                showToast(`Баланс пополнен`);
             }
         }
 
@@ -990,7 +1023,8 @@
 
             if (promo.type === 'money') {
                 state.balance += promo.value;
-                showToast(`Промокод активирован! +${formatMoney(promo.value)}`);
+                animateMoney(promo.value, true);
+                showToast(`Промокод активирован!`);
             }
             
             state.usedPromos.push(code);
@@ -1015,10 +1049,11 @@
             if (sum > state.balance) return alert('Недостаточно средств на балансе!');
 
             state.balance -= sum;
+            animateMoney(sum, false);
             saveState();
             updateUI();
             closeModal('transferModal');
-            showToast(`Успешно переведено ${formatMoney(sum)} игроку #${targetId}`);
+            showToast(`Успешно переведено игроку #${targetId}`);
         }
 
         window.switchTab = function(tabId, el) {
@@ -1047,6 +1082,7 @@
             if (sellItemIndex === -1) return;
             const item = state.inventory[sellItemIndex];
             state.balance += item.price; 
+            animateMoney(item.price, true);
             state.inventory.splice(sellItemIndex, 1);
             
             selectedLeft = selectedLeft.filter(i => i.index !== sellItemIndex);
@@ -1057,7 +1093,7 @@
             renderInv();
             updateLeftPanel();
             closeModal('sellModal');
-            showToast(`Скин продан за ${formatMoney(item.price)}`);
+            showToast(`Скин продан`);
             sellItemIndex = -1;
         }
 
@@ -1067,6 +1103,7 @@
             const total = state.inventory.reduce((sum, item) => sum + item.price, 0);
             if (confirm(`Вы уверены, что хотите продать ВСЕ скины за ${formatMoney(total)}?`)) {
                 state.balance += total;
+                animateMoney(total, true);
                 state.inventory = [];
                 selectedLeft = [];
                 
@@ -1074,7 +1111,7 @@
                 updateUI();
                 renderInv();
                 updateLeftPanel();
-                showToast(`Весь инвентарь продан за ${formatMoney(total)}`);
+                showToast(`Весь инвентарь продан`);
             }
         }
 
@@ -1153,13 +1190,14 @@
             if (state.balance < totalPrice) return alert('Недостаточно средств!');
             
             state.balance -= totalPrice;
+            animateMoney(totalPrice, false);
             for(let i=0; i<currentBuyQty; i++) {
                 state.inventory.push(currentBuyItem);
             }
             saveState();
             updateUI();
             closeModal('buyModal');
-            showToast(`Успешно куплено: ${currentBuyItem.name}`);
+            showToast(`Успешно куплено!`);
             checkPoorBonus();
             updateUI();
             renderInv();
@@ -1348,7 +1386,6 @@
             setRightItem(closest.id);
         }
 
-        // --- ЛОГИКА АПГРЕЙДА С ПОЛНЫМ СБРОСОМ ---
         document.getElementById('upgradeBtn').addEventListener('click', () => {
             if (isSpinning) return; 
             
@@ -1392,17 +1429,14 @@
             const arrow = document.getElementById('arrow');
             const win = secretDrop || (Math.random() < realChance); 
             
-            // 1. Жесткий сброс в исходное положение (без анимации)
+            // 1. Жесткий сброс
             arrow.style.transition = 'none';
             arrow.style.transform = 'rotate(0deg)';
-            
-            // 2. Принудительный рефлоу
             void arrow.offsetWidth;
             
             let targetDeg = 0;
             const spinDuration = isFastMode ? 2 : 4;
             
-            // Вычисляем угол
             if (win) {
                 const maxDeg = baseChance * 360;
                 targetDeg = 360 * 5 + (Math.random() * maxDeg); 
@@ -1411,7 +1445,7 @@
                 targetDeg = 360 * 5 + (minDeg + Math.random() * (360 - minDeg));
             }
 
-            // 3. Включаем анимацию и крутим
+            // 2. Запуск анимации
             setTimeout(() => {
                 arrow.style.transition = `transform ${spinDuration}s cubic-bezier(0.1, 0.7, 0.1, 1)`;
                 arrow.style.transform = `rotate(${targetDeg}deg)`;
@@ -1459,7 +1493,7 @@
                 checkPoorBonus();
                 updateUI();
 
-                // 4. СБРОС СТРЕЛКИ ОБРАТНО В 0 (без анимации)
+                // 3. СБРОС СТРЕЛКИ ОБРАТНО В 0
                 setTimeout(() => {
                     arrow.style.transition = 'none';
                     arrow.style.transform = 'rotate(0deg)';
@@ -1474,6 +1508,7 @@
             document.getElementById('caseQuestionBox').style.display = 'block';
             document.getElementById('caseRewardsBox').style.display = 'none';
             document.getElementById('mathAnswerInput').value = '';
+            isClaimingCase = false; // СБРОС ФЛАГА
             
             const num1 = Math.floor(Math.random() * 50) + 10;
             const num2 = Math.floor(Math.random() * 50) + 10;
@@ -1529,6 +1564,9 @@
         }
 
         window.claimCaseReward = function(id) {
+            if (isClaimingCase) return; // ЗАЩИТА ОТ БЕСКОНЕЧНЫХ СКИНОВ
+            isClaimingCase = true;
+
             const reward = currentCaseRewards.find(i => i.id === id);
             state.inventory.push(reward);
             
@@ -1545,4 +1583,5 @@
         fetchSkins();
     </script>
 </body>
-    </html>
+</html>
+```
