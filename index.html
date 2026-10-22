@@ -17,7 +17,6 @@
             --lose: #e74c3c;
             --gold-gradient: linear-gradient(180deg, #F1C40F 0%, #D4AC0D 100%);
             
-            /* Цвета редкостей */
             --rar-consumer: #b0c3d9;
             --rar-industrial: #5e98d9;
             --rar-milspec: #4b69ff;
@@ -308,7 +307,6 @@
                 <div style="color: var(--text-muted); font-size: 12px;" id="profileIdText">ID: #1337</div>
             </div>
             <div class="profile-actions">
-                <!-- Кнопка будет видна только админу -->
                 <button class="profile-btn" id="addMoneyBtn" onclick="openAddMoneyModal()" style="display: none;">💰 Добавить деньги</button>
                 <button class="profile-btn" onclick="openPromoModal()">🎁 Ввести промокод</button>
             </div>
@@ -404,12 +402,9 @@
         const tg = window.Telegram?.WebApp;
         if (tg) { tg.ready(); tg.expand(); }
 
-        // ID Админа
         const ADMIN_ID = 1935313766;
-        
-        // Получаем ID пользователя. Если мы в браузере и tg нет, делаем заглушку для теста
         const tgUser = tg?.initDataUnsafe?.user;
-        const currentUserId = tgUser ? tgUser.id : ADMIN_ID; // В браузере ты будешь админом
+        const currentUserId = tgUser ? tgUser.id : ADMIN_ID;
         const isAdmin = currentUserId === ADMIN_ID;
 
         let ITEMS = [];
@@ -423,15 +418,16 @@
 
         // Промокоды
         const PROMO_CODES = {
-            '100M': { amount: 100000000, used: false },
-            'FREE1000': { amount: 1000, used: false },
-            'WELCOME': { amount: 500, used: false }
+            '100M': { amount: 100000000 },
+            '5M': { amount: 5000000 },
+            'FREE1000': { amount: 1000 },
+            'WELCOME': { amount: 500 }
         };
 
         function loadState() {
             const saved = localStorage.getItem('upgrader_v4');
             if (saved) { try { return JSON.parse(saved); } catch (e) {} }
-            return { balance: 1000, inventory: [], usedPromos: [] };
+            return { balance: 1000, inventory: [], usedPromos: [], lastPromoTime: 0 };
         }
 
         function saveState() { localStorage.setItem('upgrader_v4', JSON.stringify(state)); }
@@ -446,7 +442,6 @@
 
         window.closeModal = function(id) { document.getElementById(id).classList.remove('active'); }
 
-        // Проверка на админа при загрузке
         if (isAdmin) {
             document.getElementById('adminCheatPanel').style.display = 'flex';
             document.getElementById('addMoneyBtn').style.display = 'block';
@@ -455,7 +450,6 @@
             document.getElementById('profileIdText').textContent = `ID: ${currentUserId}`;
         }
 
-        // ЗАГРУЗКА ИЗ ФАЙЛА SKINS.JSON
         async function loadSkinsFromJSON() {
             try {
                 const response = await fetch('./skins.json');
@@ -464,7 +458,6 @@
                 let idCounter = 1;
                 let rawItems = [];
 
-                // Стандартная загрузка
                 data.forEach(skin => {
                     if (skin.image && skin.name) {
                         let basePrice = 10;
@@ -494,7 +487,6 @@
                     }
                 });
 
-                // Генерация +1000 скинов
                 const rarities = ['consumer', 'industrial', 'milspec', 'restricted', 'classified', 'covert', 'contraband', 'knife'];
                 for(let i = 0; i < 1000; i++) {
                     const rar = rarities[Math.floor(Math.random() * rarities.length)];
@@ -511,7 +503,7 @@
                         id: idCounter.toString(),
                         name: `Generated Skin #${i+1}`,
                         basePrice: bPrice,
-                        img: 'https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERN4KXwMCoYW28IlINc6uYqG0GZQ-RoN1k0uKcr9n2MWKHgB8I54b6DT1v', // Заглушка картинки (можно заменить на свою)
+                        img: 'https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERN4KXwMCoYW28IlINc6uYqG0GZQ-RoN1k0uKcr9n2MWKHgB8I54b6DT1v',
                         category: 'Сгенерировано',
                         rarity: rar
                     });
@@ -520,7 +512,6 @@
 
                 rawItems.sort((a, b) => a.basePrice - b.basePrice);
 
-                // Плавный рост цены
                 rawItems.forEach((item, index) => {
                     let ratio = index / rawItems.length;
                     let price = 10 + Math.floor(Math.pow(ratio, 4) * 500000000000);
@@ -534,11 +525,10 @@
                 
             } catch (e) {
                 console.error(e);
-                showToast('Ошибка загрузки skins.json (убедитесь, что он рядом)');
+                showToast('Ошибка загрузки skins.json');
             }
         }
 
-        // Переключение вкладок
         window.switchTab = function(tab, el) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -550,7 +540,6 @@
             if (tab === 'inventory') renderInventory();
         }
 
-        // Магазин
         function renderShop() {
             const grid = document.getElementById('shopGrid');
             const toRender = ITEMS.slice(0, 100);
@@ -637,7 +626,6 @@
             }, 1500);
         }
 
-        // Инвентарь
         function renderInventory() {
             const grid = document.getElementById('invGrid');
             if (state.inventory.length === 0) {
@@ -653,7 +641,6 @@
             `).join('');
         }
 
-        // Выбор скинов
         window.openSelectModal = function(mode) {
             document.getElementById('selectModal').classList.add('active');
             const grid = document.getElementById('modalGrid');
@@ -673,7 +660,7 @@
                 `).join('');
             } else {
                 document.getElementById('modalTitle').textContent = 'Выберите цель';
-                const toRender = ITEMS.slice(0, 40); // 40 скинов
+                const toRender = ITEMS.slice(0, 40);
                 grid.innerHTML = toRender.map(item => `
                     <div class="inv-item rarity-${item.rarity}" onclick="pickRight('${item.id}')" style="background: #0B0E14; border: 1px solid #1F2735; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer;">
                         <img src="${item.img}" style="width: 100%; height: 45px; object-fit: contain;">
@@ -761,7 +748,6 @@
             wheel.style.background = `conic-gradient(from 180deg, var(--accent) 0deg, var(--accent) ${deg}deg, #0B0E14 ${deg}deg)`;
         }
 
-        // Кручение (АПГРЕЙД)
         document.getElementById('upgradeBtn').addEventListener('click', () => {
             if (isSpinning) return;
             if (!selectedLeft) return alert('Выберите скин для ставки!');
@@ -772,17 +758,15 @@
             let baseChance = selectedLeft.price / selectedRight.price;
             if (baseChance > 1) baseChance = 1;
             
-            // ПОДКРУТКА (Только для админа)
             let finalChance = baseChance;
             if (isAdmin) {
-                const cheatValue = parseInt(document.getElementById('cheatSlider').value) / 100; // 0.0 - 0.9
+                const cheatValue = parseInt(document.getElementById('cheatSlider').value) / 100;
                 finalChance = Math.min(1, baseChance + cheatValue);
             }
 
             const win = Math.random() < finalChance;
             const wonItem = selectedRight;
 
-            // Удаляем скин из инвентаря
             state.inventory.splice(selectedLeft.index, 1);
             saveState();
             
@@ -791,7 +775,6 @@
             arrow.style.transform = 'rotate(0deg)';
             void arrow.offsetWidth;
             
-            // Анимация вращения (визуально оставляем базовый шанс, чтобы не палить подкрутку)
             let targetDeg = win ? (360 * 5) : (360 * 5 + (baseChance * 360 + Math.random() * (360 - baseChance * 360)));
 
             setTimeout(() => {
@@ -801,7 +784,6 @@
 
             document.getElementById('upgradeBtn').disabled = true;
 
-            // Завершение анимации
             setTimeout(() => {
                 const overlay = document.getElementById('resultOverlay');
                 const wheel = document.getElementById('wheel');
@@ -829,7 +811,6 @@
                 document.getElementById('resultName').textContent = wonItem.name;
                 document.getElementById('resultPrice').textContent = formatMoney(wonItem.price);
                 
-                // Очищаем левую панель
                 selectedLeft = null;
                 document.getElementById('leftImg').classList.add('hidden');
                 document.getElementById('leftEmpty').classList.remove('hidden');
@@ -848,7 +829,6 @@
             }, 4000);
         });
 
-        // Профиль (Пополнение только для Админа)
         window.openAddMoneyModal = function() { 
             if (!isAdmin) return showToast('Доступ запрещен');
             document.getElementById('addMoneyModal').classList.add('active'); 
@@ -865,31 +845,45 @@
             }
         }
 
-        // Промокоды
-        window.openPromoModal = function() { document.getElementById('promoModal').classList.add('active'); }
+        // --- ЛОГИКА ПРОМОКОДОВ (РАЗ В 24 ЧАСА) ---
+        window.openPromoModal = function() { 
+            document.getElementById('promoModal').classList.add('active'); 
+        }
         
         window.executePromo = function() {
             const val = document.getElementById('promoInput').value.trim().toUpperCase();
+            const now = Date.now();
+            const cooldown = 24 * 60 * 60 * 1000; // 24 часа в миллисекундах
+
+            // Проверка кулдауна
+            if (now - state.lastPromoTime < cooldown) {
+                const timeLeft = cooldown - (now - state.lastPromoTime);
+                const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                return showToast(`Промокод можно ввести через ${hours} ч. ${minutes} мин.`);
+            }
             
             if (PROMO_CODES[val]) {
                 if (state.usedPromos.includes(val)) {
                     return showToast('Этот промокод уже использован');
                 }
                 
+                // Начисляем баланс
                 state.balance += PROMO_CODES[val].amount;
                 state.usedPromos.push(val);
+                state.lastPromoTime = now; // Записываем время активации
                 
                 saveState(); 
                 updateBalance();
                 showToast(`Промокод активирован! +${PROMO_CODES[val].amount.toLocaleString('ru-RU')} ₽`);
                 closeModal('promoModal');
+                document.getElementById('promoInput').value = '';
                 
             } else {
                 showToast('Неверный промокод');
             }
         }
 
-        // Инициализация
         updateBalance();
         loadSkinsFromJSON();
 
