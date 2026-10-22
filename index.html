@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -696,7 +697,7 @@
         if (tg) { tg.ready(); tg.expand(); }
 
         const ADMIN_ID = 1935313766; 
-        const STORAGE_KEY = 'cs_upgrader_v50';
+        const STORAGE_KEY = 'cs_upgrader_v53';
         
         let ITEMS = []; 
         let state = loadState();
@@ -1219,7 +1220,7 @@
             document.getElementById('buyModal').classList.remove('active');
             document.getElementById('payModal').classList.add('active');
 
-            // Ждем 1.5 сек и ПЕРЕЗАГРУЖАЕМ страницу (через хэш, чтобы 100% сработало)
+            // Ждем 1.5 сек и ПЕРЕЗАГРУЖАЕМ страницу
             setTimeout(() => {
                 window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
             }, 1500);
@@ -1408,7 +1409,7 @@
             setRightItem(closest.id);
         }
 
-        // --- ЖЕЛЕЗОБЕТОННАЯ ЛОГИКА АПГРЕЙДА С ПЕРЕЗАГРУЗКОЙ ---
+        // --- ЛОГИКА АПГРЕЙДА ---
         document.getElementById('upgradeBtn').addEventListener('click', () => {
             if (isSpinning) return; 
             
@@ -1474,7 +1475,6 @@
                 arrow.style.transform = `rotate(${targetDeg}deg)`;
             }, 50);
 
-            document.getElementById('upgradeBtn').style.opacity = '0.5';
             document.getElementById('resultBox').style.display = 'none';
 
             setTimeout(() => {
@@ -1604,4 +1604,5 @@
         fetchSkins();
     </script>
 </body>
-                                                           </html>
+</html>
+```
