@@ -62,251 +62,314 @@
         .balance-box {
             background: #0B0E14; padding: 5px 10px; border-radius: 6px;
             border: 1px solid #2A3441; font-weight: bold; font-size: 12px;
+            box-shadow: 0 0 10px rgba(255, 204, 0, 0.1);
         }
-        .balance-box span { color: var(--accent); }
+        .balance-box span { color: var(--accent); text-shadow: 0 0 10px rgba(255, 204, 0, 0.5); }
 
         .main-content { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; align-items: center; }
         .tab-content { display: none; width: 100%; max-width: 500px; }
         .tab-content.active { display: flex; flex-direction: column; align-items: center; }
 
-        /* Колесо */
+        /* --- КОЛЕСО (КАК НА 1 ФОТО) --- */
         .circle-zone {
             display: flex; justify-content: center; align-items: center;
-            position: relative; margin: 15px 0; height: 220px;
+            position: relative; margin: 20px 0 30px; height: 250px;
+            width: 100%;
         }
-        .wheel-wrapper { position: relative; width: 200px; height: 200px; }
+        .wheel-wrapper { 
+            position: relative; width: 220px; height: 220px; 
+            border-radius: 50%; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+        
+        /* Внешние метки 50% 100% */
+        .label-50-left { position: absolute; left: -25px; top: 50%; transform: translateY(-50%); font-size: 10px; color: var(--text-muted); font-weight: 900; }
+        .label-50-right { position: absolute; right: -25px; top: 50%; transform: translateY(-50%); font-size: 10px; color: var(--text-muted); font-weight: 900; }
+        .label-100 { position: absolute; left: 50%; top: -25px; transform: translateX(-50%); font-size: 10px; color: var(--text-muted); font-weight: 900; }
+
         .wheel {
-            width: 200px; height: 200px; border-radius: 50%;
-            background: conic-gradient(var(--accent) 0deg, var(--accent) 0deg, #0B0E14 0deg);
+            width: 220px; height: 220px; border-radius: 50%;
+            /* Ключевой момент: градиент начинается с 180 градусов (снизу) и идет по часовой */
+            background: conic-gradient(from 180deg, var(--accent) 0deg, var(--accent) 0deg, #0A0F17 0deg);
             display: flex; align-items: center; justify-content: center;
-            border: 2px solid var(--border); transition: all 0.3s;
+            border: 4px solid #1F2735; transition: all 0.3s;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.9), 0 0 20px rgba(0,0,0,0.5);
+            position: relative;
         }
-        .wheel.win-border { border-color: var(--win); box-shadow: 0 0 30px rgba(46, 204, 113, 0.2); }
-        .wheel.lose-border { border-color: var(--lose); box-shadow: 0 0 30px rgba(231, 76, 60, 0.2); }
+        .wheel.win-border { border-color: var(--win); box-shadow: inset 0 0 20px rgba(0,0,0,0.9), 0 0 30px rgba(46, 204, 113, 0.3); }
+        .wheel.lose-border { border-color: var(--lose); box-shadow: inset 0 0 20px rgba(0,0,0,0.9), 0 0 30px rgba(231, 76, 60, 0.3); }
         
         .wheel-inner {
             width: 170px; height: 170px; border-radius: 50%;
-            background: var(--panel-bg); display: flex; flex-direction: column;
+            background: radial-gradient(circle at 50% 50%, #1A2232 0%, #0B0E14 100%);
+            display: flex; flex-direction: column;
             align-items: center; justify-content: center; text-align: center;
             z-index: 2; position: relative; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
         }
-        .chance-text { font-size: 26px; font-weight: 900; color: var(--text-main); display: none; }
-        .chance-label { font-size: 10px; color: var(--text-muted); margin-top: 3px; text-transform: uppercase; display: none; }
+        
+        .chance-text { 
+            font-size: 32px; font-weight: 900; color: var(--accent); display: none; 
+            text-shadow: 0 0 20px rgba(255, 204, 0, 0.4); letter-spacing: -1px;
+        }
+        .chance-label { font-size: 10px; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 1px; display: none; font-weight: 700; }
         
         .choose-text { color: var(--text-muted); font-size: 13px; text-align: center; line-height: 1.4; display: block; }
 
+        /* Стрелка снизу, смотрит вверх */
         .arrow-pointer {
-            position: absolute; top: -12px; left: 50%; margin-left: -8px;
-            width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent;
-            border-top: 16px solid var(--accent); filter: drop-shadow(0 0 8px var(--accent));
-            transform-origin: 50% 112px; z-index: 10;
+            position: absolute; bottom: -15px; left: 50%; margin-left: -15px;
+            width: 30px; height: 30px;
+            background: var(--accent);
+            clip-path: polygon(50% 0%, 100% 100%, 50% 80%, 0% 100%);
+            filter: drop-shadow(0 0 15px var(--accent));
+            z-index: 10;
+            transition: transform 4s cubic-bezier(0.1, 0.7, 0.1, 1);
+            transform-origin: 50% 50%;
         }
 
         /* Оверлей результата */
         .result-overlay {
             position: absolute; inset: 0; display: flex; flex-direction: column;
             align-items: center; justify-content: center; text-align: center;
-            z-index: 3; background: var(--panel-bg); border-radius: 50%;
+            z-index: 3; background: rgba(11, 14, 20, 0.95); border-radius: 50%;
             opacity: 0; pointer-events: none; transition: opacity 0.3s;
+            border: 2px solid transparent;
         }
         .result-overlay.show { opacity: 1; }
-        .result-title { font-size: 14px; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; }
-        .result-img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 5px; }
+        .result-title { font-size: 14px; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;}
+        .result-img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 5px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.1)); }
         .result-name { font-size: 10px; font-weight: bold; margin-bottom: 2px; white-space: nowrap; overflow: hidden; max-width: 150px; text-overflow: ellipsis; }
-        .result-price { font-size: 14px; font-weight: 900; }
+        .result-price { font-size: 14px; font-weight: 900; color: var(--accent); text-shadow: 0 0 10px rgba(255, 204, 0, 0.5); }
 
-        /* Панели */
-        .panels-container { display: flex; gap: 10px; width: 100%; margin-bottom: 15px; }
-        .skin-panel {
-            flex: 1; height: 120px; background: var(--panel-bg);
-            border: 1px solid var(--border); border-radius: 10px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            position: relative; padding: 8px; text-align: center; cursor: pointer;
-        }
-        .skin-panel-title { position: absolute; top: 6px; font-size: 9px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; }
-        .skin-panel img { width: 80px; height: 50px; object-fit: contain; margin-top: 10px; }
-        .skin-panel-name { font-size: 10px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; margin-top: 5px; }
-        .skin-panel-price { font-size: 11px; color: var(--accent); font-weight: bold; margin-top: 2px; }
+        /* --- ПАНЕЛИ СТАВКИ И ЦЕЛИ (КАК НА ФОТО 2 и 3) --- */
+        .panels-container { display: flex; flex-direction: column; gap: 15px; width: 100%; margin-bottom: 15px; }
         
-        .empty-panel-icon { font-size: 25px; color: #1F2735; margin-top: 10px; }
-        .empty-panel-text { color: var(--text-muted); font-size: 10px; margin-top: 5px; }
+        .skin-panel {
+            height: 140px; background: var(--panel-bg);
+            border: 2px solid var(--border); border-radius: 16px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            position: relative; padding: 10px; text-align: center; cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+        
+        .skin-panel.left-panel {
+            border-color: #3B82F6; /* Синий неон для ставки */
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.15), inset 0 0 15px rgba(59, 130, 246, 0.1);
+        }
+        .skin-panel.right-panel {
+            border-color: #EF4444; /* Красный неон для цели */
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.15), inset 0 0 15px rgba(239, 68, 68, 0.1);
+        }
+
+        .skin-panel:active { transform: scale(0.98); }
+        
+        .skin-panel-title { 
+            position: absolute; top: 10px; font-size: 11px; font-weight: 900; 
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;
+        }
+        .skin-panel img { width: 100px; height: 60px; object-fit: contain; margin-top: 15px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5)); z-index: 1; }
+        
+        /* Свечение под картинкой */
+        .panel-glow {
+            position: absolute; width: 100px; height: 40px; bottom: 30px;
+            background: radial-gradient(ellipse, rgba(255,255,255,0.1) 0%, transparent 70%);
+            z-index: 0; pointer-events: none;
+        }
+
+        .skin-panel-name { font-size: 12px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 90%; margin-top: 5px; z-index: 1; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .skin-panel-price { font-size: 14px; color: var(--accent); font-weight: 900; margin-top: 2px; z-index: 1; text-shadow: 0 0 10px rgba(255, 204, 0, 0.3); }
+        
+        .empty-panel-icon { font-size: 30px; color: #1F2735; margin-top: 15px; }
+        .empty-panel-text { color: var(--text-muted); font-size: 11px; margin-top: 5px; font-weight: 700; }
 
         /* Кнопки */
-        .controls { display: flex; flex-direction: column; align-items: center; width: 100%; }
+        .controls { display: flex; flex-direction: column; align-items: center; width: 100%; gap: 10px; }
         .btn-upgrade {
             background: var(--gold-gradient); color: #000;
-            width: 100%; padding: 14px; border-radius: 10px; border: none;
-            font-size: 14px; font-weight: 900; text-transform: uppercase; cursor: pointer;
+            width: 100%; padding: 16px; border-radius: 12px; border: none;
+            font-size: 16px; font-weight: 900; text-transform: uppercase; cursor: pointer;
+            box-shadow: 0 5px 20px rgba(255, 204, 0, 0.3), inset 0 2px 0 rgba(255,255,255,0.3);
+            transition: all 0.2s; letter-spacing: 1px;
         }
-        .btn-upgrade:disabled { background: #2A3441; color: #555; cursor: not-allowed; }
+        .btn-upgrade:active { transform: scale(0.98); box-shadow: 0 2px 10px rgba(255, 204, 0, 0.2); }
+        .btn-upgrade:disabled { background: #2A3441; color: #555; cursor: not-allowed; box-shadow: none; transform: none; }
 
-        .quick-btns { display: flex; justify-content: center; gap: 6px; margin-top: 10px; width: 100%; }
+        .quick-btns { display: flex; justify-content: center; gap: 8px; width: 100%; }
         .quick-btn {
             background: #0B0E14; color: var(--text-muted); border: 1px solid var(--border);
-            padding: 8px; border-radius: 6px; font-weight: bold; font-size: 11px;
+            padding: 10px; border-radius: 8px; font-weight: 900; font-size: 12px;
             cursor: pointer; flex: 1; text-align: center; transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
+        .quick-btn:active { transform: scale(0.95); }
         
-        /* Подсветка активной кнопки быстрого выбора */
+        /* Подсветка активной кнопки */
         .quick-btn.active {
-            background: var(--accent) !important;
-            color: #000 !important;
+            background: rgba(255, 204, 0, 0.1) !important;
+            color: var(--accent) !important;
             border-color: var(--accent) !important;
-            font-weight: 900;
-            box-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.2);
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
         }
 
         /* ПАНЕЛЬ ПОИСКА И ФИЛЬТРОВ */
         .search-panel {
-            background: var(--panel-bg); border: 1px solid var(--border); border-radius: 10px;
-            padding: 10px; width: 100%; margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px;
+            background: var(--panel-bg); border: 1px solid var(--border); border-radius: 12px;
+            padding: 12px; width: 100%; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
         .search-row { display: flex; gap: 10px; }
         .search-input-wrap {
             flex: 1; background: #0B0E14; border: 1px solid var(--border); border-radius: 8px;
-            display: flex; align-items: center; padding: 0 10px; height: 35px;
+            display: flex; align-items: center; padding: 0 12px; height: 38px;
         }
         .search-input-wrap input {
             background: none; border: none; color: var(--text-main); outline: none;
-            width: 100%; font-size: 12px; margin-left: 5px;
+            width: 100%; font-size: 13px; margin-left: 8px;
         }
         .filter-btn {
             background: #0B0E14; border: 1px solid var(--border); color: var(--text-main);
-            border-radius: 8px; padding: 0 10px; height: 35px; font-size: 12px;
+            border-radius: 8px; padding: 0 12px; height: 38px; font-size: 12px; font-weight: 700;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
         }
-        .filter-btn.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; }
+        .filter-btn:active { transform: scale(0.95); }
+        .filter-btn.active { background: rgba(255,204,0,0.1); color: var(--accent); border-color: var(--accent); }
         .price-inputs { display: flex; gap: 10px; }
         .price-inputs input {
             background: #0B0E14; border: 1px solid var(--border); border-radius: 8px;
-            padding: 8px; color: var(--text-main); font-size: 12px; width: 100%; outline: none;
+            padding: 10px; color: var(--text-main); font-size: 12px; width: 100%; outline: none;
         }
 
-        /* Магазин и Инвентарь */
+        /* МАГАЗИН И ИНВЕНТАРЬ (КАК НА ФОТО 4) */
         .grid {
             display: grid; grid-template-columns: repeat(2, 1fr);
-            gap: 10px; width: 100%; padding-bottom: 20px;
+            gap: 12px; width: 100%; padding-bottom: 20px;
         }
         @media (min-width: 400px) { .grid { grid-template-columns: repeat(3, 1fr); } }
 
         .item-card {
-            background: var(--panel-bg); border: 1px solid var(--border);
-            border-radius: 10px; padding: 10px; text-align: center; cursor: pointer;
+            background: #0F1621; border: 1px solid var(--border);
+            border-radius: 12px; padding: 12px; text-align: center; cursor: pointer;
             position: relative; overflow: hidden; display: flex; flex-direction: column;
-            transition: transform 0.1s;
+            transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
-        .item-card:active { transform: scale(0.98); }
+        .item-card:active { transform: scale(0.97); }
         
-        .item-card::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 60%;
-            background: linear-gradient(to bottom, rgba(255,255,255,0.05) 0%, transparent 100%);
-            pointer-events: none;
-        }
-        
-        /* Подсветка редкостей */
-        .rarity-consumer { border-bottom: 3px solid var(--rar-consumer); }
-        .rarity-industrial { border-bottom: 3px solid var(--rar-industrial); }
-        .rarity-milspec { border-bottom: 3px solid var(--rar-milspec); }
-        .rarity-restricted { border-bottom: 3px solid var(--rar-restricted); }
-        .rarity-classified { border-bottom: 3px solid var(--rar-classified); }
-        .rarity-covert { border-bottom: 3px solid var(--rar-covert); }
-        .rarity-contraband { border-bottom: 3px solid var(--rar-contraband); }
-        .rarity-knife { border-bottom: 3px solid var(--rar-knife); }
+        /* Неоновая подсветка снизу */
+        .rarity-consumer { border-bottom: 3px solid var(--rar-consumer); box-shadow: 0 4px 15px rgba(176, 195, 217, 0.1); }
+        .rarity-industrial { border-bottom: 3px solid var(--rar-industrial); box-shadow: 0 4px 15px rgba(94, 152, 217, 0.15); }
+        .rarity-milspec { border-bottom: 3px solid var(--rar-milspec); box-shadow: 0 4px 15px rgba(75, 105, 255, 0.2); }
+        .rarity-restricted { border-bottom: 3px solid var(--rar-restricted); box-shadow: 0 4px 15px rgba(136, 71, 255, 0.25); }
+        .rarity-classified { border-bottom: 3px solid var(--rar-classified); box-shadow: 0 4px 15px rgba(211, 44, 230, 0.25); }
+        .rarity-covert { border-bottom: 3px solid var(--rar-covert); box-shadow: 0 4px 15px rgba(235, 75, 75, 0.25); }
+        .rarity-contraband { border-bottom: 3px solid var(--rar-contraband); box-shadow: 0 4px 15px rgba(228, 174, 57, 0.3); }
+        .rarity-knife { border-bottom: 3px solid var(--rar-knife); box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3); }
 
-        .item-card .rarity-name { font-size: 9px; color: var(--text-muted); margin-bottom: 3px; }
-        .item-card img { width: 100%; height: 60px; object-fit: contain; z-index: 1; position: relative; }
-        .item-card .name { font-size: 10px; font-weight: bold; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 1; }
-        .item-card .price { font-size: 11px; color: var(--accent); font-weight: bold; margin-top: 2px; z-index: 1; }
+        .item-card .rarity-name { font-size: 9px; color: var(--text-muted); margin-bottom: 5px; font-weight: 800; letter-spacing: 0.5px; }
+        .item-card img { width: 100%; height: 60px; object-fit: contain; z-index: 1; position: relative; margin-bottom: 5px; }
+        .item-card .name { font-size: 11px; font-weight: 800; margin-top: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 1; }
+        .item-card .price { font-size: 12px; color: var(--accent); font-weight: 900; margin-top: 2px; z-index: 1; text-shadow: 0 0 8px rgba(255, 204, 0, 0.3); }
         
-        .btn-buy { background: var(--accent); color: #000; border: none; padding: 6px; border-radius: 6px; font-weight: bold; font-size: 10px; margin-top: 5px; width: 100%; z-index: 1; }
+        .btn-buy { background: var(--accent); color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: 900; font-size: 11px; margin-top: 8px; width: 100%; z-index: 1; cursor: pointer; }
 
         /* Кнопка продать всё */
         .sell-all-btn {
-            background: var(--lose); color: #fff; border: none; padding: 10px;
-            border-radius: 8px; font-weight: bold; font-size: 13px; width: 100%;
-            margin-bottom: 10px; cursor: pointer; display: none;
+            background: linear-gradient(180deg, #e74c3c 0%, #c0392b 100%); color: #fff; 
+            border: none; padding: 12px; border-radius: 10px; font-weight: 900; font-size: 14px; 
+            width: 100%; margin-bottom: 15px; cursor: pointer; display: none;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
         }
 
         /* Профиль */
-        .profile-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; width: 100%; }
-        .profile-btn { background: #1C2331; color: #fff; border: 1px solid var(--border); padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
+        .profile-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; width: 100%; }
+        .profile-btn { background: #1C2331; color: #fff; border: 1px solid var(--border); padding: 14px; border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+        .profile-btn:active { transform: scale(0.98); }
 
         /* Нижнее меню */
         .bottom-nav {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 65px;
             background: var(--panel-bg); border-top: 1px solid var(--border);
             display: flex; justify-content: space-around; z-index: 100;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
         }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); font-size: 10px; gap: 2px; width: 25%; position: relative; cursor: pointer; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); font-size: 10px; gap: 3px; width: 25%; position: relative; cursor: pointer; font-weight: 700; }
         .nav-item.active { color: var(--accent); }
-        .nav-icon { font-size: 18px; }
+        .nav-item.active .nav-icon { filter: drop-shadow(0 0 10px rgba(255,204,0,0.5)); }
+        .nav-icon { font-size: 20px; }
 
         /* Модалки */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; }
         .modal.active { display: flex; }
-        .modal-content { background: var(--panel-bg); width: 95%; max-width: 400px; height: 80vh; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
-        .modal-header { padding: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .modal-title { font-size: 14px; font-weight: bold; }
-        .close-modal { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; }
-        .modal-body { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; }
+        .modal-content { background: var(--panel-bg); width: 95%; max-width: 400px; height: 80vh; border-radius: 16px; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .modal-header { padding: 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 16px; font-weight: 900; }
+        .close-modal { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; }
+        .modal-body { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; }
         
         .modal-search {
-            width: 100%; padding: 10px; background: #0B0E14; border: 1px solid var(--border);
-            border-radius: 8px; color: var(--text-main); font-size: 12px; margin-bottom: 10px; outline: none;
+            width: 100%; padding: 12px; background: #0B0E14; border: 1px solid var(--border);
+            border-radius: 10px; color: var(--text-main); font-size: 13px; margin-bottom: 12px; outline: none;
         }
-        .modal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; }
+        .modal-toolbar { display: flex; gap: 10px; margin-bottom: 10px; }
+        .modal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
 
-        .promo-modal-content { max-width: 300px; padding: 20px; text-align: center; }
-        .promo-input { width: 100%; padding: 12px; background: #0B0E14; border: 1px solid var(--border); border-radius: 8px; color: var(--accent); font-size: 16px; text-align: center; margin-bottom: 10px; outline: none; }
+        .promo-modal-content { max-width: 300px; padding: 25px; text-align: center; height: auto; }
+        .promo-input { width: 100%; padding: 14px; background: #0B0E14; border: 1px solid var(--border); border-radius: 10px; color: var(--accent); font-size: 16px; text-align: center; margin-bottom: 15px; outline: none; font-weight: 900; }
         .promo-btns { display: flex; gap: 10px; }
-        .promo-btn { flex: 1; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; }
+        .promo-btn { flex: 1; padding: 14px; border-radius: 10px; font-weight: 900; cursor: pointer; border: none; font-size: 13px; }
         .btn-cancel { background: #2A3441; color: #fff; }
-        .btn-apply { background: var(--gold-gradient); color: #000; }
+        .btn-apply { background: var(--gold-gradient); color: #000; box-shadow: 0 4px 15px rgba(255,204,0,0.2); }
 
         .pay-modal-content {
             background: var(--panel-bg); border: 2px solid var(--win);
             padding: 30px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            max-width: 250px; text-align: center;
+            max-width: 250px; text-align: center; height: auto;
         }
         .pay-spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--win); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
         .toast {
-            position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
-            background: var(--win); color: #fff; padding: 10px 20px; border-radius: 8px;
-            font-weight: bold; z-index: 2000; display: none; font-size: 13px;
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--win); color: #fff; padding: 12px 24px; border-radius: 10px;
+            font-weight: 800; z-index: 2000; display: none; font-size: 13px;
+            box-shadow: 0 5px 20px rgba(46, 204, 113, 0.3);
         }
 
         .hidden { display: none !important; }
 
-        .buy-modal-content { max-width: 320px; height: auto; padding: 20px; border-radius: 12px; }
-        .buy-qty-btn { background: #0B0E14; color: var(--text-main); border: 1px solid var(--border); width: 35px; height: 35px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .buy-modal-content { max-width: 320px; height: auto; padding: 20px; border-radius: 16px; }
+        .buy-qty-btn { background: #0B0E14; color: var(--text-main); border: 1px solid var(--border); width: 40px; height: 40px; border-radius: 10px; font-size: 20px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .buy-qty-btn:active { background: var(--border); }
 
         /* Стили для окна продажи */
-        .sell-modal-content { max-width: 320px; height: auto; padding: 20px; border-radius: 12px; }
+        .sell-modal-content { max-width: 320px; height: auto; padding: 20px; border-radius: 16px; }
         .sell-info-box {
-            background: #0B0E14; border: 1px solid var(--border); border-radius: 10px;
-            padding: 15px; margin-bottom: 20px; text-align: left;
+            background: #0B0E14; border: 1px solid var(--border); border-radius: 12px;
+            padding: 18px; margin-bottom: 20px; text-align: left;
         }
-        .sell-info-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
-        .sell-info-value { font-size: 22px; font-weight: 900; color: var(--accent); }
+        .sell-info-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; font-weight: 800; letter-spacing: 1px; }
+        .sell-info-value { font-size: 24px; font-weight: 900; color: var(--accent); }
         .sell-btns { display: flex; gap: 10px; }
         .btn-sell-cancel { background: #1C2331; color: #fff; }
-        .btn-sell-confirm { background: var(--gold-gradient); color: #000; }
+        .btn-sell-confirm { background: var(--gold-gradient); color: #000; box-shadow: 0 4px 15px rgba(255,204,0,0.2); }
 
         /* Слайдер подкрутки */
         .admin-cheat-box {
-            background: #0B0E14; border: 1px solid var(--border); border-radius: 10px;
-            padding: 15px; margin-top: 10px; width: 100%; display: flex; flex-direction: column; gap: 5px;
+            background: #0B0E14; border: 1px solid var(--border); border-radius: 12px;
+            padding: 15px; margin-top: 10px; width: 100%; display: flex; flex-direction: column; gap: 8px;
         }
         .cheat-slider {
             -webkit-appearance: none; width: 100%; height: 8px; border-radius: 4px;
             background: #1F2735; outline: none;
         }
         .cheat-slider::-webkit-slider-thumb {
-            -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+            -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;
             background: var(--accent); cursor: pointer; border: 2px solid #fff;
+            box-shadow: 0 0 10px rgba(255,204,0,0.5);
         }
     </style>
 </head>
@@ -338,16 +401,24 @@
     <div class="main-content">
         <!-- ВКЛАДКА АПГРЕЙД -->
         <div id="tab-upgrade" class="tab-content active">
+            
             <div class="circle-zone">
+                <div class="label-100">100%</div>
+                <div class="label-50-left">50%</div>
+                <div class="label-50-right">50%</div>
+
                 <div class="wheel-wrapper">
-                    <div class="arrow-pointer" id="arrow"></div>
                     <div class="wheel" id="wheel">
                         <div class="wheel-inner">
                             <div class="chance-text" id="chanceText">0%</div>
-                            <div class="chance-label" id="chanceLabel">средний шанс</div>
+                            <div class="chance-label" id="chanceLabel">Шанс победы</div>
                             <div class="choose-text" id="chooseText">Выберите скин<br>для апгрейда</div>
                         </div>
                     </div>
+                    
+                    <!-- Стрелка смотрит вверх и вращается вокруг центра -->
+                    <div class="arrow-pointer" id="arrow"></div>
+
                     <div class="result-overlay" id="resultOverlay">
                         <div class="result-title" id="resultTitle"></div>
                         <img src="" id="resultImg" class="result-img">
@@ -358,8 +429,10 @@
             </div>
 
             <div class="panels-container">
-                <div class="skin-panel" onclick="openSelectModal('left')">
+                <!-- Панель ставки (Синяя) -->
+                <div class="skin-panel left-panel" onclick="openSelectModal('left')">
                     <div class="skin-panel-title">ВАША СТАВКА</div>
+                    <div class="panel-glow"></div>
                     <img src="" id="leftImg" class="hidden">
                     <div id="leftEmpty">
                         <div class="empty-panel-icon">🔫</div>
@@ -368,8 +441,10 @@
                     <div class="skin-panel-name" id="leftName"></div>
                     <div class="skin-panel-price" id="leftPrice"></div>
                 </div>
-                <div class="skin-panel" onclick="openSelectModal('right')">
+                <!-- Панель цели (Красная) -->
+                <div class="skin-panel right-panel" onclick="openSelectModal('right')">
                     <div class="skin-panel-title">ЦЕЛЬ</div>
+                    <div class="panel-glow"></div>
                     <img src="" id="rightImg" class="hidden">
                     <div id="rightEmpty">
                         <div class="empty-panel-icon">🎯</div>
@@ -421,18 +496,18 @@
         <!-- ВКЛАДКА ПРОФИЛЬ -->
         <div id="tab-profile" class="tab-content">
             <div style="text-align: center; margin-bottom: 20px; width: 100%;">
-                <div style="width: 60px; height: 60px; background: #1F2735; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 30px;">👤</div>
-                <div style="font-size: 16px; font-weight: bold; margin-top: 10px;">Игрок</div>
-                <div style="color: var(--text-muted); font-size: 12px;" id="profileIdText">ID: #1337</div>
+                <div style="width: 70px; height: 70px; background: #1F2735; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 35px; box-shadow: 0 0 20px rgba(255,255,255,0.05);">👤</div>
+                <div style="font-size: 18px; font-weight: 900; margin-top: 12px;">Игрок</div>
+                <div style="color: var(--text-muted); font-size: 13px; font-weight: 700;" id="profileIdText">ID: #1337</div>
             </div>
             <div class="profile-actions">
-                <button class="profile-btn" id="addMoneyBtn" onclick="openAddMoneyModal()" style="display: none;">💰 Добавить деньги</button>
+                <button class="profile-btn" id="addMoneyBtn" onclick="openAddMoneyModal()" style="display: none; color: var(--win);">💰 Добавить деньги</button>
                 <button class="profile-btn" id="removeMoneyBtn" onclick="removeMoney()" style="display: none; color: var(--lose);">🗑 Удалить все деньги</button>
                 
                 <div class="admin-cheat-box" id="adminCheatPanel" style="display: none;">
-                    <div style="display:flex; justify-content:space-between; font-size: 11px; color:var(--text-muted); margin-bottom: 5px;">
+                    <div style="display:flex; justify-content:space-between; font-size: 12px; color:var(--text-muted); margin-bottom: 5px; font-weight: 800; text-transform: uppercase;">
                         <span>ШАНС ПОДКРУТКИ</span>
-                        <span id="cheatValueDisplay">0%</span>
+                        <span id="cheatValueDisplay" style="color: var(--accent);">0%</span>
                     </div>
                     <input type="range" class="cheat-slider" id="cheatSlider" min="0" max="90" value="0" oninput="updateCheatCost()">
                 </div>
@@ -449,6 +524,9 @@
             <div class="modal-header"><div class="modal-title" id="modalTitle">Выберите скин</div><button class="close-modal" onclick="closeModal('selectModal')">×</button></div>
             <div class="modal-body">
                 <input type="text" class="modal-search" id="modalSearch" placeholder="Поиск скина..." oninput="filterModalItems()">
+                <div class="modal-toolbar">
+                    <button class="filter-btn" id="modalSortBtn" onclick="toggleModalSort()">↕ Цена (по возр.)</button>
+                </div>
                 <div class="modal-grid" id="modalGrid"></div>
             </div>
         </div>
@@ -482,29 +560,29 @@
     <div class="modal" id="payModal" style="z-index: 3000;">
         <div class="modal-content pay-modal-content">
             <div class="pay-spinner"></div>
-            <div style="font-size: 14px; font-weight: bold; color: var(--win); margin-bottom: 5px;">Оплата прошла...</div>
-            <div style="font-size: 11px; color: var(--text-muted);">Зачисление предмета</div>
+            <div style="font-size: 15px; font-weight: 900; color: var(--win); margin-bottom: 5px;">Оплата прошла...</div>
+            <div style="font-size: 12px; color: var(--text-muted);">Зачисление предмета</div>
         </div>
     </div>
 
     <!-- Модалка подтверждения покупки -->
     <div class="modal" id="buyConfirmModal" style="z-index: 2500;">
         <div class="modal-content buy-modal-content">
-            <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 5px;" id="buyItemCategory">КАТЕГОРИЯ</div>
-            <div style="font-size: 16px; font-weight: 900; margin-bottom: 5px; display: flex; align-items: center; gap: 5px;" id="buyItemName">Название скина</div>
-            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;" id="buyItemPriceText">Цена за штуку</div>
+            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 900; margin-bottom: 5px;" id="buyItemCategory">КАТЕГОРИЯ</div>
+            <div style="font-size: 18px; font-weight: 900; margin-bottom: 5px; display: flex; align-items: center; gap: 5px;" id="buyItemName">Название скина</div>
+            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;" id="buyItemPriceText">Цена за штуку</div>
 
-            <div style="background: #0B0E14; border: 1px solid var(--border); border-radius: 10px; padding: 15px; margin-bottom: 20px;">
-                <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 10px; text-align: left;">ИТОГО</div>
+            <div style="background: #0B0E14; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+                <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px; text-align: left; font-weight: 800;">ИТОГО</div>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div style="font-size: 20px; font-weight: 900; color: var(--accent);" id="buyTotalPrice">0 ₽</div>
+                    <div style="font-size: 22px; font-weight: 900; color: var(--accent);" id="buyTotalPrice">0 ₽</div>
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <button class="buy-qty-btn" onclick="changeBuyQty(-1)">-</button>
-                        <div style="font-size: 16px; font-weight: bold; width: 20px; text-align: center;" id="buyQtyDisplay">1</div>
+                        <div style="font-size: 18px; font-weight: 900; width: 20px; text-align: center;" id="buyQtyDisplay">1</div>
                         <button class="buy-qty-btn" onclick="changeBuyQty(1)">+</button>
                     </div>
                 </div>
-                <div style="text-align: right; font-size: 10px; color: var(--text-muted); margin-top: 10px;" id="buyAvailableText">хватает на одну</div>
+                <div style="text-align: right; font-size: 11px; color: var(--text-muted); margin-top: 10px;" id="buyAvailableText">хватает на одну</div>
             </div>
 
             <div class="promo-btns">
@@ -517,8 +595,8 @@
     <!-- МОДАЛКА ПРОДАЖИ -->
     <div class="modal" id="sellConfirmModal" style="z-index: 2500;">
         <div class="modal-content sell-modal-content">
-            <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 5px;" id="sellItemCategory">КАТЕГОРИЯ</div>
-            <div style="font-size: 16px; font-weight: 900; margin-bottom: 15px; line-height: 1.2;" id="sellItemName">Название скина</div>
+            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 900; margin-bottom: 5px;" id="sellItemCategory">КАТЕГОРИЯ</div>
+            <div style="font-size: 18px; font-weight: 900; margin-bottom: 15px; line-height: 1.2;" id="sellItemName">Название скина</div>
 
             <div class="sell-info-box">
                 <div class="sell-info-label">ВЫ ПОЛУЧИТЕ</div>
@@ -568,6 +646,7 @@
         let buyQuantity = 1;
         let isSortAsc = true;
         let modalMode = 'left';
+        let isModalSortAsc = true;
         
         let currentSellIndex = -1;
         let isSellAllMode = false;
@@ -608,7 +687,6 @@
             document.getElementById('profileIdText').textContent = `ID: ${currentUserId}`;
         }
 
-        // --- ИСПРАВЛЕННЫЙ РАНДОМАЙЗЕР (ГЕНЕРАЦИЯ СКИНОВ И ЦЕН) ---
         async function loadSkinsFromJSON() {
             try {
                 const response = await fetch('./skins.json');
@@ -646,7 +724,6 @@
                     }
                 });
 
-                // Генерация 600 скинов с разными редкостями
                 const rarities = ['consumer', 'industrial', 'milspec', 'restricted', 'classified', 'covert', 'contraband', 'knife'];
                 for(let i = 0; i < 600; i++) {
                     let rar = 'consumer';
@@ -826,7 +903,6 @@
             }, 1500);
         }
 
-        // --- ИНВЕНТАРЬ И ПРОДАЖА ---
         function renderInventory() {
             const grid = document.getElementById('invGrid');
             const sellAllBtn = document.getElementById('sellAllBtn');
@@ -897,13 +973,18 @@
             closeModal('sellConfirmModal');
         }
 
-        // --- МОДАЛКА ВЫБОРА ---
         window.openSelectModal = function(mode) {
             modalMode = mode;
             document.getElementById('selectModal').classList.add('active');
             document.getElementById('modalSearch').value = '';
             document.getElementById('modalTitle').textContent = mode === 'left' ? 'Ваша ставка' : 'Выберите цель';
             
+            filterModalItems();
+        }
+        
+        window.toggleModalSort = function() {
+            isModalSortAsc = !isModalSortAsc;
+            document.getElementById('modalSortBtn').innerHTML = isModalSortAsc ? '↕ Цена (по возр.)' : '↕ Цена (по убыв.)';
             filterModalItems();
         }
 
@@ -919,6 +1000,10 @@
             }
 
             let filtered = sourceItems.filter(item => item.name.toLowerCase().includes(query));
+            
+            // Сортировка в модалке
+            filtered.sort((a, b) => isModalSortAsc ? a.price - b.price : b.price - a.price);
+            
             let toRender = filtered.slice(0, 40);
             
             if (toRender.length === 0) {
@@ -932,7 +1017,7 @@
                     : `pickRight('${item.id}')`;
                 
                 return `
-                <div class="inv-item rarity-${item.rarity}" onclick="${clickAction}" style="background: #0B0E14; border: 1px solid #1F2735; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; border-bottom: 3px solid var(--rar-${item.rarity});">
+                <div class="inv-item rarity-${item.rarity}" onclick="${clickAction}" style="background: #0B0E14; border: 1px solid #1F2735; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; border-bottom: 3px solid var(--rar-${item.rarity}); box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
                     <img src="${item.img}" style="width: 100%; height: 45px; object-fit: contain;" onerror="this.src='${DEFAULT_IMAGE}'">
                     <div class="name" style="font-size: 9px; font-weight: bold; margin-top: 5px;">${item.name}</div>
                     <div class="price" style="font-size: 10px; color: #FFCC00; font-weight: bold;">${formatMoney(item.price)}</div>
@@ -973,13 +1058,10 @@
             document.getElementById('rightPrice').textContent = formatMoney(selectedRight.price);
         }
 
-        // --- БЫСТРЫЕ КНОПКИ С ПОДСВЕТКОЙ ---
         window.setQuickTarget = function(mode, btnEl) {
             if (!selectedLeft) return alert('Сначала выберите скин для ставки!');
             
-            // Убираем активный класс у всех кнопок
             document.querySelectorAll('.quick-btn').forEach(btn => btn.classList.remove('active'));
-            // Добавляем активный класс текущей
             btnEl.classList.add('active');
 
             let targetPrice;
@@ -999,7 +1081,7 @@
             pickRight(closest.id);
         }
 
-        // --- ИСПРАВЛЕННАЯ ОТРИСОВКА КОЛЕСА ---
+        // ИСПРАВЛЕННАЯ ОТРИСОВКА КОЛЕСА (снизу)
         function updateUI() {
             const chanceText = document.getElementById('chanceText');
             const chanceLabel = document.getElementById('chanceLabel');
@@ -1010,7 +1092,7 @@
                 chanceText.style.display = 'none';
                 chanceLabel.style.display = 'none';
                 chooseText.style.display = 'block';
-                wheel.style.background = 'conic-gradient(var(--accent) 0deg, var(--accent) 0deg, #0B0E14 0deg)';
+                wheel.style.background = 'conic-gradient(from 180deg, var(--accent) 0deg, var(--accent) 0deg, #0A0F17 0deg)';
                 return;
             }
             
@@ -1023,20 +1105,18 @@
             chanceText.textContent = (chance * 100).toFixed(1) + '%';
             
             const deg = chance * 360;
-            wheel.style.background = `conic-gradient(var(--accent) 0deg, var(--accent) ${deg}deg, #0B0E14 ${deg}deg)`;
+            // Начинаем с 180 градусов (снизу)
+            wheel.style.background = `conic-gradient(from 180deg, var(--accent) 0deg, var(--accent) ${deg}deg, #0A0F17 ${deg}deg)`;
         }
 
-        // --- ПОДКРУТКА (БЕЗ СПИСАНИЯ ДЕНЕГ) ---
         window.updateCheatCost = function() {
             const slider = document.getElementById('cheatSlider');
             const cheatVal = parseInt(slider.value);
             
-            // Желтая линия
             slider.style.background = `linear-gradient(90deg, var(--accent) ${cheatVal}%, #1F2735 ${cheatVal}%)`;
             document.getElementById('cheatValueDisplay').textContent = cheatVal + '%';
         }
 
-        // --- ИСПРАВЛЕННАЯ АНИМАЦИЯ КОЛЕСА ---
         document.getElementById('upgradeBtn').addEventListener('click', () => {
             if (isSpinning) return;
             if (!selectedLeft) return alert('Выберите скин для ставки!');
@@ -1045,7 +1125,6 @@
 
             const cheatVal = isAdmin ? parseInt(document.getElementById('cheatSlider').value) : 0;
 
-            // Убрали списание денег (cheatCost) для админа
             isSpinning = true;
 
             let baseChance = selectedLeft.price / selectedRight.price;
@@ -1064,21 +1143,40 @@
             saveState();
             
             const arrow = document.getElementById('arrow');
+            // Стрелка изначально смотрит вверх (0 градусов) и находится внизу.
+            // Нам нужно повернуть её на нужный угол.
             arrow.style.transition = 'none';
             arrow.style.transform = 'rotate(0deg)';
             void arrow.offsetWidth;
 
-            // --- РАСЧЕТ УГЛА ---
+            // Логика: Колесо начинается снизу (180 град) и идет по часовой.
+            // Стрелка внизу. Если она повернется на 0 градусов, она покажет на 180 град колеса.
+            // Если на 90 градусов, она покажет на 270 град (лево) и т.д.
+            
+            // Нам нужно преобразовать угол зоны победы в угол поворота стрелки.
+            // Зона победы: от 180 до 180 + winZone.
+            // Угол поворота стрелки (по часовой): 
+            // Если зона от 180 до 360, то стрелка поворачивается от 0 до 180 (вправо).
+            // Если зона от 0 до 180, то стрелка поворачивается от 180 до 360 (влево).
+            
+            // Упростим: просто сгенерируем случайный угол в пределах зоны победы/проигрыша,
+            // но так как визуал стрелки совпадает с зоной, мы можем просто использовать
+            // значения от 0 до 360 для поворота стрелки.
+            
             let winZoneDeg = baseChance * 360;
             let targetAngle;
             
             if (win) {
+                // Выигрыш: стрелка должна упасть в желтую зону (от 180 до 180 + winZoneDeg)
+                // Значит, стрелка поворачивается от 0 до winZoneDeg (по часовой)
                 targetAngle = Math.random() * winZoneDeg;
             } else {
+                // Проигрыш: стрелка падает в темную зону
                 let loseZoneDeg = 360 - winZoneDeg;
                 targetAngle = winZoneDeg + (Math.random() * loseZoneDeg);
             }
 
+            // 5 полных оборотов + угол
             let totalRotation = (360 * 5) + targetAngle;
 
             setTimeout(() => {
@@ -1121,7 +1219,6 @@
                 document.getElementById('leftName').textContent = '';
                 document.getElementById('leftPrice').textContent = '';
                 
-                // Убираем подсветку кнопок после прокрутки
                 document.querySelectorAll('.quick-btn').forEach(btn => btn.classList.remove('active'));
 
                 updateUI();
@@ -1137,7 +1234,6 @@
             }, 4000);
         });
 
-        // --- АДМИН ФУНКЦИИ ---
         window.openAddMoneyModal = function() { 
             if (!isAdmin) return;
             document.getElementById('addMoneyModal').classList.add('active'); 
@@ -1206,4 +1302,4 @@
         loadSkinsFromJSON();
     </script>
 </body>
-    </html>
+</html>
