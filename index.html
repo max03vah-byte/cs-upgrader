@@ -147,15 +147,23 @@
             cursor: pointer; flex: 1; text-align: center;
         }
 
-        /* Слайдер подкрутки */
+        /* Слайдер подкрутки с желтой линией */
         .cheat-container {
             background: var(--panel-bg); border: 1px solid var(--border); border-radius: 10px;
             padding: 10px; margin-top: 15px; width: 100%; display: flex; flex-direction: column; gap: 5px;
         }
         .cheat-header { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: var(--text-muted); }
         .cheat-cost { color: var(--accent); font-size: 11px; text-align: right; margin-top: 2px; }
-        .cheat-slider { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px; background: #0B0E14; outline: none; }
-        .cheat-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); cursor: pointer; }
+        
+        .cheat-slider {
+            -webkit-appearance: none; width: 100%; height: 8px; border-radius: 4px;
+            background: #0B0E14; outline: none; transition: background 0.1s;
+        }
+        .cheat-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+            background: var(--accent); cursor: pointer; border: 2px solid #fff;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
 
         /* ПАНЕЛЬ ПОИСКА И ФИЛЬТРОВ */
         .search-panel {
@@ -219,6 +227,13 @@
         .item-card .price { font-size: 11px; color: var(--accent); font-weight: bold; margin-top: 2px; z-index: 1; }
         
         .btn-buy { background: var(--accent); color: #000; border: none; padding: 6px; border-radius: 6px; font-weight: bold; font-size: 10px; margin-top: 5px; width: 100%; z-index: 1; }
+
+        /* Кнопка продать всё */
+        .sell-all-btn {
+            background: var(--lose); color: #fff; border: none; padding: 10px;
+            border-radius: 8px; font-weight: bold; font-size: 13px; width: 100%;
+            margin-bottom: 10px; cursor: pointer; display: none;
+        }
 
         /* Профиль */
         .profile-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; width: 100%; }
@@ -358,14 +373,14 @@
                     <button class="quick-btn" onclick="setQuickTarget('75')">75%</button>
                 </div>
 
-                <!-- ПОДКРУТКА С ОТОБРАЖЕНИЕМ СТОИМОСТИ -->
+                <!-- ПОДКРУТКА С ЖЕЛТОЙ ЛИНИЕЙ -->
                 <div class="cheat-container" id="adminCheatPanel" style="display: none;">
                     <div class="cheat-header">
                         <span>ПОДКРУТКА ШАНСА</span>
                         <span id="cheatValueDisplay">0%</span>
                     </div>
                     <input type="range" class="cheat-slider" id="cheatSlider" min="0" max="90" value="0" oninput="updateCheatCost()">
-                    <div class="cheat-cost" id="cheatCostDisplay">Стоимость подкрутки: 0 ₽</div>
+                    <div class="cheat-cost" id="cheatCostDisplay">Стоимость: 0 ₽</div>
                 </div>
             </div>
         </div>
@@ -391,6 +406,7 @@
 
         <!-- ВКЛАДКА ИНВЕНТАРЬ -->
         <div id="tab-inventory" class="tab-content">
+            <button class="sell-all-btn" id="sellAllBtn" onclick="sellAllItems()">Продать всё за 100% стоимости</button>
             <div class="grid" id="invGrid"></div>
         </div>
 
@@ -404,6 +420,7 @@
             <div class="profile-actions">
                 <button class="profile-btn" id="addMoneyBtn" onclick="openAddMoneyModal()" style="display: none;">💰 Добавить деньги</button>
                 <button class="profile-btn" onclick="openPromoModal()">🎁 Ввести промокод</button>
+                <button class="profile-btn" onclick="resetGame()" style="color: var(--lose);">⚠️ Сбросить прогресс</button>
             </div>
         </div>
     </div>
@@ -595,7 +612,7 @@
                     }
                 });
 
-                // Генерация 500 скинов с плавным ростом цены
+                // Генерация 500 скинов
                 const rarities = ['consumer', 'industrial', 'milspec', 'restricted', 'classified', 'covert', 'contraband', 'knife'];
                 for(let i = 0; i < 500; i++) {
                     const rar = rarities[Math.floor(Math.random() * rarities.length)];
@@ -623,10 +640,9 @@
 
                 rawItems.sort((a, b) => a.basePrice - b.basePrice);
 
-                // ФОРМУЛА ЦЕНЫ: начинается с 2 рублей и заканчивается 500 миллиардами
+                // Цены от 2 до 500 млрд
                 rawItems.forEach((item, index) => {
                     let ratio = index / rawItems.length;
-                    // Используем степень 5 для плавного роста с "пары рублей" в начале
                     let price = 2 + Math.floor(Math.pow(ratio, 5) * 500000000000);
                     item.price = price;
                 });
@@ -664,7 +680,7 @@
             renderShop();
         }
 
-        // --- МАГАЗИН С ФИЛЬТРАМИ ---
+        // --- МАГАЗИН ---
         function renderShop() {
             const grid = document.getElementById('shopGrid');
             const query = document.getElementById('shopSearch').value.toLowerCase();
@@ -768,20 +784,57 @@
             }, 1500);
         }
 
+        // --- ИНВЕНТАРЬ (ПРОДАЖА ЗА 100%) ---
         function renderInventory() {
             const grid = document.getElementById('invGrid');
+            const sellAllBtn = document.getElementById('sellAllBtn');
+
             if (state.inventory.length === 0) {
+                sellAllBtn.style.display = 'none';
                 grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #888; padding: 20px;">Инвентарь пуст</div>';
                 return;
             }
+
+            sellAllBtn.style.display = 'block';
+
             grid.innerHTML = state.inventory.map((item, index) => `
-                <div class="item-card rarity-${item.rarity}">
+                <div class="item-card rarity-${item.rarity}" onclick="sellItem(${index})">
                     <div class="rarity-name" style="color: var(--rar-${item.rarity});">${item.rarity.toUpperCase()}</div>
                     <img src="${item.img}" loading="lazy">
                     <div class="name">${item.name}</div>
                     <div class="price">${formatMoney(item.price)}</div>
+                    <div style="font-size:9px; color:var(--text-muted); margin-top:4px;">Нажми, чтобы продать</div>
                 </div>
             `).join('');
+        }
+
+        window.sellItem = function(index) {
+            const item = state.inventory[index];
+            if (!item) return;
+            
+            const price = item.price; // 100% стоимости
+            state.balance += price;
+            state.inventory.splice(index, 1);
+            saveState();
+            updateBalance();
+            renderInventory();
+            showToast(`Продан ${item.name} за ${formatMoney(price)} (100%)`);
+        }
+
+        window.sellAllItems = function() {
+            if (state.inventory.length === 0) return;
+            
+            let totalSum = 0;
+            state.inventory.forEach(item => { totalSum += item.price; });
+            
+            if (confirm(`Продать ВСЕ скины за ${formatMoney(totalSum)} (100% стоимости)?`)) {
+                state.balance += totalSum;
+                state.inventory = [];
+                saveState();
+                updateBalance();
+                renderInventory();
+                showToast(`Всё продано за ${formatMoney(totalSum)}`);
+            }
         }
 
         // --- МОДАЛКА ВЫБОРА (С ПОИСКОМ) ---
@@ -848,7 +901,7 @@
             document.getElementById('rightPrice').textContent = formatMoney(selectedRight.price);
             closeModal('selectModal');
             updateUI();
-            updateCheatCost(); // Обновляем стоимость подкрутки
+            updateCheatCost();
         }
 
         function updateRightPanel() {
@@ -905,20 +958,21 @@
             wheel.style.background = `conic-gradient(from 180deg, var(--accent) 0deg, var(--accent) ${deg}deg, #0B0E14 ${deg}deg)`;
         }
 
-        // --- ОБНОВЛЕНИЕ СТОИМОСТИ ПОДКРУТКИ ---
+        // --- ЖЕЛТАЯ ЛИНИЯ ПОДКРУТКИ ---
         window.updateCheatCost = function() {
+            const slider = document.getElementById('cheatSlider');
+            const cheatVal = parseInt(slider.value);
+            
+            // Желтая линия заполнения
+            slider.style.background = `linear-gradient(90deg, var(--accent) ${cheatVal}%, #0B0E14 ${cheatVal}%)`;
+
             if (!selectedLeft || !selectedRight) {
                 document.getElementById('cheatCostDisplay').textContent = 'Выберите скины для ставки';
-                document.getElementById('cheatValueDisplay').textContent = '0%';
+                document.getElementById('cheatValueDisplay').textContent = cheatVal + '%';
                 return;
             }
 
-            const slider = document.getElementById('cheatSlider');
-            const cheatVal = parseInt(slider.value);
             document.getElementById('cheatValueDisplay').textContent = cheatVal + '%';
-
-            // Стоимость подкрутки = (процент подкрутки / 100) * (Цена цели - Цена ставки)
-            // То есть 1% подкрутки стоит 1% от разницы в цене
             let diff = selectedRight.price - selectedLeft.price;
             if (diff < 0) diff = 0;
             
@@ -926,14 +980,13 @@
             document.getElementById('cheatCostDisplay').textContent = `Стоимость: ${formatMoney(cost)}`;
         }
 
-        // --- АПГРЕЙД С ПЛАТНОЙ ПОДКРУТКОЙ ---
+        // --- АПГРЕЙД ---
         document.getElementById('upgradeBtn').addEventListener('click', () => {
             if (isSpinning) return;
             if (!selectedLeft) return alert('Выберите скин для ставки!');
             if (!selectedRight) return alert('Выберите цель!');
             if (selectedLeft.price >= selectedRight.price) return alert('Цель должна быть дороже!');
 
-            // Проверяем, хватает ли денег на подкрутку
             const cheatVal = isAdmin ? parseInt(document.getElementById('cheatSlider').value) : 0;
             let diff = selectedRight.price - selectedLeft.price;
             let cheatCost = Math.floor((cheatVal / 100) * diff);
@@ -944,7 +997,6 @@
 
             isSpinning = true;
             
-            // Списываем деньги за подкрутку
             if (cheatCost > 0) {
                 state.balance -= cheatCost;
                 updateBalance();
@@ -1012,7 +1064,7 @@
                 document.getElementById('leftPrice').textContent = '';
                 
                 updateUI();
-                updateCheatCost(); // Сбрасываем стоимость подкрутки
+                updateCheatCost();
                 document.getElementById('upgradeBtn').disabled = false;
                 isSpinning = false;
 
@@ -1070,7 +1122,15 @@
             }
         }
 
+        window.resetGame = function() {
+            if(confirm('Вы уверены, что хотите полностью сбросить баланс и инвентарь?')) {
+                localStorage.removeItem('upgrader_v4');
+                location.reload();
+            }
+        }
+
         updateBalance();
+        updateCheatCost(); // Инициализация желтой полоски при загрузке
         loadSkinsFromJSON();
     </script>
 </body>
