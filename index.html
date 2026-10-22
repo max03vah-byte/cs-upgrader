@@ -153,6 +153,7 @@
             padding: 10px; margin-top: 15px; width: 100%; display: flex; flex-direction: column; gap: 5px;
         }
         .cheat-header { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: var(--text-muted); }
+        .cheat-cost { color: var(--accent); font-size: 11px; text-align: right; margin-top: 2px; }
         .cheat-slider { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px; background: #0B0E14; outline: none; }
         .cheat-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); cursor: pointer; }
 
@@ -357,13 +358,14 @@
                     <button class="quick-btn" onclick="setQuickTarget('75')">75%</button>
                 </div>
 
-                <!-- ПОДКРУТКА -->
+                <!-- ПОДКРУТКА С ОТОБРАЖЕНИЕМ СТОИМОСТИ -->
                 <div class="cheat-container" id="adminCheatPanel" style="display: none;">
                     <div class="cheat-header">
-                        <span>ПОДКРУТКА ШАНСА В ПОЛЬЗУ ИГРОКА</span>
+                        <span>ПОДКРУТКА ШАНСА</span>
                         <span id="cheatValueDisplay">0%</span>
                     </div>
-                    <input type="range" class="cheat-slider" id="cheatSlider" min="0" max="90" value="0" oninput="document.getElementById('cheatValueDisplay').textContent = this.value + '%'">
+                    <input type="range" class="cheat-slider" id="cheatSlider" min="0" max="90" value="0" oninput="updateCheatCost()">
+                    <div class="cheat-cost" id="cheatCostDisplay">Стоимость подкрутки: 0 ₽</div>
                 </div>
             </div>
         </div>
@@ -514,7 +516,6 @@
         let isSortAsc = true;
         let modalMode = 'left';
 
-        // Промокоды
         const PROMO_CODES = {
             '100M': { amount: 100000000 },
             '5M': { amount: 5000000 },
@@ -522,13 +523,12 @@
             'WELCOME': { amount: 500 }
         };
 
-        // Массив картинок для сгенерированных скинов (чтобы не было пустых квадратов)
         const FALLBACK_IMAGES = [
-            "https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERN4KXwMCoYW28IlINc6uYqG0GZQ-RoN1k0uKcr9n2MWKHgB8I54b6DT1v", // Нож 1
-            "https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERN4KXwMCoYW28IlINc6uYqG0GZQ-RoN1k0uKcr9n2MWKHgB8I54b6DT1v", // Нож 2 (замени если надо)
-            "https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERN4KXwMCoYW28IlINc6uYqG0GZQ-RoN1k0uKcr9n2MWKHgB8I54b6DT1v", // AK
-            "https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERN4KXwMCoYW28IlINc6uYqG0GZQ-RoN1k0uKcr9n2MWKHgB8I54b6DT1v", // M4
-            "https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERN4KXwMCoYW28IlINc6uYqG0GZQ-RoN1k0uKcr9n2MWKHgB8I54b6DT1v"  // AWP
+            "https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERN4KXwMCoYW28IlINc6uYqG0GZQ-RoN1k0uKcr9n2MWKHgB8I54b6DT1v",
+            "https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERN4KXwMCoYW28IlINc6uYqG0GZQ-RoN1k0uKcr9n2MWKHgB8I54b6DT1v",
+            "https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERN4KXwMCoYW28IlINc6uYqG0GZQ-RoN1k0uKcr9n2MWKHgB8I54b6DT1v",
+            "https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERN4KXwMCoYW28IlINc6uYqG0GZQ-RoN1k0uKcr9n2MWKHgB8I54b6DT1v",
+            "https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERN4KXwMCoYW28IlINc6uYqG0GZQ-RoN1k0uKcr9n2MWKHgB8I54b6DT1v"
         ];
 
         function loadState() {
@@ -557,7 +557,7 @@
             document.getElementById('profileIdText').textContent = `ID: ${currentUserId}`;
         }
 
-        // --- ЗАГРУЗКА 1000+ СКИНОВ ---
+        // --- ЗАГРУЗКА 500 СКИНОВ ---
         async function loadSkinsFromJSON() {
             try {
                 const response = await fetch('./skins.json');
@@ -568,13 +568,13 @@
 
                 data.forEach(skin => {
                     if (skin.image && skin.name) {
-                        let basePrice = 10;
+                        let basePrice = 2;
                         let rarityClass = 'consumer';
                         
                         if (skin.category && skin.category.name === 'Knives') { basePrice = 15000; rarityClass = 'knife'; }
                         else if (skin.category && skin.category.name === 'Gloves') { basePrice = 8000; rarityClass = 'knife'; }
                         else if (skin.rarity) {
-                            if (skin.rarity.name === 'Consumer Grade') { basePrice = 10; rarityClass = 'consumer'; }
+                            if (skin.rarity.name === 'Consumer Grade') { basePrice = 2; rarityClass = 'consumer'; }
                             else if (skin.rarity.name === 'Industrial Grade') { basePrice = 40; rarityClass = 'industrial'; }
                             else if (skin.rarity.name === 'Mil-Spec Grade') { basePrice = 150; rarityClass = 'milspec'; }
                             else if (skin.rarity.name === 'Restricted') { basePrice = 400; rarityClass = 'restricted'; }
@@ -595,11 +595,11 @@
                     }
                 });
 
-                // Генерация 1000+ скинов с нормальными картинками
+                // Генерация 500 скинов с плавным ростом цены
                 const rarities = ['consumer', 'industrial', 'milspec', 'restricted', 'classified', 'covert', 'contraband', 'knife'];
-                for(let i = 0; i < 1200; i++) {
+                for(let i = 0; i < 500; i++) {
                     const rar = rarities[Math.floor(Math.random() * rarities.length)];
-                    let bPrice = 10;
+                    let bPrice = 2;
                     if (rar === 'industrial') bPrice = 40;
                     if (rar === 'milspec') bPrice = 150;
                     if (rar === 'restricted') bPrice = 400;
@@ -608,7 +608,6 @@
                     if (rar === 'contraband') bPrice = 10000;
                     if (rar === 'knife') bPrice = 15000;
 
-                    // Выбираем случайную картинку из массива
                     const randomImg = FALLBACK_IMAGES[Math.floor(Math.random() * FALLBACK_IMAGES.length)];
 
                     rawItems.push({
@@ -624,10 +623,11 @@
 
                 rawItems.sort((a, b) => a.basePrice - b.basePrice);
 
-                // РАСЧЕТ ЦЕНЫ ДО 500 МИЛЛИАРДОВ
+                // ФОРМУЛА ЦЕНЫ: начинается с 2 рублей и заканчивается 500 миллиардами
                 rawItems.forEach((item, index) => {
                     let ratio = index / rawItems.length;
-                    let price = 10 + Math.floor(Math.pow(ratio, 4) * 500000000000);
+                    // Используем степень 5 для плавного роста с "пары рублей" в начале
+                    let price = 2 + Math.floor(Math.pow(ratio, 5) * 500000000000);
                     item.price = price;
                 });
                 
@@ -848,6 +848,7 @@
             document.getElementById('rightPrice').textContent = formatMoney(selectedRight.price);
             closeModal('selectModal');
             updateUI();
+            updateCheatCost(); // Обновляем стоимость подкрутки
         }
 
         function updateRightPanel() {
@@ -904,25 +905,57 @@
             wheel.style.background = `conic-gradient(from 180deg, var(--accent) 0deg, var(--accent) ${deg}deg, #0B0E14 ${deg}deg)`;
         }
 
-        // --- АПГРЕЙД (С ПОДКРУТКОЙ) ---
+        // --- ОБНОВЛЕНИЕ СТОИМОСТИ ПОДКРУТКИ ---
+        window.updateCheatCost = function() {
+            if (!selectedLeft || !selectedRight) {
+                document.getElementById('cheatCostDisplay').textContent = 'Выберите скины для ставки';
+                document.getElementById('cheatValueDisplay').textContent = '0%';
+                return;
+            }
+
+            const slider = document.getElementById('cheatSlider');
+            const cheatVal = parseInt(slider.value);
+            document.getElementById('cheatValueDisplay').textContent = cheatVal + '%';
+
+            // Стоимость подкрутки = (процент подкрутки / 100) * (Цена цели - Цена ставки)
+            // То есть 1% подкрутки стоит 1% от разницы в цене
+            let diff = selectedRight.price - selectedLeft.price;
+            if (diff < 0) diff = 0;
+            
+            let cost = Math.floor((cheatVal / 100) * diff);
+            document.getElementById('cheatCostDisplay').textContent = `Стоимость: ${formatMoney(cost)}`;
+        }
+
+        // --- АПГРЕЙД С ПЛАТНОЙ ПОДКРУТКОЙ ---
         document.getElementById('upgradeBtn').addEventListener('click', () => {
             if (isSpinning) return;
             if (!selectedLeft) return alert('Выберите скин для ставки!');
             if (!selectedRight) return alert('Выберите цель!');
             if (selectedLeft.price >= selectedRight.price) return alert('Цель должна быть дороже!');
 
+            // Проверяем, хватает ли денег на подкрутку
+            const cheatVal = isAdmin ? parseInt(document.getElementById('cheatSlider').value) : 0;
+            let diff = selectedRight.price - selectedLeft.price;
+            let cheatCost = Math.floor((cheatVal / 100) * diff);
+
+            if (state.balance < cheatCost) {
+                return showToast('Недостаточно средств для оплаты подкрутки!');
+            }
+
             isSpinning = true;
+            
+            // Списываем деньги за подкрутку
+            if (cheatCost > 0) {
+                state.balance -= cheatCost;
+                updateBalance();
+            }
+
             let baseChance = selectedLeft.price / selectedRight.price;
             if (baseChance > 1) baseChance = 1;
             
             let finalChance = baseChance;
-            
-            // ПРОСТАЯ ПОДКРУТКА (ровно столько процентов, сколько на ползунке)
-            if (isAdmin) {
-                const cheatVal = parseInt(document.getElementById('cheatSlider').value); // 0 - 90
-                if (cheatVal > 0) {
-                    finalChance = Math.min(1, baseChance + (cheatVal / 100));
-                }
+            if (cheatVal > 0) {
+                finalChance = Math.min(1, baseChance + (cheatVal / 100));
             }
 
             const win = Math.random() < finalChance;
@@ -979,6 +1012,7 @@
                 document.getElementById('leftPrice').textContent = '';
                 
                 updateUI();
+                updateCheatCost(); // Сбрасываем стоимость подкрутки
                 document.getElementById('upgradeBtn').disabled = false;
                 isSpinning = false;
 
