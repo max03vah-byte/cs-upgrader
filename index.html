@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>UPGRADER</title>
+    <title>Upgrader</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: #0b0e14;
-            --panel-bg: #121722;
-            --panel-border: #1f2735;
-            --accent: #ffcc00;
-            --text-main: #ffffff;
-            --text-muted: #8892a0;
-            --win: #2ed573;
-            --lose: #ff4757;
-            --gold-gradient: linear-gradient(180deg, #f1c40f 0%, #d4ac0d 100%);
+            --bg-color: #0B0E14;
+            --panel-bg: #131A26;
+            --border: #1F2735;
+            --accent: #FFCC00;
+            --text-main: #FFFFFF;
+            --text-muted: #8A99AD;
+            --win: #2ecc71;
+            --lose: #e74c3c;
+            --gold-gradient: linear-gradient(180deg, #F1C40F 0%, #D4AC0D 100%);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         body {
@@ -24,232 +24,266 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
+            padding-bottom: 60px;
             overflow: hidden;
-            background-image: radial-gradient(circle at 50% 30%, #1a2232 0%, #0b0e14 70%);
+            background-image: radial-gradient(circle at 50% 30%, #1A2232 0%, #0B0E14 70%);
         }
         
-        /* Шапка (адаптивная) */
+        /* Шапка */
         .header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 15px; background: rgba(18, 23, 34, 0.9);
-            border-bottom: 1px solid var(--panel-border); z-index: 100;
+            padding: 10px 15px; background: var(--panel-bg);
+            border-bottom: 1px solid var(--border); z-index: 100;
         }
         .logo-area { display: flex; align-items: center; gap: 5px; font-weight: 900; font-size: 16px; }
-        .logo-icon { color: var(--accent); font-size: 20px; }
+        .logo-icon { color: var(--accent); font-size: 18px; }
         .balance-box {
-            background: #1c2331; padding: 5px 10px; border-radius: 6px;
-            border: 1px solid #2a3441; font-weight: bold; font-size: 13px;
+            background: #0B0E14; padding: 5px 10px; border-radius: 6px;
+            border: 1px solid #2A3441; font-weight: bold; font-size: 12px;
         }
         .balance-box span { color: var(--accent); }
 
-        /* Основной контент */
         .main-content { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; align-items: center; }
 
-        /* Колесо (мобильное) */
-        .wheel-container {
-            position: relative; width: 280px; height: 280px;
+        /* Колесо */
+        .circle-zone {
             display: flex; justify-content: center; align-items: center;
-            margin-top: 10px;
+            position: relative; margin: 15px 0; height: 200px;
         }
+        .wheel-wrapper { position: relative; width: 180px; height: 180px; }
         
-        /* Желтая полоса снизу */
-        .wheel-bg {
-            position: absolute; width: 100%; height: 100%; border-radius: 50%;
-            background: conic-gradient(from 180deg, var(--accent) 0deg, var(--accent) 0deg, #222 0deg);
-            mask-image: radial-gradient(transparent 65%, black 66%);
-            -webkit-mask-image: radial-gradient(transparent 65%, black 66%);
-            transition: background 0.3s;
+        .wheel {
+            width: 180px; height: 180px; border-radius: 50%;
+            background: conic-gradient(from 180deg, var(--accent) 0deg, var(--accent) 0deg, #0B0E14 0deg);
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid var(--border);
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            transition: all 0.3s;
         }
+        .wheel.win-border { border-color: var(--win); box-shadow: 0 0 20px rgba(46, 204, 113, 0.3); }
+        .wheel.lose-border { border-color: var(--lose); box-shadow: 0 0 20px rgba(231, 76, 60, 0.3); }
         
-        .wheel-inner-circle {
-            width: 200px; height: 200px; background: #131822; border-radius: 50%;
-            position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            border: 4px solid #1f2735; box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+        .wheel-inner {
+            width: 150px; height: 150px; border-radius: 50%;
+            background: var(--panel-bg); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center;
             z-index: 2;
         }
-        
-        .chance-value { font-size: 32px; font-weight: 900; color: var(--accent); }
-        .chance-label { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-top: 5px; }
-        .chance-sub { font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-top: 5px; }
+        .chance-text { font-size: 26px; font-weight: 900; color: var(--text-main); }
+        .chance-label { font-size: 10px; color: var(--text-muted); margin-top: 3px; text-transform: uppercase; }
 
-        .wheel-labels { position: absolute; width: 100%; height: 100%; z-index: 3; }
-        .label-100 { position: absolute; top: 5px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: bold; }
-        .label-50 { position: absolute; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; }
-        .label-50.left { left: 5px; }
-        .label-50.right { right: 5px; }
-        .label-0 { position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: bold; }
-
-        /* Стрелка */
         .arrow-pointer {
-            position: absolute; top: -20px; left: 50%; margin-left: -10px;
+            position: absolute;
+            top: -12px; left: 50%; margin-left: -8px;
             width: 0; height: 0;
-            border-left: 10px solid transparent; border-right: 10px solid transparent;
-            border-top: 25px solid var(--accent);
-            filter: drop-shadow(0 0 10px var(--accent));
-            transform-origin: 50% 160px; z-index: 10;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 16px solid var(--accent);
+            filter: drop-shadow(0 0 8px var(--accent));
+            transform-origin: 50% 102px;
+            z-index: 10;
         }
 
-        /* Панели ставки и цели (в мобильной версии они идут под колесом) */
-        .panels-container {
-            display: flex; gap: 10px; width: 100%; max-width: 400px; margin-top: 20px;
+        /* Текст внутри колеса */
+        .wheel-overlay-text {
+            position: absolute; inset: 0; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center; z-index: 3;
+            pointer-events: none;
         }
+        .wheel-overlay-text h3 { font-size: 12px; color: var(--text-main); font-weight: bold; line-height: 1.3; }
+        .wheel-overlay-text.lose h3 { color: var(--lose); font-size: 14px; margin-bottom: 3px; font-weight: 900; }
+        .wheel-overlay-text.lose .amount { color: var(--lose); font-size: 20px; font-weight: bold; margin-bottom: 3px; }
+        .wheel-overlay-text.lose .sub { color: var(--text-muted); font-size: 10px; }
+
+        /* Панели */
+        .panels-container { display: flex; gap: 10px; width: 100%; max-width: 400px; margin-bottom: 15px; }
         .skin-panel {
-            flex: 1; height: 140px; background: var(--panel-bg);
-            border: 1px solid var(--panel-border); border-radius: 12px;
+            flex: 1; height: 120px; background: var(--panel-bg);
+            border: 1px solid var(--border); border-radius: 10px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            position: relative; padding: 10px; text-align: center; cursor: pointer; transition: 0.2s;
+            position: relative; padding: 8px; text-align: center; cursor: pointer; transition: 0.2s;
+            overflow: hidden;
         }
-        .skin-panel:active { background: #1a2232; }
-        .skin-panel-title { position: absolute; top: 8px; font-size: 10px; font-weight: bold; color: var(--text-muted); letter-spacing: 1px; }
-        .skin-panel img { width: 100px; height: 60px; object-fit: contain; margin-top: 15px; }
-        .skin-panel-name { font-size: 11px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; margin-top: 5px; }
-        .skin-panel-price { font-size: 12px; color: var(--accent); font-weight: bold; }
+        .skin-panel:hover { border-color: #2A3441; }
+        .skin-panel-title { position: absolute; top: 6px; font-size: 9px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; }
+        .skin-panel img { width: 80px; height: 50px; object-fit: contain; margin-top: 10px; }
+        .skin-panel-name { font-size: 10px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; margin-top: 5px; }
+        .skin-panel-price { font-size: 11px; color: var(--accent); font-weight: bold; margin-top: 2px; }
         
-        .empty-panel-icon { font-size: 30px; color: #2a3441; margin-top: 15px; }
-        .empty-panel-text { color: var(--text-muted); font-size: 11px; margin-top: 5px; }
+        .empty-panel-icon { font-size: 25px; color: #1F2735; margin-top: 10px; }
+        .empty-panel-text { color: var(--text-muted); font-size: 10px; margin-top: 5px; }
 
-        /* Кнопки управления */
-        .controls { display: flex; flex-direction: column; align-items: center; margin-top: 20px; width: 100%; max-width: 400px; padding-bottom: 20px; }
+        /* Кнопки */
+        .controls { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 400px; }
         
         .btn-upgrade {
             background: var(--gold-gradient); color: #000;
-            width: 100%; padding: 15px; border-radius: 10px; border: none;
-            font-size: 16px; font-weight: 900; text-transform: uppercase; cursor: pointer;
-            box-shadow: 0 5px 20px rgba(255, 204, 0, 0.3); transition: 0.2s;
-            display: flex; justify-content: center; align-items: center; gap: 10px;
+            width: 100%; padding: 14px; border-radius: 10px; border: none;
+            font-size: 14px; font-weight: 900; text-transform: uppercase; cursor: pointer;
+            display: flex; justify-content: center; align-items: center; gap: 6px;
         }
-        .btn-upgrade:active { transform: scale(0.98); }
+        .btn-upgrade:disabled { background: #2A3441; color: #555; cursor: not-allowed; }
 
-        .quick-btns {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 15px; width: 100%;
-        }
+        .quick-btns { display: flex; justify-content: center; gap: 6px; margin-top: 10px; width: 100%; }
         .quick-btn {
-            background: #1c2331; color: var(--text-muted); border: 1px solid #2a3441;
-            padding: 10px; border-radius: 8px; font-weight: bold; font-size: 13px;
-            cursor: pointer; transition: 0.2s;
+            background: #0B0E14; color: var(--text-muted); border: 1px solid var(--border);
+            padding: 8px; border-radius: 6px; font-weight: bold; font-size: 11px;
+            cursor: pointer; flex: 1; text-align: center;
         }
-        .quick-btn:active { border-color: var(--accent); color: var(--accent); }
+        .quick-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-        /* Модальное окно */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
+        /* Модалки */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; }
         .modal.active { display: flex; }
-        .modal-content { background: var(--panel-bg); width: 95%; max-width: 500px; height: 80vh; border-radius: 16px; border: 1px solid var(--panel-border); display: flex; flex-direction: column; overflow: hidden; }
-        .modal-header { padding: 15px; border-bottom: 1px solid var(--panel-border); display: flex; justify-content: space-between; align-items: center; }
-        .modal-title { font-size: 16px; font-weight: bold; }
-        .close-modal { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; }
-        .modal-body { flex: 1; overflow-y: auto; padding: 15px; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; align-content: start; }
+        .modal-content { background: var(--panel-bg); width: 95%; max-width: 400px; height: 80vh; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+        .modal-header { padding: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 14px; font-weight: bold; }
+        .close-modal { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; }
+        .modal-body { flex: 1; overflow-y: auto; padding: 10px; display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; align-content: start; }
 
         .inv-item {
-            background: #18202c; border: 1px solid #2a3441; border-radius: 10px; padding: 10px;
+            background: #0B0E14; border: 1px solid var(--border); border-radius: 8px; padding: 8px;
             text-align: center; cursor: pointer; transition: 0.2s;
         }
-        .inv-item:active { border-color: var(--accent); }
-        .inv-item img { width: 100%; height: 50px; object-fit: contain; }
-        .inv-item .name { font-size: 10px; font-weight: bold; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .inv-item .price { font-size: 11px; color: var(--accent); font-weight: bold; margin-top: 3px; }
+        .inv-item:hover { border-color: var(--accent); }
+        .inv-item img { width: 100%; height: 45px; object-fit: contain; }
+        .inv-item .name { font-size: 9px; font-weight: bold; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); }
+        .inv-item .price { font-size: 10px; color: var(--accent); font-weight: bold; margin-top: 3px; }
 
-        /* Инвентарь на главной */
-        .main-inv-area {
-            width: 100%; max-width: 400px; background: var(--panel-bg);
-            border: 1px solid var(--panel-border); border-radius: 12px; padding: 10px; margin-top: 15px;
+        /* Модалка денег и промокодов */
+        .promo-modal-content { max-width: 300px; padding: 20px; text-align: center; }
+        .promo-input { width: 100%; padding: 12px; background: #0B0E14; border: 1px solid var(--border); border-radius: 8px; color: var(--accent); font-size: 16px; text-align: center; margin-bottom: 10px; outline: none; font-weight: bold; }
+        .promo-input:focus { border-color: var(--accent); }
+        .promo-btns { display: flex; gap: 10px; }
+        .promo-btn { flex: 1; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 14px; }
+        .btn-cancel { background: #2A3441; color: #fff; }
+        .btn-apply { background: var(--gold-gradient); color: #000; }
+
+        /* Кнопка для профиля */
+        .profile-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; width: 100%; max-width: 300px; }
+        .profile-btn { background: #1C2331; color: #fff; border: 1px solid var(--border); padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
+        .profile-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* Нижнее меню */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
+            background: var(--panel-bg); border-top: 1px solid var(--border);
+            display: flex; justify-content: space-around; z-index: 100;
         }
-        .main-inv-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 12px; font-weight: bold; }
-        .main-inv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; max-height: 200px; overflow-y: auto; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); cursor: pointer; font-size: 10px; gap: 2px; width: 25%; }
+        .nav-item.active { color: var(--accent); }
+        .nav-icon { font-size: 18px; }
 
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #0b0e14; }
-        ::-webkit-scrollbar-thumb { background: #2a3441; border-radius: 2px; }
-        
+        /* Окно оплаты */
+        .pay-modal-content {
+            background: var(--panel-bg); border: 2px solid var(--win);
+            padding: 30px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            max-width: 250px;
+        }
+        .pay-spinner {
+            width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--win);
+            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Тосты */
+        .toast {
+            position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
+            background: var(--win); color: #fff; padding: 10px 20px; border-radius: 8px;
+            font-weight: bold; z-index: 2000; display: none; font-size: 13px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
+    <!-- Шапка -->
     <div class="header">
         <div class="logo-area"><span class="logo-icon">≪</span> UPGRADER</div>
-        <div class="balance-box">БАЛАНС: <span id="balanceDisplay">300,00 ₽</span></div>
+        <div class="balance-box">БАЛАНС: <span id="balanceDisplay">1000 ₽</span></div>
     </div>
 
+    <!-- Основной контент -->
     <div class="main-content" id="appContent" style="display: none;">
         
-        <!-- Колесо -->
-        <div class="wheel-container">
-            <div class="wheel-bg" id="wheelBg"></div>
-            <div class="wheel-inner-circle">
-                <div class="chance-value" id="chanceText">0.00%</div>
-                <div class="chance-label" id="chanceLabel">средний шанс</div>
-            </div>
-            <div class="wheel-labels">
-                <div class="label-100">100%</div>
-                <div class="label-50 left">50%</div>
-                <div class="label-50 right">50%</div>
-                <div class="label-0">0%</div>
-            </div>
-            <div class="arrow-pointer" id="arrow"></div>
-        </div>
-
-        <!-- Ставка и Цель -->
-        <div class="panels-container">
-            <div class="skin-panel" onclick="openSelectModal('left')">
-                <div class="skin-panel-title">СТАВКА</div>
-                <img src="" id="leftImg" class="hidden">
-                <div id="leftEmpty">
-                    <div class="empty-panel-icon">🔫</div>
-                    <div class="empty-panel-text">Выбрать</div>
+        <!-- АПГРЕЙД -->
+        <div id="tab-upgrade" class="tab-content">
+            <div class="circle-zone">
+                <div class="wheel-wrapper">
+                    <div class="arrow-pointer" id="arrow"></div>
+                    <div class="wheel" id="wheel">
+                        <div class="wheel-inner">
+                            <div class="chance-text" id="chanceText">0%</div>
+                            <div class="chance-label" id="chanceLabel">средний шанс</div>
+                        </div>
+                    </div>
+                    <div class="wheel-overlay-text" id="wheelText">
+                        <h3>Выберите скин<br>для апгрейда</h3>
+                    </div>
                 </div>
-                <div class="skin-panel-name" id="leftName"></div>
-                <div class="skin-panel-price" id="leftPrice"></div>
             </div>
 
-            <div class="skin-panel" onclick="openSelectModal('right')">
-                <div class="skin-panel-title">ЦЕЛЬ</div>
-                <img src="" id="rightImg" class="hidden">
-                <div id="rightEmpty">
-                    <div class="empty-panel-icon">🎯</div>
-                    <div class="empty-panel-text">Выбрать</div>
+            <div class="panels-container">
+                <div class="skin-panel" onclick="openSelectModal('left')">
+                    <div class="skin-panel-title">ВАША СТАВКА</div>
+                    <img src="" id="leftImg" class="hidden">
+                    <div id="leftEmpty">
+                        <div class="empty-panel-icon">🔫</div>
+                        <div class="empty-panel-text">Выберите скин</div>
+                    </div>
+                    <div class="skin-panel-name" id="leftName"></div>
+                    <div class="skin-panel-price" id="leftPrice"></div>
                 </div>
-                <div class="skin-panel-name" id="rightName"></div>
-                <div class="skin-panel-price" id="rightPrice"></div>
+
+                <div class="skin-panel" onclick="openSelectModal('right')">
+                    <div class="skin-panel-title">ЦЕЛЬ</div>
+                    <img src="" id="rightImg" class="hidden">
+                    <div id="rightEmpty">
+                        <div class="empty-panel-icon">🎯</div>
+                        <div class="empty-panel-text">Выберите цель</div>
+                    </div>
+                    <div class="skin-panel-name" id="rightName"></div>
+                    <div class="skin-panel-price" id="rightPrice"></div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="btn-upgrade" id="upgradeBtn">≪ ПРОКАЧАТЬ</button>
+                <div class="quick-btns">
+                    <button class="quick-btn" onclick="setQuickTarget('x2')">x2</button>
+                    <button class="quick-btn" onclick="setQuickTarget('x4')">x4</button>
+                    <button class="quick-btn" onclick="setQuickTarget('x8')">x8</button>
+                    <button class="quick-btn" onclick="setQuickTarget('35')">35%</button>
+                    <button class="quick-btn" onclick="setQuickTarget('55')">55%</button>
+                    <button class="quick-btn" onclick="setQuickTarget('75')">75%</button>
+                </div>
             </div>
         </div>
 
-        <!-- Управление -->
-        <div class="controls">
-            <button class="btn-upgrade" id="upgradeBtn"><span>≪</span> ПРОКАЧАТЬ</button>
-            <div class="quick-btns">
-                <button class="quick-btn" onclick="setQuickTarget('x2')">x2</button>
-                <button class="quick-btn" onclick="setQuickTarget('x4')">x4</button>
-                <button class="quick-btn" onclick="setQuickTarget('x8')">x8</button>
-                <button class="quick-btn" onclick="setQuickTarget('35')">35%</button>
-                <button class="quick-btn" onclick="setQuickTarget('55')">55%</button>
-                <button class="quick-btn" onclick="setQuickTarget('75')">75%</button>
+        <!-- ПРОФИЛЬ -->
+        <div id="tab-profile" class="tab-content hidden">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="width: 60px; height: 60px; background: #1F2735; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 30px;">👤</div>
+                <div style="font-size: 16px; font-weight: bold; margin-top: 10px;">Игрок</div>
+                <div style="color: var(--text-muted); font-size: 12px;">ID: #1337</div>
             </div>
-        </div>
-
-        <!-- Инвентарь -->
-        <div class="main-inv-area">
-            <div class="main-inv-header">
-                <span>ИНВЕНТАРЬ <span id="invCount" style="color: var(--text-muted);">0</span></span>
-                <span style="color: var(--accent); cursor: pointer;" onclick="openShop()">МАГАЗИН</span>
+            
+            <div class="profile-actions">
+                <button class="profile-btn" onclick="openAddMoneyModal()">💰 Добавить деньги</button>
+                <button class="profile-btn" onclick="openPromoModal()">🎁 Ввести промокод</button>
             </div>
-            <div class="main-inv-grid" id="mainInvGrid"></div>
         </div>
     </div>
 
     <!-- Загрузка -->
     <div id="loadingScreen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999;">
-        <div class="logo-icon" style="font-size: 60px; color: var(--accent); margin-bottom: 20px;">≪</div>
-        <div style="font-size: 20px; font-weight: 900; letter-spacing: 2px;">UPGRADER</div>
-        <div style="color: var(--text-muted); margin-top: 10px; font-size: 12px;">Загрузка базы...</div>
+        <div class="logo-icon" style="font-size: 40px; color: var(--accent); margin-bottom: 10px;">≪</div>
+        <div style="font-size: 16px; font-weight: 900; letter-spacing: 2px;">UPGRADER</div>
+        <div style="color: var(--text-muted); margin-top: 5px; font-size: 10px;">Загрузка...</div>
     </div>
 
-    <!-- Модалки -->
-    <div class="modal" id="shopModal">
-        <div class="modal-content">
-            <div class="modal-header"><div class="modal-title">Магазин</div><button class="close-modal" onclick="closeModal('shopModal')">×</button></div>
-            <div class="modal-body" id="shopGrid"></div>
-        </div>
-    </div>
-
+    <!-- Модалка выбора скина -->
     <div class="modal" id="selectModal">
         <div class="modal-content">
             <div class="modal-header"><div class="modal-title" id="modalTitle">Выберите скин</div><button class="close-modal" onclick="closeModal('selectModal')">×</button></div>
@@ -257,183 +291,170 @@
         </div>
     </div>
 
+    <!-- Модалка добавления денег -->
+    <div class="modal" id="addMoneyModal">
+        <div class="modal-content promo-modal-content">
+            <div class="modal-title">Пополнение</div>
+            <input type="number" class="promo-input" id="moneyInput" placeholder="Сумма в ₽">
+            <div class="promo-btns">
+                <button class="promo-btn btn-cancel" onclick="closeModal('addMoneyModal')">Отмена</button>
+                <button class="promo-btn btn-apply" onclick="executeAddMoney()">Пополнить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модалка промокода -->
+    <div class="modal" id="promoModal">
+        <div class="modal-content promo-modal-content">
+            <div class="modal-title">Промокод</div>
+            <input type="text" class="promo-input" id="promoInput" placeholder="Введите код">
+            <div class="promo-btns">
+                <button class="promo-btn btn-cancel" onclick="closeModal('promoModal')">Отмена</button>
+                <button class="promo-btn btn-apply" onclick="executePromo()">Активировать</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Окно оплаты -->
+    <div class="modal" id="payModal" style="z-index: 3000;">
+        <div class="modal-content pay-modal-content">
+            <div class="pay-spinner"></div>
+            <div style="font-size: 14px; font-weight: bold; color: var(--win); margin-bottom: 5px;">Оплата прошла...</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Зачисление предмета</div>
+        </div>
+    </div>
+
+    <!-- Нижнее меню -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('upgrade')">
+            <div class="nav-icon">⚡</div><div>Апгрейд</div>
+        </div>
+        <div class="nav-item" onclick="switchTab('profile')">
+            <div class="nav-icon">👤</div><div>Профиль</div>
+        </div>
+    </div>
+
     <script>
         const tg = window.Telegram?.WebApp;
         if (tg) { tg.ready(); tg.expand(); }
 
-        let ITEMS = [];
+        // ВШИТЫЕ СКИНЫ
+        const ITEMS = [
+            { id: '1', name: 'AK-47 | Slate', price: 120, img: 'https://community.akamai.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
+            { id: '2', name: 'M4A1-S | Printstream', price: 1000, img: 'https://community.akamai.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
+            { id: '3', name: 'AWP | Asiimov', price: 1500, img: 'https://community.akamai.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
+            { id: '4', name: 'AK-47 | Redline', price: 400, img: 'https://community.akamai.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
+            { id: '5', name: 'AWP | Dragon Lore', price: 10000, img: 'https://community.akamai.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
+            { id: '6', name: 'M4A4 | Howl', price: 12000, img: 'https://community.akamai.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
+            { id: '7', name: 'Нож | Doppler', price: 25000, img: 'https://community.akamai.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
+            { id: '8', name: 'Glock-18 | Fade', price: 3500, img: 'https://community.akamai.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
+            { id: '9', name: 'AK-47 | Vulcan', price: 2800, img: 'https://community.akamai.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' },
+            { id: '10', name: 'AWP | Hyper Beast', price: 3000, img: 'https://community.akamai.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv38xsLEzklFjzpC7YX6FA58z_2bcjWl7t_hbwWJvFAE' }
+        ];
+
         let state = loadState();
         let selectedLeft = null;
         let selectedRight = null;
         let isSpinning = false;
 
         function loadState() {
-            const saved = localStorage.getItem('upgrader_v4');
+            const saved = localStorage.getItem('upgrader_mobile');
             if (saved) { try { return JSON.parse(saved); } catch (e) {} }
-            return { balance: 300, inventory: [] };
+            return { balance: 1000, inventory: [] };
         }
 
-        function saveState() { localStorage.setItem('upgrader_v4', JSON.stringify(state)); }
+        function saveState() { localStorage.setItem('upgrader_mobile', JSON.stringify(state)); }
+
         function formatMoney(amount) { return amount.toLocaleString('ru-RU') + ' ₽'; }
 
-        async function fetchSkins() {
-            try {
-                const response = await fetch('./skins.json');
-                const data = await response.json();
-                
-                let idCounter = 1;
-                let rawItems = [];
-
-                data.forEach(skin => {
-                    if (skin.image && skin.name) {
-                        let basePrice = 10;
-                        if (skin.category && skin.category.name === 'Knives') basePrice = 15000;
-                        else if (skin.category && skin.category.name === 'Gloves') basePrice = 8000;
-                        else if (skin.rarity) {
-                            if (skin.rarity.name === 'Consumer Grade') basePrice = 10;
-                            else if (skin.rarity.name === 'Industrial Grade') basePrice = 40;
-                            else if (skin.rarity.name === 'Mil-Spec Grade') basePrice = 150;
-                            else if (skin.rarity.name === 'Restricted') basePrice = 400;
-                            else if (skin.rarity.name === 'Classified') basePrice = 1000;
-                            else if (skin.rarity.name === 'Covert') basePrice = 3000;
-                            else if (skin.rarity.name === 'Contraband') basePrice = 10000;
-                        }
-
-                        rawItems.push({ id: idCounter.toString(), name: skin.name, basePrice: basePrice, img: skin.image });
-                        idCounter++;
-                    }
-                });
-
-                rawItems.sort((a, b) => a.basePrice - b.basePrice);
-                rawItems.forEach((item, index) => {
-                    let ratio = index / rawItems.length;
-                    item.price = 10 + Math.floor(Math.pow(ratio, 4) * 500000000000);
-                });
-
-                ITEMS = rawItems;
-                
-                document.getElementById('loadingScreen').style.display = 'none';
-                document.getElementById('appContent').style.display = 'flex';
-                
-                initApp();
-            } catch (e) {
-                document.getElementById('loadingScreen').innerHTML = `<div style="color: red; text-align: center; padding: 20px; font-size: 14px;">Ошибка skins.json.<br>Проверьте, что файл лежит рядом.</div>`;
-            }
+        function updateBalance() {
+            document.getElementById('balanceDisplay').textContent = formatMoney(state.balance);
         }
 
-        function initApp() {
-            updateUI();
-            renderInventory();
-            selectedRight = ITEMS[10];
-            updateRightPanel();
-        }
-
-        function updateUI() { document.getElementById('balanceDisplay').textContent = formatMoney(state.balance); }
-
-        function renderInventory() {
-            const grid = document.getElementById('mainInvGrid');
-            document.getElementById('invCount').textContent = state.inventory.length;
-
-            if (state.inventory.length === 0) {
-                grid.innerHTML = '<div style="color: var(--text-muted); grid-column: 1/-1; text-align: center; padding: 10px; font-size: 12px;">Пусто</div>';
-                return;
-            }
-
-            grid.innerHTML = state.inventory.map((item, index) => `
-                <div class="inv-item" onclick="selectLeftItem(${index})">
-                    <img src="${item.img}">
-                    <div class="name">${item.name.split('|')[0]}</div>
-                    <div class="price">${formatMoney(item.price)}</div>
-                </div>
-            `).join('');
-        }
-
-        function selectLeftItem(index) {
-            selectedLeft = state.inventory[index];
-            selectedLeft.index = index;
-            updateLeftPanel();
-        }
-
-        function updateLeftPanel() {
-            if (!selectedLeft) return;
-            document.getElementById('leftImg').src = selectedLeft.img;
-            document.getElementById('leftImg').classList.remove('hidden');
-            document.getElementById('leftEmpty').classList.add('hidden');
-            document.getElementById('leftName').textContent = selectedLeft.name.split('|')[0];
-            document.getElementById('leftPrice').textContent = formatMoney(selectedLeft.price);
-            updateChanceUI();
-        }
-
-        function updateRightPanel() {
-            document.getElementById('rightImg').src = selectedRight.img;
-            document.getElementById('rightImg').classList.remove('hidden');
-            document.getElementById('rightEmpty').classList.add('hidden');
-            document.getElementById('rightName').textContent = selectedRight.name.split('|')[0];
-            document.getElementById('rightPrice').textContent = formatMoney(selectedRight.price);
-            updateChanceUI();
-        }
-
-        function updateChanceUI() {
-            if (!selectedLeft) {
-                document.getElementById('chanceText').textContent = '0.00%';
-                return;
-            }
-            let chance = selectedLeft.price / selectedRight.price;
-            if (chance > 1) chance = 1;
-            document.getElementById('chanceText').textContent = (chance * 100).toFixed(2) + '%';
+        // Переключение вкладок
+        window.switchTab = function(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             
-            const wheel = document.getElementById('wheelBg');
-            // Градиент от 180 градусов (низ) + шанс
-            const deg = chance * 360;
-            wheel.style.background = `conic-gradient(from 180deg, var(--accent) 0deg, var(--accent) ${deg}deg, #222 ${deg}deg)`;
+            if (tab === 'upgrade') {
+                document.getElementById('tab-upgrade').classList.remove('hidden');
+                document.querySelectorAll('.nav-item')[0].classList.add('active');
+            } else {
+                document.getElementById('tab-profile').classList.remove('hidden');
+                document.querySelectorAll('.nav-item')[1].classList.add('active');
+            }
         }
 
-        window.openShop = function() {
-            document.getElementById('shopModal').classList.add('active');
-            const grid = document.getElementById('shopGrid');
-            grid.innerHTML = ITEMS.slice(0, 150).map(item => `
-                <div class="inv-item" onclick="buyItem('${item.id}')">
-                    <img src="${item.img}">
-                    <div class="name">${item.name.split('|')[0]}</div>
-                    <div class="price">${formatMoney(item.price)}</div>
-                </div>
-            `).join('');
+        // Модалки
+        window.openAddMoneyModal = function() {
+            document.getElementById('moneyInput').value = '';
+            document.getElementById('addMoneyModal').classList.add('active');
         }
 
-        window.buyItem = function(id) {
-            const item = ITEMS.find(i => i.id === id);
-            if (state.balance < item.price) return alert('Недостаточно средств!');
-            state.balance -= item.price;
-            state.inventory.push(item);
-            saveState();
-            updateUI();
-            renderInventory();
-            closeModal('shopModal');
+        window.executeAddMoney = function() {
+            const amount = Number(document.getElementById('moneyInput').value);
+            if (amount > 0) {
+                state.balance += amount;
+                saveState();
+                updateBalance();
+                closeModal('addMoneyModal');
+                showToast('Баланс пополнен');
+            }
         }
 
+        window.openPromoModal = function() {
+            document.getElementById('promoInput').value = '';
+            document.getElementById('promoModal').classList.add('active');
+        }
+
+        window.executePromo = function() {
+            const code = document.getElementById('promoInput').value.trim().toUpperCase();
+            if (code === 'START') {
+                state.balance += 5000;
+                saveState();
+                updateBalance();
+                showToast('Промокод активирован');
+            } else {
+                alert('Неверный промокод');
+            }
+            closeModal('promoModal');
+        }
+
+        window.closeModal = function(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function showToast(text) {
+            const t = document.getElementById('toast');
+            t.textContent = text;
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 2500);
+        }
+
+        // Выбор скинов
         window.openSelectModal = function(mode) {
             document.getElementById('selectModal').classList.add('active');
             const grid = document.getElementById('modalGrid');
             
             if (mode === 'left') {
-                document.getElementById('modalTitle').textContent = 'Выберите скин';
+                document.getElementById('modalTitle').textContent = 'Ваша ставка';
                 if (state.inventory.length === 0) {
-                    grid.innerHTML = '<div style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">Инвентарь пуст</div>';
+                    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #888;">Инвентарь пуст</div>';
                     return;
                 }
                 grid.innerHTML = state.inventory.map((item, index) => `
                     <div class="inv-item" onclick="pickLeft(${index})">
                         <img src="${item.img}">
-                        <div class="name">${item.name.split('|')[0]}</div>
+                        <div class="name">${item.name}</div>
                         <div class="price">${formatMoney(item.price)}</div>
                     </div>
                 `).join('');
             } else {
                 document.getElementById('modalTitle').textContent = 'Выберите цель';
-                grid.innerHTML = ITEMS.slice(0, 150).map(item => `
+                grid.innerHTML = ITEMS.map(item => `
                     <div class="inv-item" onclick="pickRight('${item.id}')">
                         <img src="${item.img}">
-                        <div class="name">${item.name.split('|')[0]}</div>
+                        <div class="name">${item.name}</div>
                         <div class="price">${formatMoney(item.price)}</div>
                     </div>
                 `).join('');
@@ -443,20 +464,28 @@
         window.pickLeft = function(index) {
             selectedLeft = state.inventory[index];
             selectedLeft.index = index;
-            updateLeftPanel();
+            document.getElementById('leftImg').src = selectedLeft.img;
+            document.getElementById('leftImg').classList.remove('hidden');
+            document.getElementById('leftEmpty').classList.add('hidden');
+            document.getElementById('leftName').textContent = selectedLeft.name;
+            document.getElementById('leftPrice').textContent = formatMoney(selectedLeft.price);
             closeModal('selectModal');
+            updateUI();
         }
 
         window.pickRight = function(id) {
             selectedRight = ITEMS.find(i => i.id === id);
-            updateRightPanel();
+            document.getElementById('rightImg').src = selectedRight.img;
+            document.getElementById('rightImg').classList.remove('hidden');
+            document.getElementById('rightEmpty').classList.add('hidden');
+            document.getElementById('rightName').textContent = selectedRight.name;
+            document.getElementById('rightPrice').textContent = formatMoney(selectedRight.price);
             closeModal('selectModal');
+            updateUI();
         }
 
-        window.closeModal = function(id) { document.getElementById(id).classList.remove('active'); }
-
         window.setQuickTarget = function(mode) {
-            if (!selectedLeft) return alert('Выберите скин!');
+            if (!selectedLeft) return alert('Сначала выберите скин для ставки!');
             let targetPrice;
             if (mode === 'x2') targetPrice = selectedLeft.price * 2;
             else if (mode === 'x4') targetPrice = selectedLeft.price * 4;
@@ -471,13 +500,27 @@
                 const diff = Math.abs(item.price - targetPrice);
                 if (diff < minDiff) { minDiff = diff; closest = item; }
             }
-            selectedRight = closest;
-            updateRightPanel();
+            pickRight(closest.id);
         }
 
+        function updateUI() {
+            if (!selectedLeft) {
+                document.getElementById('chanceText').textContent = '0%';
+                document.getElementById('wheel').style.background = 'conic-gradient(from 180deg, var(--accent) 0deg, var(--accent) 0deg, #0B0E14 0deg)';
+                return;
+            }
+            let chance = selectedLeft.price / selectedRight.price;
+            if (chance > 1) chance = 1;
+            document.getElementById('chanceText').textContent = (chance * 100).toFixed(1) + '%';
+            
+            const deg = chance * 360;
+            document.getElementById('wheel').style.background = `conic-gradient(from 180deg, var(--accent) 0deg, var(--accent) ${deg}deg, #0B0E14 ${deg}deg)`;
+        }
+
+        // Логика кручения
         document.getElementById('upgradeBtn').addEventListener('click', () => {
             if (isSpinning) return;
-            if (!selectedLeft) return alert('Выберите скин!');
+            if (!selectedLeft) return alert('Выберите скин для ставки!');
             if (selectedLeft.price >= selectedRight.price) return alert('Цель должна быть дороже!');
 
             isSpinning = true;
@@ -485,16 +528,16 @@
             const win = Math.random() < chance;
             const wonItem = selectedRight;
 
-            // Удаляем ставку
+            // Удаляем из инвентаря
             state.inventory.splice(selectedLeft.index, 1);
-            saveState(); // Сохраняем сразу после удаления
+            saveState();
             
+            // Анимация стрелки
             const arrow = document.getElementById('arrow');
             arrow.style.transition = 'none';
             arrow.style.transform = 'rotate(0deg)';
             void arrow.offsetWidth;
             
-            // Стрелка крутится, если выигрыш - вверх (0), если проигрыш - рандом
             let targetDeg = win ? (360 * 5) : (360 * 5 + (chance * 360 + Math.random() * (360 - chance * 360)));
 
             setTimeout(() => {
@@ -502,23 +545,44 @@
                 arrow.style.transform = `rotate(${targetDeg}deg)`;
             }, 50);
 
-            document.querySelector('.btn-upgrade').style.opacity = '0.5';
+            // Блокируем кнопку
+            document.getElementById('upgradeBtn').disabled = true;
 
             setTimeout(() => {
+                const wheelText = document.getElementById('wheelText');
+                const wheel = document.getElementById('wheel');
+
                 if (win) {
                     state.inventory.push(wonItem);
+                    saveState();
+                    wheelText.className = 'wheel-overlay-text win';
+                    wheelText.innerHTML = `<h3>ВЫИГРЫШ</h3><div class="amount" style="color: var(--win); font-size: 20px;">+${formatMoney(wonItem.price)}</div><div class="sub">${wonItem.name}</div>`;
+                    wheel.classList.add('win-border');
+                } else {
+                    // Утешительный скин (рандом)
+                    const consolation = ITEMS[Math.floor(Math.random() * ITEMS.length)];
+                    state.inventory.push(consolation);
+                    saveState();
+                    
+                    wheelText.className = 'wheel-overlay-text lose';
+                    wheelText.innerHTML = `<h3>ПРОИГРЫШ</h3><div class="amount">-${formatMoney(selectedLeft.price)}</div><div class="sub">Выпал: ${consolation.name}</div>`;
+                    wheel.classList.add('lose-border');
                 }
-                saveState(); // Сохраняем перед перезагрузкой
 
-                // Перезагрузка для сброса стрелки
+                updateBalance();
+
+                // Перезагрузка через 2.5 секунды
                 setTimeout(() => {
                     window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
-                }, 500);
+                }, 2500);
 
             }, 4000);
         });
 
-        fetchSkins();
+        // Инициализация
+        updateBalance();
+        document.getElementById('loadingScreen').style.display = 'none';
+        document.getElementById('appContent').style.display = 'flex';
     </script>
 </body>
 </html>
