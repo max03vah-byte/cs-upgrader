@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NumberUpgrader</title>
+    <title>Upgrader</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -16,6 +16,15 @@
             --win: #2ecc71;
             --lose: #e74c3c;
             --gold-gradient: linear-gradient(180deg, #F1C40F 0%, #D4AC0D 100%);
+            
+            --rar-consumer: #b0c3d9;
+            --rar-industrial: #5e98d9;
+            --rar-milspec: #4b69ff;
+            --rar-restricted: #8847ff;
+            --rar-classified: #d32ce6;
+            --rar-covert: #eb4b4b;
+            --rar-contraband: #e4ae39;
+            --rar-knife: #ffd700;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         body {
@@ -83,6 +92,7 @@
         }
         .chance-text { font-size: 26px; font-weight: 900; color: var(--text-main); display: none; }
         .chance-label { font-size: 10px; color: var(--text-muted); margin-top: 3px; text-transform: uppercase; display: none; }
+        
         .choose-text { color: var(--text-muted); font-size: 13px; text-align: center; line-height: 1.4; display: block; }
 
         .arrow-pointer {
@@ -101,8 +111,9 @@
         }
         .result-overlay.show { opacity: 1; }
         .result-title { font-size: 14px; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; }
-        .result-name { font-size: 20px; font-weight: bold; color: var(--accent); margin-bottom: 2px; }
-        .result-price { font-size: 14px; font-weight: 900; color: var(--text-muted); }
+        .result-img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 5px; }
+        .result-name { font-size: 10px; font-weight: bold; margin-bottom: 2px; white-space: nowrap; overflow: hidden; max-width: 150px; text-overflow: ellipsis; }
+        .result-price { font-size: 14px; font-weight: 900; }
 
         /* Панели */
         .panels-container { display: flex; gap: 10px; width: 100%; margin-bottom: 15px; }
@@ -113,9 +124,12 @@
             position: relative; padding: 8px; text-align: center; cursor: pointer;
         }
         .skin-panel-title { position: absolute; top: 6px; font-size: 9px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; }
-        .skin-panel .number-display { font-size: 16px; font-weight: 900; color: var(--accent); margin-top: 15px; }
-        .skin-panel-name { font-size: 10px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; margin-top: 5px; color: var(--text-muted); }
-        .skin-panel-price { font-size: 14px; color: var(--win); font-weight: bold; margin-top: 2px; }
+        .skin-panel img { width: 80px; height: 50px; object-fit: contain; margin-top: 10px; }
+        .skin-panel-name { font-size: 10px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; margin-top: 5px; }
+        .skin-panel-price { font-size: 11px; color: var(--accent); font-weight: bold; margin-top: 2px; }
+        
+        .empty-panel-icon { font-size: 25px; color: #1F2735; margin-top: 10px; }
+        .empty-panel-text { color: var(--text-muted); font-size: 10px; margin-top: 5px; }
 
         /* Кнопки */
         .controls { display: flex; flex-direction: column; align-items: center; width: 100%; }
@@ -132,11 +146,14 @@
             padding: 8px; border-radius: 6px; font-weight: bold; font-size: 11px;
             cursor: pointer; flex: 1; text-align: center; transition: all 0.2s;
         }
+        
+        /* Подсветка активной кнопки быстрого выбора */
         .quick-btn.active {
             background: var(--accent) !important;
             color: #000 !important;
             border-color: var(--accent) !important;
             font-weight: 900;
+            box-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
         }
 
         /* ПАНЕЛЬ ПОИСКА И ФИЛЬТРОВ */
@@ -158,6 +175,7 @@
             border-radius: 8px; padding: 0 10px; height: 35px; font-size: 12px;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
+        .filter-btn.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; }
         .price-inputs { display: flex; gap: 10px; }
         .price-inputs input {
             background: #0B0E14; border: 1px solid var(--border); border-radius: 8px;
@@ -179,25 +197,41 @@
         }
         .item-card:active { transform: scale(0.98); }
         
-        .op-a1 { border-bottom: 3px solid #e74c3c; }
-        .op-mts { border-bottom: 3px solid #3498db; }
-        .op-life { border-bottom: 3px solid #9b59b6; }
+        .item-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 60%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.05) 0%, transparent 100%);
+            pointer-events: none;
+        }
         
-        .item-card .op-name { font-size: 10px; font-weight: bold; margin-bottom: 2px; }
-        .item-card .number { font-size: 16px; font-weight: 900; color: var(--accent); margin: 5px 0; }
-        .item-card .price { font-size: 12px; color: var(--win); font-weight: bold; }
+        /* Подсветка редкостей */
+        .rarity-consumer { border-bottom: 3px solid var(--rar-consumer); }
+        .rarity-industrial { border-bottom: 3px solid var(--rar-industrial); }
+        .rarity-milspec { border-bottom: 3px solid var(--rar-milspec); }
+        .rarity-restricted { border-bottom: 3px solid var(--rar-restricted); }
+        .rarity-classified { border-bottom: 3px solid var(--rar-classified); }
+        .rarity-covert { border-bottom: 3px solid var(--rar-covert); }
+        .rarity-contraband { border-bottom: 3px solid var(--rar-contraband); }
+        .rarity-knife { border-bottom: 3px solid var(--rar-knife); }
+
+        .item-card .rarity-name { font-size: 9px; color: var(--text-muted); margin-bottom: 3px; }
+        .item-card img { width: 100%; height: 60px; object-fit: contain; z-index: 1; position: relative; }
+        .item-card .name { font-size: 10px; font-weight: bold; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 1; }
+        .item-card .price { font-size: 11px; color: var(--accent); font-weight: bold; margin-top: 2px; z-index: 1; }
         
         .btn-buy { background: var(--accent); color: #000; border: none; padding: 6px; border-radius: 6px; font-weight: bold; font-size: 10px; margin-top: 5px; width: 100%; z-index: 1; }
 
+        /* Кнопка продать всё */
         .sell-all-btn {
             background: var(--lose); color: #fff; border: none; padding: 10px;
             border-radius: 8px; font-weight: bold; font-size: 13px; width: 100%;
             margin-bottom: 10px; cursor: pointer; display: none;
         }
 
+        /* Профиль */
         .profile-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; width: 100%; }
         .profile-btn { background: #1C2331; color: #fff; border: 1px solid var(--border); padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
 
+        /* Нижнее меню */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
             background: var(--panel-bg); border-top: 1px solid var(--border);
@@ -207,6 +241,7 @@
         .nav-item.active { color: var(--accent); }
         .nav-icon { font-size: 18px; }
 
+        /* Модалки */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
         .modal.active { display: flex; }
         .modal-content { background: var(--panel-bg); width: 95%; max-width: 400px; height: 80vh; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
@@ -246,22 +281,38 @@
 
         .buy-modal-content { max-width: 320px; height: auto; padding: 20px; border-radius: 12px; }
         .buy-qty-btn { background: #0B0E14; color: var(--text-main); border: 1px solid var(--border); width: 35px; height: 35px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        
+        .buy-qty-btn:active { background: var(--border); }
+
+        /* Стили для окна продажи */
         .sell-modal-content { max-width: 320px; height: auto; padding: 20px; border-radius: 12px; }
-        .sell-info-box { background: #0B0E14; border: 1px solid var(--border); border-radius: 10px; padding: 15px; margin-bottom: 20px; text-align: left; }
+        .sell-info-box {
+            background: #0B0E14; border: 1px solid var(--border); border-radius: 10px;
+            padding: 15px; margin-bottom: 20px; text-align: left;
+        }
         .sell-info-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
         .sell-info-value { font-size: 22px; font-weight: 900; color: var(--accent); }
         .sell-btns { display: flex; gap: 10px; }
         .btn-sell-cancel { background: #1C2331; color: #fff; }
         .btn-sell-confirm { background: var(--gold-gradient); color: #000; }
 
-        .admin-cheat-box { background: #0B0E14; border: 1px solid var(--border); border-radius: 10px; padding: 15px; margin-top: 10px; width: 100%; display: flex; flex-direction: column; gap: 5px; }
-        .cheat-slider { -webkit-appearance: none; width: 100%; height: 8px; border-radius: 4px; background: #1F2735; outline: none; }
-        .cheat-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 2px solid #fff; }
+        /* Слайдер подкрутки */
+        .admin-cheat-box {
+            background: #0B0E14; border: 1px solid var(--border); border-radius: 10px;
+            padding: 15px; margin-top: 10px; width: 100%; display: flex; flex-direction: column; gap: 5px;
+        }
+        .cheat-slider {
+            -webkit-appearance: none; width: 100%; height: 8px; border-radius: 4px;
+            background: #1F2735; outline: none;
+        }
+        .cheat-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+            background: var(--accent); cursor: pointer; border: 2px solid #fff;
+        }
     </style>
 </head>
 <body>
 
+    <!-- ЭКРАН ЗАГРУЗКИ -->
     <div class="loading-screen" id="loadingScreen">
         <svg class="load-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -273,14 +324,14 @@
             <path d="M12 2L22 12L19 15L12 8L5 15L2 12L12 2Z" />
             <path d="M12 10L22 20L19 23L12 16L5 23L2 20L12 10Z" />
         </svg>
-        <div class="load-title">NUMBER UPGRADER</div>
+        <div class="load-title">UPGRADER</div>
         <div class="load-bar-container">
             <div class="load-bar"></div>
         </div>
     </div>
 
     <div class="header">
-        <div class="logo-area"><span class="logo-icon">≪</span> NUMBER UPGRADER</div>
+        <div class="logo-area"><span class="logo-icon">≪</span> UPGRADER</div>
         <div class="balance-box">БАЛАНС: <span id="balanceDisplay">1000 ₽</span></div>
     </div>
 
@@ -294,11 +345,12 @@
                         <div class="wheel-inner">
                             <div class="chance-text" id="chanceText">0%</div>
                             <div class="chance-label" id="chanceLabel">средний шанс</div>
-                            <div class="choose-text" id="chooseText">Выберите номер<br>для апгрейда</div>
+                            <div class="choose-text" id="chooseText">Выберите скин<br>для апгрейда</div>
                         </div>
                     </div>
                     <div class="result-overlay" id="resultOverlay">
                         <div class="result-title" id="resultTitle"></div>
+                        <img src="" id="resultImg" class="result-img">
                         <div class="result-name" id="resultName"></div>
                         <div class="result-price" id="resultPrice"></div>
                     </div>
@@ -307,20 +359,22 @@
 
             <div class="panels-container">
                 <div class="skin-panel" onclick="openSelectModal('left')">
-                    <div class="skin-panel-title">ВАШ НОМЕР</div>
+                    <div class="skin-panel-title">ВАША СТАВКА</div>
+                    <img src="" id="leftImg" class="hidden">
                     <div id="leftEmpty">
-                        <div class="number-display" style="color: var(--text-muted);">+375</div>
-                        <div class="skin-panel-name">Выберите номер</div>
+                        <div class="empty-panel-icon">🔫</div>
+                        <div class="empty-panel-text">Выберите скин</div>
                     </div>
-                    <div id="leftContent" style="display: none; width: 100%;">
-                        <div class="number-display" id="leftNumber">+375...</div>
-                        <div class="skin-panel-name" id="leftName"></div>
-                        <div class="skin-panel-price" id="leftPrice"></div>
-                    </div>
+                    <div class="skin-panel-name" id="leftName"></div>
+                    <div class="skin-panel-price" id="leftPrice"></div>
                 </div>
                 <div class="skin-panel" onclick="openSelectModal('right')">
                     <div class="skin-panel-title">ЦЕЛЬ</div>
-                    <div class="number-display" id="rightNumber">+375...</div>
+                    <img src="" id="rightImg" class="hidden">
+                    <div id="rightEmpty">
+                        <div class="empty-panel-icon">🎯</div>
+                        <div class="empty-panel-text">Выберите цель</div>
+                    </div>
                     <div class="skin-panel-name" id="rightName"></div>
                     <div class="skin-panel-price" id="rightPrice"></div>
                 </div>
@@ -345,7 +399,7 @@
                 <div class="search-row">
                     <div class="search-input-wrap">
                         <span style="color:var(--text-muted);">🔍</span>
-                        <input type="text" id="shopSearch" placeholder="Поиск по номеру..." oninput="renderShop()">
+                        <input type="text" id="shopSearch" placeholder="Поиск по названию..." oninput="renderShop()">
                     </div>
                     <button class="filter-btn" onclick="toggleSort()" id="sortBtn">↕ Цена</button>
                     <button class="filter-btn" onclick="renderShop()">🔄</button>
@@ -375,14 +429,12 @@
                 <button class="profile-btn" id="addMoneyBtn" onclick="openAddMoneyModal()" style="display: none;">💰 Добавить деньги</button>
                 <button class="profile-btn" id="removeMoneyBtn" onclick="removeMoney()" style="display: none; color: var(--lose);">🗑 Удалить все деньги</button>
                 
-                <!-- Ползунок теперь виден ВСЕМ -->
-                <div class="admin-cheat-box" id="adminCheatPanel">
+                <div class="admin-cheat-box" id="adminCheatPanel" style="display: none;">
                     <div style="display:flex; justify-content:space-between; font-size: 11px; color:var(--text-muted); margin-bottom: 5px;">
                         <span>ШАНС ПОДКРУТКИ</span>
                         <span id="cheatValueDisplay">0%</span>
                     </div>
                     <input type="range" class="cheat-slider" id="cheatSlider" min="0" max="90" value="0" oninput="updateCheatCost()">
-                    <div id="cheatHint" style="font-size: 10px; color: var(--text-muted); margin-top: 5px; text-align: center;">(Доступно только админу)</div>
                 </div>
 
                 <button class="profile-btn" onclick="openPromoModal()">🎁 Ввести промокод</button>
@@ -391,12 +443,12 @@
         </div>
     </div>
 
-    <!-- Модалка выбора -->
+    <!-- Модалка выбора скинов -->
     <div class="modal" id="selectModal">
         <div class="modal-content">
-            <div class="modal-header"><div class="modal-title" id="modalTitle">Выберите номер</div><button class="close-modal" onclick="closeModal('selectModal')">×</button></div>
+            <div class="modal-header"><div class="modal-title" id="modalTitle">Выберите скин</div><button class="close-modal" onclick="closeModal('selectModal')">×</button></div>
             <div class="modal-body">
-                <input type="text" class="modal-search" id="modalSearch" placeholder="Поиск номера..." oninput="filterModalItems()">
+                <input type="text" class="modal-search" id="modalSearch" placeholder="Поиск скина..." oninput="filterModalItems()">
                 <div class="modal-grid" id="modalGrid"></div>
             </div>
         </div>
@@ -426,21 +478,21 @@
         </div>
     </div>
 
-    <!-- Модалка оплаты -->
+    <!-- Модалка оплаты (Спиннер) -->
     <div class="modal" id="payModal" style="z-index: 3000;">
         <div class="modal-content pay-modal-content">
             <div class="pay-spinner"></div>
             <div style="font-size: 14px; font-weight: bold; color: var(--win); margin-bottom: 5px;">Оплата прошла...</div>
-            <div style="font-size: 11px; color: var(--text-muted);">Зачисление номера</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Зачисление предмета</div>
         </div>
     </div>
 
-    <!-- Модалка покупки -->
+    <!-- Модалка подтверждения покупки -->
     <div class="modal" id="buyConfirmModal" style="z-index: 2500;">
         <div class="modal-content buy-modal-content">
-            <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 5px;" id="buyItemCategory">ОПЕРАТОР</div>
-            <div style="font-size: 16px; font-weight: 900; margin-bottom: 5px;" id="buyItemName">Номер</div>
-            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;" id="buyItemPriceText">Цена</div>
+            <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 5px;" id="buyItemCategory">КАТЕГОРИЯ</div>
+            <div style="font-size: 16px; font-weight: 900; margin-bottom: 5px; display: flex; align-items: center; gap: 5px;" id="buyItemName">Название скина</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;" id="buyItemPriceText">Цена за штуку</div>
 
             <div style="background: #0B0E14; border: 1px solid var(--border); border-radius: 10px; padding: 15px; margin-bottom: 20px;">
                 <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 10px; text-align: left;">ИТОГО</div>
@@ -452,7 +504,7 @@
                         <button class="buy-qty-btn" onclick="changeBuyQty(1)">+</button>
                     </div>
                 </div>
-                <div style="text-align: right; font-size: 10px; color: var(--text-muted); margin-top: 10px;" id="buyAvailableText">хватает на один</div>
+                <div style="text-align: right; font-size: 10px; color: var(--text-muted); margin-top: 10px;" id="buyAvailableText">хватает на одну</div>
             </div>
 
             <div class="promo-btns">
@@ -462,11 +514,11 @@
         </div>
     </div>
 
-    <!-- Модалка продажи -->
+    <!-- МОДАЛКА ПРОДАЖИ -->
     <div class="modal" id="sellConfirmModal" style="z-index: 2500;">
         <div class="modal-content sell-modal-content">
-            <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 5px;" id="sellItemCategory">ОПЕРАТОР</div>
-            <div style="font-size: 16px; font-weight: 900; margin-bottom: 15px;" id="sellItemName">Номер</div>
+            <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 5px;" id="sellItemCategory">КАТЕГОРИЯ</div>
+            <div style="font-size: 16px; font-weight: 900; margin-bottom: 15px; line-height: 1.2;" id="sellItemName">Название скина</div>
 
             <div class="sell-info-box">
                 <div class="sell-info-label">ВЫ ПОЛУЧИТЕ</div>
@@ -503,7 +555,7 @@
 
         const ADMIN_ID = 1935313766;
         const tgUser = tg?.initDataUnsafe?.user;
-        const currentUserId = tgUser ? tgUser.id : ADMIN_ID; 
+        const currentUserId = tgUser ? tgUser.id : ADMIN_ID; // Для теста в браузере считаем админом
         const isAdmin = currentUserId === ADMIN_ID;
 
         let ITEMS = [];
@@ -527,13 +579,15 @@
             'WELCOME': { amount: 500 }
         };
 
+        const DEFAULT_IMAGE = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23131A26'/><text x='50' y='50' font-size='40' text-anchor='middle' fill='%238A99AD' dominant-baseline='central'>?</text></svg>";
+
         function loadState() {
-            const saved = localStorage.getItem('number_upgrader_v1');
+            const saved = localStorage.getItem('upgrader_v4');
             if (saved) { try { return JSON.parse(saved); } catch (e) {} }
             return { balance: 1000, inventory: [], usedPromos: [], lastPromoTime: 0 };
         }
 
-        function saveState() { localStorage.setItem('number_upgrader_v1', JSON.stringify(state)); }
+        function saveState() { localStorage.setItem('upgrader_v4', JSON.stringify(state)); }
         function formatMoney(amount) { return amount.toLocaleString('ru-RU') + ' ₽'; }
         function updateBalance() { document.getElementById('balanceDisplay').textContent = formatMoney(state.balance); }
         function showToast(msg) {
@@ -545,73 +599,111 @@
 
         window.closeModal = function(id) { document.getElementById(id).classList.remove('active'); }
 
-        // Показываем кнопки пополнения только админу, но ползунок видят все
         if (isAdmin) {
+            document.getElementById('adminCheatPanel').style.display = 'flex';
             document.getElementById('addMoneyBtn').style.display = 'block';
             document.getElementById('removeMoneyBtn').style.display = 'block';
             document.getElementById('profileIdText').textContent = `ID: ${currentUserId} (АДМИН)`;
-            document.getElementById('cheatHint').textContent = '(Доступно вам)';
-            document.getElementById('cheatHint').style.color = 'var(--accent)';
         } else {
             document.getElementById('profileIdText').textContent = `ID: ${currentUserId}`;
-            document.getElementById('cheatHint').textContent = '(Доступно только админу)';
         }
 
-        // --- ГЕНЕРАЦИЯ НОМЕРОВ ---
-        function loadNumbers() {
-            let idCounter = 1;
-            let rawItems = [];
-
-            const operators = [
-                { code: '29', name: 'A1', class: 'op-a1' },
-                { code: '33', name: 'МТС', class: 'op-mts' },
-                { code: '25', name: 'life:)', class: 'op-life' },
-                { code: '44', name: 'A1', class: 'op-a1' },
-                { code: '29', name: 'МТС', class: 'op-mts' }
-            ];
-
-            function generateRandomNumber() {
-                let num = '';
-                for(let i=0; i<7; i++) num += Math.floor(Math.random() * 10);
-                return num;
-            }
-
-            // Генерация 200 номеров
-            for (let i = 0; i < 200; i++) {
-                let op = operators[Math.floor(Math.random() * operators.length)];
-                let rawNum = generateRandomNumber();
+        // --- ИСПРАВЛЕННЫЙ РАНДОМАЙЗЕР (ГЕНЕРАЦИЯ СКИНОВ И ЦЕН) ---
+        async function loadSkinsFromJSON() {
+            try {
+                const response = await fetch('./skins.json');
+                const data = await response.json();
                 
-                let isBeautiful = Math.random() > 0.9; // 10% красивых
-                let displayNum = op.code + ' ' + rawNum.substring(0,3) + '-' + rawNum.substring(3,5) + '-' + rawNum.substring(5);
-                
-                let price = 50 + Math.floor(Math.random() * 5000);
-                if (isBeautiful) {
-                    price = 10000 + Math.floor(Math.random() * 500000);
-                    displayNum = op.code + ' ' + '777-77-77'; // Условно красивый
+                let idCounter = 1;
+                let rawItems = [];
+
+                data.forEach(skin => {
+                    if (skin.name) {
+                        let basePrice = 2;
+                        let rarityClass = 'consumer';
+                        
+                        if (skin.category && skin.category.name === 'Knives') { basePrice = 15000; rarityClass = 'knife'; }
+                        else if (skin.category && skin.category.name === 'Gloves') { basePrice = 8000; rarityClass = 'knife'; }
+                        else if (skin.rarity) {
+                            if (skin.rarity.name === 'Consumer Grade') { basePrice = 2; rarityClass = 'consumer'; }
+                            else if (skin.rarity.name === 'Industrial Grade') { basePrice = 40; rarityClass = 'industrial'; }
+                            else if (skin.rarity.name === 'Mil-Spec Grade') { basePrice = 150; rarityClass = 'milspec'; }
+                            else if (skin.rarity.name === 'Restricted') { basePrice = 400; rarityClass = 'restricted'; }
+                            else if (skin.rarity.name === 'Classified') { basePrice = 1000; rarityClass = 'classified'; }
+                            else if (skin.rarity.name === 'Covert') { basePrice = 3000; rarityClass = 'covert'; }
+                            else if (skin.rarity.name === 'Contraband') { basePrice = 10000; rarityClass = 'contraband'; }
+                        }
+
+                        rawItems.push({
+                            id: idCounter.toString(),
+                            name: skin.name,
+                            basePrice: basePrice,
+                            img: skin.image || DEFAULT_IMAGE,
+                            category: skin.category?.name || 'Предмет',
+                            rarity: rarityClass
+                        });
+                        idCounter++;
+                    }
+                });
+
+                // Генерация 600 скинов с разными редкостями
+                const rarities = ['consumer', 'industrial', 'milspec', 'restricted', 'classified', 'covert', 'contraband', 'knife'];
+                for(let i = 0; i < 600; i++) {
+                    let rar = 'consumer';
+                    let randRar = Math.random();
+                    if (randRar > 0.99) rar = 'knife';
+                    else if (randRar > 0.95) rar = 'contraband';
+                    else if (randRar > 0.88) rar = 'covert';
+                    else if (randRar > 0.75) rar = 'classified';
+                    else if (randRar > 0.55) rar = 'restricted';
+                    else if (randRar > 0.30) rar = 'milspec';
+                    else if (randRar > 0.10) rar = 'industrial';
+                    else rar = 'consumer';
+
+                    let bPrice = 2;
+                    if (rar === 'industrial') bPrice = 40;
+                    if (rar === 'milspec') bPrice = 150;
+                    if (rar === 'restricted') bPrice = 400;
+                    if (rar === 'classified') bPrice = 1000;
+                    if (rar === 'covert') bPrice = 3000;
+                    if (rar === 'contraband') bPrice = 10000;
+                    if (rar === 'knife') bPrice = 15000;
+
+                    rawItems.push({
+                        id: idCounter.toString(),
+                        name: `${rar.charAt(0).toUpperCase() + rar.slice(1)} Skin #${i+1}`,
+                        basePrice: bPrice,
+                        img: DEFAULT_IMAGE, 
+                        category: 'Сгенерировано',
+                        rarity: rar
+                    });
+                    idCounter++;
                 }
 
-                rawItems.push({
-                    id: idCounter.toString(),
-                    opName: op.name,
-                    opClass: op.class,
-                    number: displayNum,
-                    basePrice: price,
-                    category: op.name,
-                    price: price
+                rawItems.sort((a, b) => a.basePrice - b.basePrice);
+
+                rawItems.forEach((item, index) => {
+                    let ratio = index / rawItems.length;
+                    let randomFactor = 0.9 + (Math.random() * 0.2); 
+                    let price = 2 + Math.floor(Math.pow(ratio, 4.5) * 500000000000 * randomFactor);
+                    if (price < 2) price = 2;
+                    item.price = price;
                 });
-                idCounter++;
-            }
-
-            rawItems.sort((a, b) => a.price - b.price);
-
-            ITEMS = rawItems;
-            selectedRight = ITEMS[10] || ITEMS[0];
-            updateRightPanel();
-            renderShop();
-            
-            setTimeout(() => {
+                
+                ITEMS = rawItems;
+                selectedRight = ITEMS[10] || ITEMS[0];
+                updateRightPanel();
+                renderShop();
+                
+                setTimeout(() => {
+                    document.getElementById('loadingScreen').classList.add('hidden');
+                }, 1000);
+                
+            } catch (e) {
+                console.error(e);
+                showToast('Ошибка загрузки skins.json');
                 document.getElementById('loadingScreen').classList.add('hidden');
-            }, 1000);
+            }
         }
 
         window.switchTab = function(tab, el) {
@@ -638,7 +730,7 @@
             const maxPrice = parseInt(document.getElementById('priceMax').value) || Infinity;
             
             let filtered = ITEMS.filter(item => {
-                const matchName = item.number.toLowerCase().includes(query);
+                const matchName = item.name.toLowerCase().includes(query);
                 const matchPrice = item.price >= minPrice && item.price <= maxPrice;
                 return matchName && matchPrice;
             });
@@ -647,9 +739,10 @@
             const toRender = filtered.slice(0, 100);
             
             grid.innerHTML = toRender.map(item => `
-                <div class="item-card ${item.opClass}">
-                    <div class="op-name" style="color: var(--text-muted);">${item.opName}</div>
-                    <div class="number">${item.number}</div>
+                <div class="item-card rarity-${item.rarity}">
+                    <div class="rarity-name" style="color: var(--rar-${item.rarity});">${item.rarity.toUpperCase()}</div>
+                    <img src="${item.img}" loading="lazy" onerror="this.src='${DEFAULT_IMAGE}'">
+                    <div class="name">${item.name}</div>
                     <div class="price">${formatMoney(item.price)}</div>
                     <button class="btn-buy" onclick="event.stopPropagation(); buyItem('${item.id}')">Купить</button>
                 </div>
@@ -668,8 +761,8 @@
             buyQuantity = 1;
             
             document.getElementById('buyItemCategory').textContent = item.category;
-            document.getElementById('buyItemName').textContent = item.number;
-            document.getElementById('buyItemPriceText').textContent = formatMoney(item.price) + ' за номер';
+            document.getElementById('buyItemName').textContent = item.name;
+            document.getElementById('buyItemPriceText').textContent = formatMoney(item.price) + ' за штуку';
             
             updateBuyModal();
             document.getElementById('buyConfirmModal').classList.add('active');
@@ -728,11 +821,12 @@
             document.getElementById('payModal').classList.add('active');
             setTimeout(() => {
                 document.getElementById('payModal').classList.remove('active');
-                showToast(`Куплено: ${currentBuyItem.number} x${buyQuantity}`);
+                showToast(`Куплено: ${currentBuyItem.name} x${buyQuantity}`);
                 if(document.getElementById('tab-inventory').classList.contains('active')) renderInventory();
             }, 1500);
         }
 
+        // --- ИНВЕНТАРЬ И ПРОДАЖА ---
         function renderInventory() {
             const grid = document.getElementById('invGrid');
             const sellAllBtn = document.getElementById('sellAllBtn');
@@ -746,9 +840,10 @@
             sellAllBtn.style.display = 'block';
 
             grid.innerHTML = state.inventory.map((item, index) => `
-                <div class="item-card ${item.opClass}" onclick="openSellModal(${index})">
-                    <div class="op-name" style="color: var(--text-muted);">${item.opName}</div>
-                    <div class="number">${item.number}</div>
+                <div class="item-card rarity-${item.rarity}" onclick="openSellModal(${index})">
+                    <div class="rarity-name" style="color: var(--rar-${item.rarity});">${item.rarity.toUpperCase()}</div>
+                    <img src="${item.img}" loading="lazy" onerror="this.src='${DEFAULT_IMAGE}'">
+                    <div class="name">${item.name}</div>
                     <div class="price">${formatMoney(item.price)}</div>
                 </div>
             `).join('');
@@ -761,7 +856,7 @@
             if (!item) return;
 
             document.getElementById('sellItemCategory').textContent = item.category;
-            document.getElementById('sellItemName').textContent = item.number;
+            document.getElementById('sellItemName').textContent = item.name;
             document.getElementById('sellItemPrice').textContent = formatMoney(item.price);
             
             document.getElementById('sellConfirmModal').classList.add('active');
@@ -775,7 +870,7 @@
             state.inventory.forEach(item => totalSum += item.price);
 
             document.getElementById('sellItemCategory').textContent = 'ВЕСЬ ИНВЕНТАРЬ';
-            document.getElementById('sellItemName').textContent = `Продажа ${state.inventory.length} номеров`;
+            document.getElementById('sellItemName').textContent = `Продажа ${state.inventory.length} предметов`;
             document.getElementById('sellItemPrice').textContent = formatMoney(totalSum);
             
             document.getElementById('sellConfirmModal').classList.add('active');
@@ -793,7 +888,7 @@
                 if (!item) return;
                 state.balance += item.price;
                 state.inventory.splice(currentSellIndex, 1);
-                showToast(`Продан ${item.number} за ${formatMoney(item.price)}`);
+                showToast(`Продан ${item.name} за ${formatMoney(item.price)}`);
             }
             
             saveState();
@@ -802,11 +897,12 @@
             closeModal('sellConfirmModal');
         }
 
+        // --- МОДАЛКА ВЫБОРА ---
         window.openSelectModal = function(mode) {
             modalMode = mode;
             document.getElementById('selectModal').classList.add('active');
             document.getElementById('modalSearch').value = '';
-            document.getElementById('modalTitle').textContent = mode === 'left' ? 'Ваш номер' : 'Выберите цель';
+            document.getElementById('modalTitle').textContent = mode === 'left' ? 'Ваша ставка' : 'Выберите цель';
             
             filterModalItems();
         }
@@ -822,7 +918,7 @@
                 return;
             }
 
-            let filtered = sourceItems.filter(item => item.number.toLowerCase().includes(query));
+            let filtered = sourceItems.filter(item => item.name.toLowerCase().includes(query));
             let toRender = filtered.slice(0, 40);
             
             if (toRender.length === 0) {
@@ -836,10 +932,10 @@
                     : `pickRight('${item.id}')`;
                 
                 return `
-                <div class="inv-item ${item.opClass}" onclick="${clickAction}" style="background: #0B0E14; border: 1px solid #1F2735; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; border-bottom: 3px solid currentColor;">
-                    <div style="font-size: 9px; color: var(--text-muted);">${item.opName}</div>
-                    <div class="number" style="font-size: 13px; color: var(--accent); font-weight: bold; margin: 3px 0;">${item.number}</div>
-                    <div style="font-size: 10px; color: var(--win); font-weight: bold;">${formatMoney(item.price)}</div>
+                <div class="inv-item rarity-${item.rarity}" onclick="${clickAction}" style="background: #0B0E14; border: 1px solid #1F2735; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; border-bottom: 3px solid var(--rar-${item.rarity});">
+                    <img src="${item.img}" style="width: 100%; height: 45px; object-fit: contain;" onerror="this.src='${DEFAULT_IMAGE}'">
+                    <div class="name" style="font-size: 9px; font-weight: bold; margin-top: 5px;">${item.name}</div>
+                    <div class="price" style="font-size: 10px; color: #FFCC00; font-weight: bold;">${formatMoney(item.price)}</div>
                 </div>
             `}).join('');
         }
@@ -847,10 +943,10 @@
         window.pickLeft = function(index) {
             selectedLeft = state.inventory[index];
             selectedLeft.index = index;
-            document.getElementById('leftEmpty').style.display = 'none';
-            document.getElementById('leftContent').style.display = 'block';
-            document.getElementById('leftNumber').textContent = selectedLeft.number;
-            document.getElementById('leftName').textContent = selectedLeft.opName;
+            document.getElementById('leftImg').src = selectedLeft.img;
+            document.getElementById('leftImg').classList.remove('hidden');
+            document.getElementById('leftEmpty').classList.add('hidden');
+            document.getElementById('leftName').textContent = selectedLeft.name;
             document.getElementById('leftPrice').textContent = formatMoney(selectedLeft.price);
             closeModal('selectModal');
             updateUI();
@@ -858,8 +954,10 @@
 
         window.pickRight = function(id) {
             selectedRight = ITEMS.find(i => i.id === id);
-            document.getElementById('rightNumber').textContent = selectedRight.number;
-            document.getElementById('rightName').textContent = selectedRight.opName;
+            document.getElementById('rightImg').src = selectedRight.img;
+            document.getElementById('rightImg').classList.remove('hidden');
+            document.getElementById('rightEmpty').classList.add('hidden');
+            document.getElementById('rightName').textContent = selectedRight.name;
             document.getElementById('rightPrice').textContent = formatMoney(selectedRight.price);
             closeModal('selectModal');
             updateUI();
@@ -868,15 +966,20 @@
 
         function updateRightPanel() {
             if (!selectedRight) return;
-            document.getElementById('rightNumber').textContent = selectedRight.number;
-            document.getElementById('rightName').textContent = selectedRight.opName;
+            document.getElementById('rightImg').src = selectedRight.img;
+            document.getElementById('rightImg').classList.remove('hidden');
+            document.getElementById('rightEmpty').classList.add('hidden');
+            document.getElementById('rightName').textContent = selectedRight.name;
             document.getElementById('rightPrice').textContent = formatMoney(selectedRight.price);
         }
 
+        // --- БЫСТРЫЕ КНОПКИ С ПОДСВЕТКОЙ ---
         window.setQuickTarget = function(mode, btnEl) {
-            if (!selectedLeft) return alert('Сначала выберите номер для ставки!');
+            if (!selectedLeft) return alert('Сначала выберите скин для ставки!');
             
+            // Убираем активный класс у всех кнопок
             document.querySelectorAll('.quick-btn').forEach(btn => btn.classList.remove('active'));
+            // Добавляем активный класс текущей
             btnEl.classList.add('active');
 
             let targetPrice;
@@ -896,6 +999,7 @@
             pickRight(closest.id);
         }
 
+        // --- ИСПРАВЛЕННАЯ ОТРИСОВКА КОЛЕСА ---
         function updateUI() {
             const chanceText = document.getElementById('chanceText');
             const chanceLabel = document.getElementById('chanceLabel');
@@ -922,23 +1026,26 @@
             wheel.style.background = `conic-gradient(var(--accent) 0deg, var(--accent) ${deg}deg, #0B0E14 ${deg}deg)`;
         }
 
+        // --- ПОДКРУТКА (БЕЗ СПИСАНИЯ ДЕНЕГ) ---
         window.updateCheatCost = function() {
             const slider = document.getElementById('cheatSlider');
             const cheatVal = parseInt(slider.value);
             
+            // Желтая линия
             slider.style.background = `linear-gradient(90deg, var(--accent) ${cheatVal}%, #1F2735 ${cheatVal}%)`;
             document.getElementById('cheatValueDisplay').textContent = cheatVal + '%';
         }
 
+        // --- ИСПРАВЛЕННАЯ АНИМАЦИЯ КОЛЕСА ---
         document.getElementById('upgradeBtn').addEventListener('click', () => {
             if (isSpinning) return;
-            if (!selectedLeft) return alert('Выберите номер для ставки!');
+            if (!selectedLeft) return alert('Выберите скин для ставки!');
             if (!selectedRight) return alert('Выберите цель!');
             if (selectedLeft.price >= selectedRight.price) return alert('Цель должна быть дороже!');
 
-            // Подкрутка применяется ТОЛЬКО если ты админ
             const cheatVal = isAdmin ? parseInt(document.getElementById('cheatSlider').value) : 0;
 
+            // Убрали списание денег (cheatCost) для админа
             isSpinning = true;
 
             let baseChance = selectedLeft.price / selectedRight.price;
@@ -961,6 +1068,7 @@
             arrow.style.transform = 'rotate(0deg)';
             void arrow.offsetWidth;
 
+            // --- РАСЧЕТ УГЛА ---
             let winZoneDeg = baseChance * 360;
             let targetAngle;
             
@@ -1003,13 +1111,17 @@
                     showToast('Вы проиграли!');
                 }
 
-                document.getElementById('resultName').textContent = wonItem.number;
+                document.getElementById('resultImg').src = wonItem.img;
+                document.getElementById('resultName').textContent = wonItem.name;
                 document.getElementById('resultPrice').textContent = formatMoney(wonItem.price);
                 
                 selectedLeft = null;
-                document.getElementById('leftEmpty').style.display = 'block';
-                document.getElementById('leftContent').style.display = 'none';
+                document.getElementById('leftImg').classList.add('hidden');
+                document.getElementById('leftEmpty').classList.remove('hidden');
+                document.getElementById('leftName').textContent = '';
+                document.getElementById('leftPrice').textContent = '';
                 
+                // Убираем подсветку кнопок после прокрутки
                 document.querySelectorAll('.quick-btn').forEach(btn => btn.classList.remove('active'));
 
                 updateUI();
@@ -1025,6 +1137,7 @@
             }, 4000);
         });
 
+        // --- АДМИН ФУНКЦИИ ---
         window.openAddMoneyModal = function() { 
             if (!isAdmin) return;
             document.getElementById('addMoneyModal').classList.add('active'); 
@@ -1083,14 +1196,14 @@
 
         window.resetGame = function() {
             if(confirm('Вы уверены, что хотите полностью сбросить баланс и инвентарь?')) {
-                localStorage.removeItem('number_upgrader_v1');
+                localStorage.removeItem('upgrader_v4');
                 location.reload();
             }
         }
 
         updateBalance();
         updateCheatCost(); 
-        loadNumbers();
+        loadSkinsFromJSON();
     </script>
 </body>
-    </html>
+            </html>
